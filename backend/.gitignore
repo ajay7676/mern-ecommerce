@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build Files
+dist/
+build/
+
+# Coverage
+coverage/
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# IDE Files
+.vscode/
+.idea/
+
+# Temporary Files
+*.tmp
+*.temp
+
+# Vite
+vite.config.timestamp-*
+
+# ESLint Cache
+.eslintcache
+
+# Package Lock Files (Optional)
+# package-lock.json
+# yarn.lock
