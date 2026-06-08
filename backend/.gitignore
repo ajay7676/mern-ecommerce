@@ -44,6 +44,6 @@ vite.config.timestamp-*
 # ESLint Cache
 .eslintcache
 
-# Package Lock Files (Optional)
-# package-lock.json
-# yarn.lock
+# Prevents local images
+
+uploads

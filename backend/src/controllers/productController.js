@@ -1,13 +1,6 @@
 import PrdouctModel from "../model/productModel.js";
 import generateSlug from "../utils/generateSlug.js";
 
-const getProducts = async (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "All Products API is working",
-  });
-};
-
 // Creating Prouduct API
 
 const createProduct = async (req, res) => {
@@ -29,12 +22,12 @@ const createProduct = async (req, res) => {
       });
     }
     const genSlug = generateSlug(name);
-    const existingProduct = await PrdouctModel.findOne({genSlug});
-    if(existingProduct){
-        return res.status(400).json({
-            success: false,
-            message: "Product already exists"
-        })
+    const existingProduct = await PrdouctModel.findOne({ genSlug });
+    if (existingProduct) {
+      return res.status(400).json({
+        success: false,
+        message: "Product already exists",
+      });
     }
 
     const product = await PrdouctModel.create({
@@ -46,20 +39,41 @@ const createProduct = async (req, res) => {
       images,
       category,
       brand,
-      stock
-    })
+      stock,
+    });
 
     res.status(201).json({
-        success: true,
-        message: "Product created successfully",
-        product
-    })
+      success: true,
+      message: "Product created successfully",
+      product,
+    });
   } catch (error) {
     res.status(500).json({
-        success: false,
-        message : error.message,
-    })
+      success: false,
+      message: error.message,
+    });
   }
 };
 
-export { getProducts, createProduct };
+const getAllProducts = async (req, res) => {
+  try {
+    const products = await PrdouctModel.find({}).sort({ createAt: -1 }).lean();
+
+    return res.status(200).json({
+      success: true,
+      message:
+        products.length > 0
+          ? "Products fetched successfully"
+          : "No products found",
+      count: products.length,
+      products,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export { createProduct ,getAllProducts};
