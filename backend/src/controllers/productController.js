@@ -1,4 +1,5 @@
 import PrdouctModel from "../model/productModel.js";
+import generateSlug from "../utils/generateSlug.js";
 
 const getProducts = async (req, res) => {
   res.status(200).json({
@@ -14,7 +15,6 @@ const createProduct = async (req, res) => {
     const {
       name,
       description,
-      slug,
       price,
       discountPrice,
       images,
@@ -22,16 +22,14 @@ const createProduct = async (req, res) => {
       brand,
       stock,
     } = req.body;
-
     if (!name || !description || !price || !category) {
       return res.status(400).json({
         success: false,
         message: "Please fill all required fields",
       });
     }
-
-    const existingProduct = await PrdouctModel.findOne({slug});
-
+    const genSlug = generateSlug(name);
+    const existingProduct = await PrdouctModel.findOne({genSlug});
     if(existingProduct){
         return res.status(400).json({
             success: false,
@@ -42,7 +40,7 @@ const createProduct = async (req, res) => {
     const product = await PrdouctModel.create({
       name,
       description,
-      slug,
+      slug: genSlug,
       price,
       discountPrice,
       images,
