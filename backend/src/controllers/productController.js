@@ -1,4 +1,5 @@
 import ProductModel from "../model/productModel.js";
+import buildSearchQuery from "../utils/buildSearchQuery.js";
 import generateSlug from "../utils/generateSlug.js";
 import HandleError from "../utils/handleError.js";
 
@@ -52,8 +53,18 @@ const createProduct = async (req, res, next) => {
 
 // Create get All products API
 const getAllProducts = async (req, res, next) => {
+  
   try {
-    const products = await ProductModel.find({}).sort({ createdAt: -1 }).lean();
+    const {keyword=""} = req.query;
+    const query = buildSearchQuery(keyword, [
+      "name",
+      "description",
+      "brand",
+      "category",
+    ] )
+    const products = await ProductModel.find(query)
+    .select("name slug price discountPrice images category brand stock ratings numReviews createdAt")
+    .sort({ createdAt: -1 }).lean();
 
     return res.status(200).json({
       success: true,
