@@ -20,7 +20,7 @@ const createProduct = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: "Please fill all required fields",
-        statusCode: 400
+        statusCode: 400,
       });
     }
     const genSlug = generateSlug(name);
@@ -53,18 +53,15 @@ const createProduct = async (req, res, next) => {
 
 // Create get All products API
 const getAllProducts = async (req, res, next) => {
-  
   try {
-    const {keyword=""} = req.query;
-    const query = buildSearchQuery(keyword, [
-      "name",
-      "description",
-      "brand",
-      "category",
-    ] )
+    const { keyword = "", category = "" } = req.query;
+    const query = buildSearchQuery({keyword, category});
     const products = await ProductModel.find(query)
-    .select("name slug price discountPrice images category brand stock ratings numReviews createdAt")
-    .sort({ createdAt: -1 }).lean();
+      .select(
+        "name slug price discountPrice images category brand stock ratings numReviews createdAt",
+      )
+      .sort({ createdAt: -1 })
+      .lean();
 
     return res.status(200).json({
       success: true,
@@ -140,7 +137,7 @@ const deleteProduct = async (req, res, next) => {
       product,
     });
   } catch (error) {
-     next (error)
+    next(error);
   }
 };
 

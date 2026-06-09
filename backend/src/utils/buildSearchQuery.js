@@ -1,16 +1,21 @@
 
-const buildSearchQuery = (keyword, fields=[]) =>{
+const buildSearchQuery = ({keyword, category}) =>{
      const query = {};
 
      if(keyword && keyword.trim()){
-        query.$or = fields.map((field) => ({
+        query.$or = ["name", "description", "brand", "category"].map((field) => ({
            [field]: {
             $regex: keyword.trim(),
             $options: "i",
            } ,
         }))
      }
-
+      if (category && category.trim()) {
+        query.category = {
+        $regex: category.trim(),
+        $options: "i",
+        };
+    }
 
      return query;
 
