@@ -1,8 +1,9 @@
-import PrdouctModel from "../model/productModel.js";
+import ProductModel from "../model/productModel.js";
 import generateSlug from "../utils/generateSlug.js";
+import HandleError from "../utils/handleError.js";
 
 // Creating Prouduct API
-const createProduct = async (req, res) => {
+const createProduct = async (req, res, next) => {
   try {
     const {
       name,
@@ -23,10 +24,7 @@ const createProduct = async (req, res) => {
     const genSlug = generateSlug(name);
     const existingProduct = await PrdouctModel.findOne({ genSlug });
     if (existingProduct) {
-      return res.status(400).json({
-        success: false,
-        message: "Product already exists",
-      });
+      return next(new HandleError("Product already exists", 404));
     }
 
     const product = await PrdouctModel.create({
@@ -47,40 +45,37 @@ const createProduct = async (req, res) => {
       product,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
 // Create get All products API
-const getAllProducts = async (req, res) => {
+const getAllProducts = async (req, res, next) => {
   try {
-    const products = await PrdouctModel.find({}).sort({ createAt: -1 }).lean();
+    const products = await ProductModel.find({}).sort({ createdAt: -1 }).lean();
 
     return res.status(200).json({
       success: true,
-      message:
-        products.length > 0
-          ? "Products fetched successfully"
-          : "No products found",
+      message: products.length
+        ? "Products fetched successfully"
+        : "No products found",
       count: products.length,
       products,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
 // Create get single product API
 
-const getSingleProduct = async (req, res) => {
+const getSingleProduct = async (req, res, next) => {
   try {
-    const product = await PrdouctModel.findById(req.params.productId);
+    const product = await ProductModel.findById(req.params.productId);
+
+    if (!product) {
+      return next(new HandleError("Product not found", 400));
+    }
     res.status(200).json({
       success: true,
       message: "Product fetched successfully",
@@ -88,61 +83,59 @@ const getSingleProduct = async (req, res) => {
     });
     console.log(product);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
 
 // Create update product API
-const updateProduct = async (req, res) => {
+const updateProduct = async (req, res, next) => {
   try {
     const productId = req.params.productId;
-    console.log(productId);
-    const product = await PrdouctModel.findByIdAndUpdate(productId, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    res.status(200).json({
-        success: true,
-        message: "Product Updated Successfully ",
-        product
+    const product = await ProductModel.findById(productId);
 
-    })
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
+    if (!product) {
+      return next(new HandleError("Product not found", 404));
+    }
+
+    const updatedProduct = await ProductModel.findByIdAndUpdate(
+      productId,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+    res.status(200).json({
+      success: true,
+      message: "Product Updated Successfully ",
+      product: updatedProduct,
     });
+  } catch (error) {
+    next(error);
   }
 };
 
 // Create delete product API
-const deleteProduct  = async (req,res) => {
-     try {
-         const product = await PrdouctModel.findByIdAndDelete(req.params.productId);
-          if(!product){
-             return res.status(404).json({
-                success: false,
-                message: "Product not found"
-            })
-          }
-           return res.status(200).json({
-            success: true,
-            message: "Product deleted Successfully",
-            product,
-          })
-        
-     } catch (error) {
+const deleteProduct = async (req, res, next) => {
+  try {
+    const product = await ProductModel.findByIdAndDelete(req.params.productId);
+    if (!product) {
+      return next(new HandleError("Product not found", 404));
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Product deleted Successfully",
+      product,
+    });
+  } catch (error) {
+     next (error)
+  }
+};
 
-       return  res.status(500).json({
-            success: false,
-            message: error.message,
-        })
-        
-     }
-
-}
-
-export { createProduct, getAllProducts, getSingleProduct, updateProduct, deleteProduct };
+export {
+  createProduct,
+  getAllProducts,
+  getSingleProduct,
+  updateProduct,
+  deleteProduct,
+};
