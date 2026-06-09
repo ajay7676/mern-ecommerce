@@ -1,3 +1,9 @@
+// Uncaught Exception
+process.on("uncaughtException", (err) => {
+  console.log(`Uncaught Exception: ${err.message}`);
+  process.exit(1);
+});
+
 import express from "express";
 import dotenv from "dotenv";
 import productRoutes from './routes/productRoutes.js'
@@ -14,7 +20,6 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-
 app.use("/api" ,productRoutes );
 app.use(errorHandler);
 
@@ -23,3 +28,11 @@ app.listen(PORT , () => {
               console.log(`Server is running on PORT Number ${PORT}`);
 
 })
+
+// Unhandled Rejection
+process.on("unhandledRejection", (err) => {
+  console.log(`Unhandled Rejection: ${err.message}`);
+  server.close(() => {
+    process.exit(1);
+  });
+});

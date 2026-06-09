@@ -19,15 +19,16 @@ const createProduct = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: "Please fill all required fields",
+        statusCode: 400
       });
     }
     const genSlug = generateSlug(name);
-    const existingProduct = await PrdouctModel.findOne({ genSlug });
+    const existingProduct = await ProductModel.findOne({ genSlug });
     if (existingProduct) {
       return next(new HandleError("Product already exists", 404));
     }
 
-    const product = await PrdouctModel.create({
+    const product = await ProductModel.create({
       name,
       description,
       slug: genSlug,
