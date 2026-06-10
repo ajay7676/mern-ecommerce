@@ -54,8 +54,7 @@ const createProduct = async (req, res, next) => {
 // Create get All products API
 const getAllProducts = async (req, res, next) => {
   try {
-    const { keyword = "", category = "" } = req.query;
-    const query = buildSearchQuery({keyword, category});
+    const query = buildSearchQuery(req.query);
     const products = await ProductModel.find(query)
       .select(
         "name slug price discountPrice images category brand stock ratings numReviews createdAt",
