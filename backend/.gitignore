@@ -1,30 +1,8 @@
 # Dependencies
 node_modules/
 node_modules
-# Environment Variables
+node_modules/
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Build Files
-dist/
-build/
-
-# Coverage
-coverage/
-
-# Cache
-.cache/
-.parcel-cache/
 
 # Operating System Files
 .DS_Store
@@ -45,5 +23,4 @@ vite.config.timestamp-*
 .eslintcache
 
 # Prevents local images
-
 uploads
