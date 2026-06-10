@@ -1,6 +1,7 @@
 import HandleError from "../utils/handleError.js";
 import User from "../model/userModel.js";
 import generateToken from "../utils/generateToken.js";
+import sendToken from "../utils/sendToken.js";
 
 const createRegisterUser = async (req, res, next) => {
   try {
@@ -15,22 +16,7 @@ const createRegisterUser = async (req, res, next) => {
       return next(new HandleError("User is already exist", 400));
     }
     const user = await User.create({ name, email, password });
-    const token = generateToken(user._id);
-
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-    res.status(201).json({
-      success: true,
-      message: "User register successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
-    });
+    return sendToken(user, 201, res, "User registered successfully");
   } catch (error) {
       next(error)
    
