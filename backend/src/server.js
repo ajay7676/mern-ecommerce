@@ -22,7 +22,7 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.use("/api" ,productRoutes );
-app.use("/api/auth" ,userRoutes);
+app.use("/api/v1" ,userRoutes);
 
 app.use(errorHandler);
 

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import validator from 'validator'
 
 const userSchema = new mongoose.Schema(
   {
@@ -46,6 +47,11 @@ const userSchema = new mongoose.Schema(
         },
         message: "Please enter a valid phone number",
       },
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
     },
     isActive: {
       type: Boolean,
