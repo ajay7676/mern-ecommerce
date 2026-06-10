@@ -18,9 +18,32 @@ const createRegisterUser = async (req, res, next) => {
     const user = await User.create({ name, email, password });
     return sendToken(user, 201, res, "User registered successfully");
   } catch (error) {
-      next(error)
-   
+    next(error);
   }
 };
 
-export { createRegisterUser };
+const loginUser = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return next(new HandleError("Please provide email and password", 400));
+    }
+
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user) {
+      return next(new HandleError("Invalid email or password", 401));
+    }
+
+    const isPasswordMatched = await user.comparePassword(password);
+    if (!isPasswordMatched) {
+      return next(new HandleError("Invalid email or password", 401));
+    }
+    return sendToken(user,"200", res,"User Login successfully")
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { createRegisterUser, loginUser };
