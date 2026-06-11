@@ -2,6 +2,7 @@ import HandleError from "../utils/handleError.js";
 import User from "../model/userModel.js";
 import generateToken from "../utils/generateToken.js";
 import sendToken from "../utils/sendToken.js";
+import validator from "validator";
 
 const createRegisterUser = async (req, res, next) => {
   try {
@@ -59,4 +60,64 @@ const logoutUser = async (req, res, next) => {
   });
 };
 
-export { createRegisterUser, loginUser, logoutUser };
+const getProfile = async (req, res, next) => {
+  try {
+    const { _id, name, email } = req.user;
+    return res.status(200).json({
+      success: true,
+      message: "User profile fetched successfully",
+      user: {
+        id: _id,
+        name,
+        email,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateProfile = async (req, res, next) => {
+  try {
+    const { name ,email} = req.body;
+    const user = req.user;
+    if (!email || !email.trim()) {
+      return next(new HandleError("Email is required", 400));
+    }
+      if(email && email !== user.email){
+         const emailExsting = await User.findOne({email});
+          if(emailExsting){
+             return next(new HandleError("Email already exists", 400));
+          }
+            user.email = email;
+      }
+
+     if (!name || !name.trim()) {
+        return next(new HandleError("Name is required", 400));
+      }
+      
+
+    if (name) {
+      if (!validator.isLength(name.trim(), { min: 3, max: 25 })) {
+        return next(
+          new HandleError("Name must be between 3 and 25 characters", 400),
+        );
+      }
+       user.name = name;
+    }
+    await user.save();
+      return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { createRegisterUser, loginUser, logoutUser, getProfile, updateProfile };
