@@ -16,6 +16,7 @@ const createProduct = async (req, res, next) => {
       brand,
       stock,
     } = req.body;
+   console.log(req.user?._id)
     if (!name || !description || !price || !category) {
       return res.status(400).json({
         success: false,
@@ -28,7 +29,9 @@ const createProduct = async (req, res, next) => {
     if (existingProduct) {
       return next(new HandleError("Product already exists", 404));
     }
-
+    //  console.log(req.user);
+      
+    req.body.createdBy = req.user._id;
     const product = await ProductModel.create({
       name,
       description,
@@ -39,6 +42,7 @@ const createProduct = async (req, res, next) => {
       category,
       brand,
       stock,
+      createdBy: req.user._id,
     });
 
     res.status(201).json({
@@ -104,7 +108,7 @@ const updateProduct = async (req, res, next) => {
     if (!product) {
       return next(new HandleError("Product not found", 404));
     }
-
+    req.body.updatedBy = req.user._id;
     const updatedProduct = await ProductModel.findByIdAndUpdate(
       productId,
       req.body,
@@ -126,10 +130,17 @@ const updateProduct = async (req, res, next) => {
 // Create delete product API
 const deleteProduct = async (req, res, next) => {
   try {
-    const product = await ProductModel.findByIdAndDelete(req.params.productId);
+    const productId = req.params.productId;
+    const product = await ProductModel.findById(productId);
     if (!product) {
       return next(new HandleError("Product not found", 404));
     }
+    
+    product.isDeleted = true;
+    product.isActive = false;
+    product.deletedBy = req.user._id;
+    product.deletedAt = new Date();
+     await product.save();
     return res.status(200).json({
       success: true,
       message: "Product deleted Successfully",

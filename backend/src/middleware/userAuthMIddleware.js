@@ -5,7 +5,6 @@ import HandleError from "../utils/handleError.js";
 const userAuth = async (req, res, next) => {
   try {
     const token = req.cookies?.token;
-     console.log(token)
     if (!token) {
       return next(new HandleError("Please login to access this resource", 401));
     }
