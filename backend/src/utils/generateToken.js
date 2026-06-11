@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
      return jwt.sign(
         {userId},
-        process.env.SECTRET_KEY,
+        process.env.JWT_SECRET_KEY,
         {
             expiresIn: process.env.EXPIRE_DAY || "7d"
         }

@@ -40,10 +40,23 @@ const loginUser = async (req, res, next) => {
     if (!isPasswordMatched) {
       return next(new HandleError("Invalid email or password", 401));
     }
-    return sendToken(user,"200", res,"User Login successfully")
+    return sendToken(user, 200, res, "User Login successfully");
   } catch (error) {
     next(error);
   }
 };
 
-export { createRegisterUser, loginUser };
+const logoutUser = async (req, res, next) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Logged out successfully",
+  });
+};
+
+export { createRegisterUser, loginUser, logoutUser };
