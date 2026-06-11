@@ -5,7 +5,7 @@ import HandleError from "../utils/handleError.js";
 const userAuth = async (req, res, next) => {
   try {
     const token = req.cookies?.token;
-
+     console.log(token)
     if (!token) {
       return next(new HandleError("Please login to access this resource", 401));
     }
@@ -13,7 +13,7 @@ const userAuth = async (req, res, next) => {
       return next(new HandleError("JWT secret key is missing", 500));
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    
+
     const user = await User.findById(decoded.userId).select("-password");
     if (!user) {
       return next(new HandleError("User not found or token is invalid", 401));
@@ -34,4 +34,17 @@ const userAuth = async (req, res, next) => {
   }
 };
 
-export { userAuth };
+const roleAuth = (...allowedRoles) => {
+      return (req,res,next) => {
+          if(!req.user){
+                return next (new HandleError("Please login first", 401));
+          }
+
+          if(!allowedRoles.includes(req.user.role)){
+                return next(new HandleError("You are not allowed to access this resource" , 403))
+          };
+           next();
+      }
+}
+
+export { userAuth ,roleAuth };

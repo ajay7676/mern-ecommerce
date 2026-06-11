@@ -79,12 +79,33 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+
+    deletedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
   },
 );
 
- const ProductModel = mongoose.model("ProductModel" , productSchema);
+const ProductModel = mongoose.model("ProductModel", productSchema);
 
- export default ProductModel;
+export default ProductModel;

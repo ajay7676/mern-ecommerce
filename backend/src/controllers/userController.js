@@ -1,6 +1,5 @@
 import HandleError from "../utils/handleError.js";
 import User from "../model/userModel.js";
-import generateToken from "../utils/generateToken.js";
 import sendToken from "../utils/sendToken.js";
 import validator from "validator";
 
