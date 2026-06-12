@@ -98,7 +98,7 @@ userSchema.pre("save" , async function (next) {
 
     // If password is not modified, skip hashing
     if(!this.isModified("password")){
-       return ;
+       return next() ;
     }
 
   this.password = await bcrypt.hash(this.password, 10);

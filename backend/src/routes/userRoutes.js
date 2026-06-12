@@ -1,5 +1,5 @@
 import express from 'express';
-import { createRegisterUser, forgotPassword, getProfile, loginUser, logoutUser, resetPassword, updateProfile } from '../controllers/userController.js';
+import { createRegisterUser, requestForgotPassword, getProfile, loginUser, logoutUser, resetPassword, updateProfile, updatePassword } from '../controllers/userController.js';
 import {userAuth} from '../middleware/userAuthMIddleware.js'
 const router = express.Router();
 
@@ -8,7 +8,8 @@ const router = express.Router();
  router.post("/logout" , logoutUser)
  router.get("/profile" ,userAuth, getProfile)
  router.put("/update-profile" ,userAuth, updateProfile)
- router.post("/forgot-password" , forgotPassword)
+ router.put("/update-password" ,userAuth, updatePassword)
+ router.post("/forgot-password" , requestForgotPassword)
  router.post("/reset-password/:token" ,resetPassword )
 
 

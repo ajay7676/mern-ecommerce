@@ -67,11 +67,7 @@ const getProfile = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "User profile fetched successfully",
-      user: {
-        id: _id,
-        name,
-        email,
-      },
+      user: req.user
     });
   } catch (error) {
     next(error);
@@ -120,7 +116,7 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
-const forgotPassword = async (req, res, next) => {
+const requestForgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
     if (!email) {
@@ -191,12 +187,51 @@ const resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+ const updatePassword  = async(req,res , next) => {
+     try {
+        const {oldPassword, newPassword, confirmPassword} = req.body;
+         if (!oldPassword || !oldPassword || !confirmPassword){
+            return next(new HandleError("Please provide all password fields", 400));
+         } 
+          if (newPassword !== confirmPassword) {
+            return next(new HandleError("New password and confirm password do not match", 400));
+          }
+          const user = await User.findById(req.user._id).select("+password");           
+
+          if(!user){
+             return next(new HandleError("User not found", 404));
+          }
+            const isPasswordMatched = await user.comparePassword(oldPassword);
+
+          if (!isPasswordMatched) {
+            return next(new HandleError("Old password is incorrect", 400));
+          }
+            
+          user.password = newPassword;
+          await user.save();
+          res.status(200).json({
+              success: true,
+              message: "Password Updated Successfully"
+          });
+
+
+     } catch (error) {
+         next(error)
+      
+     }
+ }
+
+ 
 export {
   createRegisterUser,
   loginUser,
   logoutUser,
   getProfile,
   updateProfile,
-  forgotPassword,
+  updatePassword,
+  requestForgotPassword,
   resetPassword,
 };
+
+
