@@ -1,5 +1,5 @@
 import express from 'express';
-import { createRegisterUser, getProfile, loginUser, logoutUser, updateProfile } from '../controllers/userController.js';
+import { createRegisterUser, forgotPassword, getProfile, loginUser, logoutUser, resetPassword, updateProfile } from '../controllers/userController.js';
 import {userAuth} from '../middleware/userAuthMIddleware.js'
 const router = express.Router();
 
@@ -8,6 +8,8 @@ const router = express.Router();
  router.post("/logout" , logoutUser)
  router.get("/profile" ,userAuth, getProfile)
  router.put("/update-profile" ,userAuth, updateProfile)
+ router.post("/forgot-password" , forgotPassword)
+ router.post("/reset-password/:token" ,resetPassword )
 
 
 export default router;
