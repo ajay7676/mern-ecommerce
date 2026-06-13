@@ -67,7 +67,7 @@ const getProfile = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "User profile fetched successfully",
-      user: req.user
+      user: req.user,
     });
   } catch (error) {
     next(error);
@@ -174,7 +174,7 @@ const resetPassword = async (req, res, next) => {
         new HandleError("Reset token is invalid or has expired", 400),
       );
     }
-     user.password = password;
+    user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save();
@@ -188,41 +188,115 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
- const updatePassword  = async(req,res , next) => {
-     try {
-        const {oldPassword, newPassword, confirmPassword} = req.body;
-         if (!oldPassword || !oldPassword || !confirmPassword){
-            return next(new HandleError("Please provide all password fields", 400));
-         } 
-          if (newPassword !== confirmPassword) {
-            return next(new HandleError("New password and confirm password do not match", 400));
-          }
-          const user = await User.findById(req.user._id).select("+password");           
+const updatePassword = async (req, res, next) => {
+  try {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+    if (!oldPassword || !oldPassword || !confirmPassword) {
+      return next(new HandleError("Please provide all password fields", 400));
+    }
+    if (newPassword !== confirmPassword) {
+      return next(
+        new HandleError("New password and confirm password do not match", 400),
+      );
+    }
+    const user = await User.findById(req.user._id).select("+password");
 
-          if(!user){
-             return next(new HandleError("User not found", 404));
-          }
-            const isPasswordMatched = await user.comparePassword(oldPassword);
+    if (!user) {
+      return next(new HandleError("User not found", 404));
+    }
+    const isPasswordMatched = await user.comparePassword(oldPassword);
 
-          if (!isPasswordMatched) {
-            return next(new HandleError("Old password is incorrect", 400));
-          }
-            
-          user.password = newPassword;
-          await user.save();
-          res.status(200).json({
-              success: true,
-              message: "Password Updated Successfully"
-          });
+    if (!isPasswordMatched) {
+      return next(new HandleError("Old password is incorrect", 400));
+    }
 
+    user.password = newPassword;
+    await user.save();
+    res.status(200).json({
+      success: true,
+      message: "Password Updated Successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-     } catch (error) {
-         next(error)
-      
-     }
- }
+// get All User List by Admin
+const getAllUserByAdmin = async (req, res, next) => {
+  try {
+    const users = await User.find()
+      .select("-password")
+      .sort({ createdAt: -1 })
+      .lean();
+    console.log(users);
+    if (!users) {
+      return next(new HandleError("Users not exists", 400));
+    }
 
- 
+    res.status(200).json({
+      success: true,
+      message: "All Users Fetched Successfully ",
+      count: users.length,
+      users,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get Single User by Admin
+const getSingleUserByAdmin = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).select("-password").lean();
+    if (!user) {
+      return next(new HandleError("User not found", 404));
+    }
+    res.status(200).json({
+      success: true,
+      message: "User Fetched Successfully",
+      user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update User Role
+
+const updateRoleByAdmin = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    if (!role) {
+      return next(new HandleError("Please provide a role", 400));
+    }
+    if (!["user", "admin"].includes(role)) {
+      return next(new HandleError("Invalid role value", 400));
+    }
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { role },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      },
+    ).select("-password");
+
+    if (!updatedUser) {
+      return next(new HandleError("User not found", 404));
+    }
+    return res.status(200).json({
+      success: true,
+      message: "User role updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 export {
   createRegisterUser,
   loginUser,
@@ -232,6 +306,7 @@ export {
   updatePassword,
   requestForgotPassword,
   resetPassword,
+  getAllUserByAdmin,
+  getSingleUserByAdmin,
+  updateRoleByAdmin,
 };
-
-

@@ -1,6 +1,7 @@
 import express from 'express';
-import { createRegisterUser, requestForgotPassword, getProfile, loginUser, logoutUser, resetPassword, updateProfile, updatePassword } from '../controllers/userController.js';
+import { createRegisterUser, requestForgotPassword, getProfile, loginUser, logoutUser, resetPassword, updateProfile, updatePassword, getAllUserByAdmin, getSingleUserByAdmin, updateRoleByAdmin } from '../controllers/userController.js';
 import {userAuth} from '../middleware/userAuthMIddleware.js'
+import adminOnly from '../middleware/adminMddleware.js';
 const router = express.Router();
 
  router.post("/register" , createRegisterUser)
@@ -11,6 +12,13 @@ const router = express.Router();
  router.put("/update-password" ,userAuth, updatePassword)
  router.post("/forgot-password" , requestForgotPassword)
  router.post("/reset-password/:token" ,resetPassword )
+
+
+  // Admin routes
+    router.get("/admin/user/:userId" ,userAuth, adminOnly, getSingleUserByAdmin)
+    router.put("/admin/update-user/:userId" ,userAuth, adminOnly, updateRoleByAdmin)
+   router.get("/admin/users" ,userAuth, adminOnly, getAllUserByAdmin);
+
 
 
 export default router;

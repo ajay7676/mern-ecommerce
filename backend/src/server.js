@@ -17,15 +17,11 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-app.get("/", (req, res) => {
-  res.send("API is running...");
-});
 
 const PORT = process.env.PORT || 5000;
 
-app.use("/api" ,productRoutes );
+app.use("/api/v1" ,productRoutes );
 app.use("/api/v1" ,userRoutes);
-
 app.use(errorHandler);
 
 app.listen(PORT , () => {
