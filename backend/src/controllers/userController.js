@@ -297,6 +297,33 @@ const updateRoleByAdmin = async (req, res, next) => {
   }
 };
 
+// Delete User by Admin
+
+const deleteUserByAdmin = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+
+    if (req.user._id.toString() === userId) {
+      return next(new HandleError("Admin cannot delete own account", 400));
+    }
+
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return next(new HandleError("User not found", 404));
+    }
+      
+    return  res.status(200).json({
+       success: true,
+       message: "User Deleted Successfully",
+       
+
+    })
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   createRegisterUser,
   loginUser,
@@ -309,4 +336,5 @@ export {
   getAllUserByAdmin,
   getSingleUserByAdmin,
   updateRoleByAdmin,
+  deleteUserByAdmin,
 };
