@@ -25,6 +25,6 @@ router.delete("/admin/product/:productId", userAuth, adminOnly, deleteProduct);
 
  // Add Update Review
 router.put("/product/:productId/reviews",userAuth, createProductReview);
-router.delete("/admin/:userId/review",userAuth,adminOnly, deleteProductReview);
+router.delete("/admin/products/:productId/reviews/:reviewId",userAuth,adminOnly, deleteProductReview);
 
 export default router;

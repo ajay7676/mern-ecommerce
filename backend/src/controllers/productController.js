@@ -211,9 +211,14 @@ const createProductReview  = async(req,res,next) => {
 // Create Delete Review By Admin
 
 const deleteProductReview = async(req,res,next) => {
-     const {userId} = req.params;
-      console.log(userId)
-    console.log("Deleting Review API")
+     const {productId} = req.params;
+     const {reviewId} = req.params;
+      // console.log(productId)
+      // console.log(reviewId)
+       const product =  await ProductModel.findById(productId);
+      if(!product){
+          return next(new HandleError("Product not found" , 404));
+      }   
 
 }
 export {
