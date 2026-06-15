@@ -256,7 +256,7 @@ const deleteProductReview = async(req,res,next) => {
          const product = await ProductModel.findById(productId).select("reviews ratings numReviews");
 
          if(!product){
-           return next(new HandleError("Product not found" , 404))
+           return next(new HandleError("Product not found " , 404))
          }
 
         return res.status(200).json({
