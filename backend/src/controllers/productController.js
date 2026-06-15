@@ -113,7 +113,7 @@ const updateProduct = async (req, res, next) => {
       productId,
       req.body,
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
       },
     );
@@ -151,10 +151,77 @@ const deleteProduct = async (req, res, next) => {
   }
 };
 
+
+// Create Product Review
+
+const createProductReview  = async(req,res,next) => {
+    try {
+        const {rating ,comment} = req.body;
+        const {productId} = req.params;
+        if(!rating || !comment){
+            return next(new HandleError("Please provide rating and comment", 400));
+        }
+        const product = await ProductModel.findById(productId);
+
+         if(!product){
+             return next(new HandleError("Product not found" , 404))
+         }
+           if (!product.reviews) {
+              product.reviews = [];
+            }
+        const alreadyReviewed = product.reviews.find(
+            (review) => review.user.toString() === req.user._id.toString()
+          );
+
+          if (alreadyReviewed) {
+             // update old review
+              alreadyReviewed.rating = Number(rating);
+              alreadyReviewed.comment = comment;
+          }else{
+             // add new review
+            const review = {
+              user: req.user._id,
+              name: req.user.name,
+              rating: Number(rating),
+              comment,
+            };
+            product.reviews.push(review);
+
+          }
+            product.numReviews = product.reviews.length;
+            if(product.reviews.length === 0){
+                product.ratings = 0
+            }else{
+              product.ratings = product.reviews.reduce((total , currReview) => total + currReview.rating , 0) / product.reviews.length;
+            }
+           
+             await product.save();
+
+            return res.status(201).json({
+                success: true,
+                message: "Review added successfully"
+            }) 
+      
+    } catch (error) {
+        next(error)
+      
+    }
+}
+
+// Create Delete Review By Admin
+
+const deleteProductReview = async(req,res,next) => {
+     const {userId} = req.params;
+      console.log(userId)
+    console.log("Deleting Review API")
+
+}
 export {
   createProduct,
   getAllProducts,
   getSingleProduct,
   updateProduct,
   deleteProduct,
+  createProductReview,
+  deleteProductReview
 };

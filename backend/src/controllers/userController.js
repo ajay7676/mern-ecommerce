@@ -302,8 +302,6 @@ const updateRoleByAdmin = async (req, res, next) => {
 const deleteUserByAdmin = async (req, res, next) => {
   try {
     const { userId } = req.params;
-
-
     if (req.user._id.toString() === userId) {
       return next(new HandleError("Admin cannot delete own account", 400));
     }
