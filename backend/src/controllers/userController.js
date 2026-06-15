@@ -117,12 +117,13 @@ const updateProfile = async (req, res, next) => {
 };
 
 const requestForgotPassword = async (req, res, next) => {
+  let user;
   try {
     const { email } = req.body;
     if (!email) {
       return next(new HandleError("Please Enter valid email", 400));
     }
-    const user = await User.findOne({ email });
+    user = await User.findOne({ email });
     if (!user) {
       return next(new HandleError("User not found with this email", 404));
     }
@@ -141,9 +142,12 @@ const requestForgotPassword = async (req, res, next) => {
       message: `Password reset email sent successfully to email: ${email}`,
     });
   } catch (error) {
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
-    await user.save({ validateBeforeSave: false });
+    if (user) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+    }
+
     return next(new HandleError("Email could not be sent", 500));
   }
 };
@@ -310,13 +314,11 @@ const deleteUserByAdmin = async (req, res, next) => {
     if (!user) {
       return next(new HandleError("User not found", 404));
     }
-      
-    return  res.status(200).json({
-       success: true,
-       message: "User Deleted Successfully",
-       
 
-    })
+    return res.status(200).json({
+      success: true,
+      message: "User Deleted Successfully",
+    });
   } catch (error) {
     next(error);
   }

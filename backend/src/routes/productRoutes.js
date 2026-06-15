@@ -6,7 +6,8 @@ import {
   updateProduct,
   deleteProduct,
   createProductReview,
-  deleteProductReview
+  deleteProductReview,
+  getAllReviewOfProduct
 } from "../controllers/productController.js";
 
 import { userAuth } from "../middleware/userAuthMIddleware.js";
@@ -26,5 +27,6 @@ router.delete("/admin/product/:productId", userAuth, adminOnly, deleteProduct);
  // Add Update Review
 router.put("/product/:productId/reviews",userAuth, createProductReview);
 router.delete("/admin/products/:productId/reviews/:reviewId",userAuth,adminOnly, deleteProductReview);
+router.get("/admin/product/:productId/reviews/",userAuth,adminOnly, getAllReviewOfProduct);
 
 export default router;

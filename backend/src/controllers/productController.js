@@ -211,16 +211,56 @@ const createProductReview  = async(req,res,next) => {
 // Create Delete Review By Admin
 
 const deleteProductReview = async(req,res,next) => {
-     const {productId} = req.params;
+    try {
+
+       const {productId} = req.params;
      const {reviewId} = req.params;
-      // console.log(productId)
-      // console.log(reviewId)
+      console.log(productId)
+      console.log(reviewId)
        const product =  await ProductModel.findById(productId);
       if(!product){
           return next(new HandleError("Product not found" , 404));
-      }   
+      }
+      const  existingReview = product.reviews.find((review) => review._id.toString() === reviewId );
+      //  const reviews = product.reviews.map((review) => review.user)
+      if(!existingReview){
+          return next(new HandleError("Review was not found" , 404))
+      }
+
+      product.reviews = product.reviews.filter((review) => review._id.toString() !== reviewId);
+
+      product.numReviews = product.reviews.length;
+      product.ratings = product.reviews.length > 0 
+      ?  product.reviews.reduce((total, review) => total + review.rating, 0) / product.reviews.length 
+      : 0
+
+      await product.save();
+       return res.status(200).json({
+      success: true,
+      message: "Review deleted successfully",
+    });
+      
+    } catch (error) {
+
+       next(error)
+      
+    }
 
 }
+
+// Get All Reviews Of Product
+
+ const getAllReviewOfProduct = async(req,res,next) => {
+    try {
+        console.log("Get ALL Reviews")
+      
+    } catch (error) {
+
+      next(error)
+      
+    }
+
+ }
 export {
   createProduct,
   getAllProducts,
@@ -228,5 +268,6 @@ export {
   updateProduct,
   deleteProduct,
   createProductReview,
-  deleteProductReview
+  deleteProductReview,
+  getAllReviewOfProduct
 };
