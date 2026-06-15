@@ -252,7 +252,22 @@ const deleteProductReview = async(req,res,next) => {
 
  const getAllReviewOfProduct = async(req,res,next) => {
     try {
-        console.log("Get ALL Reviews")
+        const {productId} = req.params;
+         const product = await ProductModel.findById(productId).select("reviews ratings numReviews");
+
+         if(!product){
+           return next(new HandleError("Product not found" , 404))
+         }
+
+        return res.status(200).json({
+            success: true,
+            message: product.reviews.length
+              ? "Reviews fetched successfully"
+              : "No reviews yet on this product",
+            count: product.reviews.length,
+            averageRating: product.ratings,
+            reviews: product.reviews,
+        })
       
     } catch (error) {
 
