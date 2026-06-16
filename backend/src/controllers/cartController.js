@@ -1,6 +1,8 @@
 import Cart from "../model/cartModel.js";
 import ProductModel from "../model/productModel.js";
+import HandleError from "../utils/handleError.js";
 
+// Create an API to Add Item in cart
 const addToCart = async (req, res, next) => {
   try {
     const { productId, quantity = 1 } = req.body;
@@ -22,58 +24,91 @@ const addToCart = async (req, res, next) => {
     if (product.stock < quantity) {
       return next(new HandleError("Not enough stock available", 400));
     }
-     let cart = await Cart.findOne({user: req.user._id});
-     const itemPrice = product.price || product.discountPrice;
-     if(!cart){
-            cart = await Cart.create({
-                user: req.user._id,
-                items: [
-                    {
-                        product: product._id,
-                        quantity: Number(quantity),
-                        price: itemPrice,
-                    }
-                ]
-
-            })
-    }
-    else{
-        const existingItem =  cart.items.find((item) => item.product.toString() === productId);
-        if(existingItem){
-            const newQuantity = existingItem.quantity + Number(quantity);
-            if (product.stock < newQuantity) {
-              return next(new HandleError("Not enough stock available", 400));
-            }
-            else{
-                existingItem.quantity = newQuantity;
-            }
-        }
-        else{
-            cart.items.push({
+    let cart = await Cart.findOne({ user: req.user._id });
+    const itemPrice = product.price || product.discountPrice;
+    if (!cart) {
+      cart = await Cart.create({
+        user: req.user._id,
+        items: [
+          {
             product: product._id,
             quantity: Number(quantity),
             price: itemPrice,
-            });
+          },
+        ],
+      });
+    } else {
+      const existingItem = cart.items.find(
+        (item) => item.product.toString() === productId,
+      );
+      if (existingItem) {
+        const newQuantity = existingItem.quantity + Number(quantity);
+        if (product.stock < newQuantity) {
+          return next(new HandleError("Not enough stock available", 400));
+        } else {
+          existingItem.quantity = newQuantity;
         }
-        
+      } else {
+        cart.items.push({
+          product: product._id,
+          quantity: Number(quantity),
+          price: itemPrice,
+        });
+      }
     }
-    cart.totalItems = cart.items.reduce((total,item) => total + item.quantity, 0);
-        cart.totalAmount = cart.items.reduce(
-      (total, item) => total + item.quantity * item.price,
-      0
+    cart.totalItems = cart.items.reduce(
+      (total, item) => total + item.quantity,
+      0,
     );
-     await cart.save();
+    cart.totalAmount = cart.items.reduce(
+      (total, item) => total + item.quantity * item.price,
+      0,
+    );
+    await cart.save();
 
-     return res.status(201).json({
-        success: true,
-        nessage: "Product added to cart successfully",
-        cart
-     })
-
+    return res.status(201).json({
+      success: true,
+      nessage: "Product added to cart successfully",
+      cart,
+    });
   } catch (error) {
-
     next(error);
   }
 };
 
-export { addToCart };
+// Create an API to get All items in cart
+
+const getAllCartItems = async (req, res, next) => {
+  try {
+    const cart = await Cart.findOne({ user: req.user._id }).populate({
+      path: "items.product",
+      select: "name slug price discountPrice images stock category brand",
+    });
+    if (!cart) {
+      return next(new HandleError("Cart not found", 404));
+    }
+   
+    if (!cart) {
+      return res.status(200).json({
+        success: true,
+        message: "Cart is empty",
+        totalItems: 0,
+        totalAmount: 0,
+        items: [],
+      });
+    }
+     return res.status(200).json({
+      success: true,
+      message: cart.items.length
+        ? "Cart items fetched successfully"
+        : "Cart is empty",
+      totalItems: cart.totalItems,
+      totalAmount: cart.totalAmount,
+      items: cart.items,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { addToCart, getAllCartItems };
