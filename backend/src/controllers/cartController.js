@@ -178,7 +178,6 @@ const removeCartItem = async(req,res,next) => {
 
    try {
       const {productId} = req.params;
-   console.log("RemoveCartItem API is working");
     const cart = await Cart.findOne({user: req.user._id});
     if(!cart){
         return next(new HandleError("Cart not found" , 404));
@@ -209,5 +208,30 @@ const removeCartItem = async(req,res,next) => {
    }
 
 }
+// Remove all items from Cart
 
-export { addToCart, getAllCartItems, updateCartQuantity , removeCartItem };
+const clearCartItems = async(req,res,next) =>{
+   try {
+        const user = req.user._id.toString();
+        const cart = await Cart.findOne({user});
+        if(!cart){
+           return next(new HandleError("Product not found in cart" , 404))
+        }
+        cart.items = [];
+         cart.totalItems = 0;
+         cart.totalAmount = 0
+         await cart.save();
+         return res.status(200).json({
+          success: true,
+          message: "Cart items removed successfully",
+          cart
+         })
+    
+   } catch (error) {
+
+    next(error)
+    
+   }
+}
+
+export { addToCart, getAllCartItems, updateCartQuantity , removeCartItem ,clearCartItems};
