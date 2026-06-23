@@ -85,10 +85,6 @@ const getAllCartItems = async (req, res, next) => {
       select: "name slug price discountPrice images stock category brand",
     });
     if (!cart) {
-      return next(new HandleError("Cart not found", 404));
-    }
-   
-    if (!cart) {
       return res.status(200).json({
         success: true,
         message: "Cart is empty",
@@ -97,7 +93,7 @@ const getAllCartItems = async (req, res, next) => {
         items: [],
       });
     }
-     return res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: cart.items.length
         ? "Cart items fetched successfully"
@@ -111,4 +107,107 @@ const getAllCartItems = async (req, res, next) => {
   }
 };
 
-export { addToCart, getAllCartItems };
+// Create an API for Update Cart Quantity
+
+const updateCartQuantity = async (req, res, next) => {
+  try {
+    const { productId, quantity } = req.body;
+    if (!productId || quantity === undefined) {
+      return next(new HandleError("Product ID and quantity are required", 400));
+    }
+    const newQuantity = Number(quantity);
+
+    if (Number.isNaN(newQuantity) || newQuantity < 1) {
+      return next(new HandleError("Quantity must be at least 1", 400));
+    }
+    const product =
+      await ProductModel.findById(productId).select("stock isActive");
+    if (!product) {
+      return next(new HandleError("Product not found", 404));
+    }
+
+    if (!product.isActive) {
+      return next(new HandleError("Product is not available", 400));
+    }
+
+    if (product.stock < newQuantity) {
+      return next(new HandleError("Not enough stock available", 400));
+    }
+
+    const cart = await Cart.findOne({ user: req.user._id });
+    if (!cart) {
+      return next(new HandleError("Cart not found", 404));
+    }
+    const cartItem = cart.items.find(
+      (item) => item.product.toString() === productId,
+    );
+    if (!cartItem) {
+      return next(new HandleError("Product not found in cart", 404));
+    }
+    cartItem.quantity = newQuantity;
+    cart.totalItems = cart.items.reduce(
+      (total, item) => total + item.quantity,
+      0,
+    );
+
+    cart.totalAmount = cart.items.reduce(
+      (total, item) => total + item.quantity * item.price,
+      0,
+    );
+
+    await cart.save();
+
+    await cart.populate({
+      path: "items.product",
+      select: "name slug price discountPrice images stock category brand",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Cart quantity updated successfully",
+      cart,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Remove Item from a cart
+
+const removeCartItem = async(req,res,next) => {
+
+   try {
+      const {productId} = req.params;
+   console.log("RemoveCartItem API is working");
+    const cart = await Cart.findOne({user: req.user._id});
+    if(!cart){
+        return next(new HandleError("Cart not found" , 404));
+    }
+
+    const itemExists = cart.items.some((item) => item.product.toString() === productId);
+    if(!itemExists){
+        return next(new HandleError("Product not found in cart", 404));
+    }
+    cart.items = cart.items.filter((item) => item.product.toString() !== productId);
+    cart.totalItems = cart.items.reduce((total,item) => total + Number(item.quantity), 0);
+    cart.totalAmount = cart.items.reduce((total, item) => total + Number( item.price) * Number(item.quantity), 0);
+    await cart.save();
+     await cart.populate({
+      path: "items.product",
+      select: "name slug price discountPrice images stock category brand",
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Cart item removed successfully",
+      cart,
+    });
+    
+   } catch (error) {
+
+     next(error)
+    
+   }
+
+}
+
+export { addToCart, getAllCartItems, updateCartQuantity , removeCartItem };
