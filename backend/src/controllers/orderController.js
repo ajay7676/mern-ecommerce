@@ -88,80 +88,153 @@ const createOrderFromCart = async (req, res, next) => {
       message: "Order created successfully",
       order,
     });
-
   } catch (error) {
     next(error);
   }
 };
 
-const getMyAllOrders = async(req,res,next) =>{
-    try {
-        const orders = await Order.find({user: req.user._id})
-        .sort({ createdAt: -1 }).lean();
-        return res.status(200).json({
-               success: true,
-               message: orders.length
-               ? "Orders fetched successfully"
-               : "No orders found",
-                count: orders.length,
-               orders: orders,
-        })        
-    } catch (error) {
-        next(error)
-    }
-}
+const getMyAllOrders = async (req, res, next) => {
+  try {
+    const orders = await Order.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.status(200).json({
+      success: true,
+      message: orders.length
+        ? "Orders fetched successfully"
+        : "No orders found",
+      count: orders.length,
+      orders: orders,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // Create an API for get single own order
 
-const getSingleOrder = async(req,res,next) => {
-    try {
-         const { orderId } = req.params;
-          const order = await Order.findById(orderId).populate({
-            path: "user",
-            select: "name email",
-          }).lean();
-           console.log(order)
-        if (!order) {
-            return next(new HandleError("Order not found", 404));
-        }
-        if(order.user._id.toString() !== req.user._id.toString()){
-             return next(new HandleError("You are not allowed to view this order", 403));
-        }
-        return res.status(200).json({
-            success: true,
-            message: "Order fetched successfully",
-            order,
+const getSingleOrder = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId)
+      .populate({
+        path: "user",
+        select: "name email",
+      })
+      .lean();
+    console.log(order);
+    if (!order) {
+      return next(new HandleError("Order not found", 404));
+    }
+    if (order.user._id.toString() !== req.user._id.toString()) {
+      return next(
+        new HandleError("You are not allowed to view this order", 403),
+      );
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Order fetched successfully",
+      order,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/// Created an API for Get All Orders By Admin
+
+const getAllOrdersByAdmin = async (req, res, next) => {
+  try {
+    const orders = await Order.find()
+      .populate({
+        path: "user",
+        select: "name email",
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const totalRevenue = orders.reduce(
+      (total, order) => total + order.totalPrice,
+      0,
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: orders.length
+        ? "Orders fetched successfully"
+        : "No orders found",
+      count: orders.length,
+      totalRevenue,
+      orders,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//
+
+const updateOrderStatusByAdmin = async (req, res, next) => {
+  try {
+    const { orderId } = req.params;
+    const { orderStatus, shippingAddress } = req.body;
+
+    const allowedStatus = [
+      "Pending",
+      "Processing",
+      "Shipped",
+      "Delivered",
+      "Cancelled",
+    ];
+
+    if (!orderStatus) {
+      return next(new HandleError("Order status is required", 400));
+    }
+    if (!allowedStatus.includes(orderStatus)) {
+      return next(new HandleError("Invalid order status", 400));
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return next(new HandleError("Order not found", 404));
+    }
+    // If order is cancelled first time, restore stock
+    if (orderStatus === "Cancelled" && order.orderStatus !== "Cancelled") {
+      for (const item of order.orderItems) {
+        const productId = item.product._id || item.product;
+
+        await Product.findByIdAndUpdate(productId, {
+          $inc: {
+            stock: item.quantity,
+            sold: -item.quantity,
+          },
         });
-        
-    } catch (error) {
-        next(error)
-        
+      }
+
+      order.isDelivered = false;
+      order.deliveredAt = undefined;
     }
-}
-
-const getAllOrdersByAdmin = async(req,res,next)  => {
-    try {
-        const orders = await Order.find().populate({
-            path: "user",
-            select: "name email"
-        }).sort({createdAt: -1}).lean();
-
-        const  totalRevenue = orders.reduce((total, order) =>
-             total + order.totalPrice, 0);
-
-        return res.status(200).json({
-            success: true,
-            message: orders.length
-            ? "Orders fetched successfully"
-            : "No orders found",
-            count: orders.length,
-            totalRevenue,
-            orders,
-        })
-        
-    } catch (error) {
-        next(error)
-        
+    if (orderStatus === "Delivered") {
+      order.isDelivered = true;
+      order.deliveredAt = Date.now();
     }
-}
-export { createOrderFromCart,getMyAllOrders,getSingleOrder ,getAllOrdersByAdmin};
+    order.orderStatus = orderStatus;
+    order.shippingAddress.city = shippingAddress.city
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Order status updated successfully",
+      order,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+export {
+  createOrderFromCart,
+  getMyAllOrders,
+  getSingleOrder,
+  getAllOrdersByAdmin,
+  updateOrderStatusByAdmin,
+};
