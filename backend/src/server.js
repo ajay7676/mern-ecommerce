@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 import productRoutes from './routes/productRoutes.js'
 import userRoutes from './routes/userRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
+import orderRoutes from './routes/orderRoutes.js'
 import connectDB from "./config/db.js";
 import errorHandler from "./middleware/errorMiddleware.js";
 import cookieParser from "cookie-parser";
@@ -24,6 +25,7 @@ const PORT = process.env.PORT || 5000;
 app.use("/api/v1" ,productRoutes );
 app.use("/api/v1" ,userRoutes);
 app.use("/api/v1" ,cartRoutes);
+app.use("/api/v1" ,orderRoutes);
 
 app.use(errorHandler);
 
