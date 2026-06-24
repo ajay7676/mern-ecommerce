@@ -94,4 +94,49 @@ const createOrderFromCart = async (req, res, next) => {
   }
 };
 
-export { createOrderFromCart };
+const getMyAllOrders = async(req,res,next) =>{
+    try {
+        const orders = await Order.find({user: req.user._id})
+        .sort({ createdAt: -1 }).lean();
+        return res.status(200).json({
+               success: true,
+               message: orders.length
+               ? "Orders fetched successfully"
+               : "No orders found",
+                count: orders.length,
+               orders: orders,
+        })        
+    } catch (error) {
+        next(error)
+    }
+}
+
+// Create an API for get single own order
+
+const getSingleOrder = async(req,res,next) => {
+    try {
+         const { orderId } = req.params;
+          const order = await Order.findById(orderId).populate({
+            path: "user",
+            select: "name email",
+          }).lean();
+           console.log(order)
+        if (!order) {
+            return next(new HandleError("Order not found", 404));
+        }
+        if(order.user._id.toString() !== req.user._id.toString()){
+             return next(new HandleError("You are not allowed to view this order", 403));
+        }
+        return res.status(200).json({
+            success: true,
+            message: "Order fetched successfully",
+            order,
+        });
+        
+    } catch (error) {
+        
+    }
+}
+
+
+export { createOrderFromCart,getMyAllOrders,getSingleOrder };
