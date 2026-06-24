@@ -134,9 +134,34 @@ const getSingleOrder = async(req,res,next) => {
         });
         
     } catch (error) {
+        next(error)
         
     }
 }
 
+const getAllOrdersByAdmin = async(req,res,next)  => {
+    try {
+        const orders = await Order.find().populate({
+            path: "user",
+            select: "name email"
+        }).sort({createdAt: -1}).lean();
 
-export { createOrderFromCart,getMyAllOrders,getSingleOrder };
+        const  totalRevenue = orders.reduce((total, order) =>
+             total + order.totalPrice, 0);
+
+        return res.status(200).json({
+            success: true,
+            message: orders.length
+            ? "Orders fetched successfully"
+            : "No orders found",
+            count: orders.length,
+            totalRevenue,
+            orders,
+        })
+        
+    } catch (error) {
+        next(error)
+        
+    }
+}
+export { createOrderFromCart,getMyAllOrders,getSingleOrder ,getAllOrdersByAdmin};
