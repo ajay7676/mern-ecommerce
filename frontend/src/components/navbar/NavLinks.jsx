@@ -10,13 +10,13 @@ const NavLinks = () => {
             to={item.path}
             className={({ isActive }) =>
               `relative
-              pb-6
+              pb-2
               text-sm
               font-semibold
               transition-all
               ${
                 isActive
-                  ? "text-red-500 after:absolute after:left-0 after:-bottom-1 after:w-full after:h-0.75 after:bg-red-500"
+                  ? "text-purple-500 after:absolute after:left-0 after:-bottom-1 after:w-full after:h-0.75 after:bg-purple-500"
                   : "text-slate-700 hover:text-red-500"
               }`
             }
