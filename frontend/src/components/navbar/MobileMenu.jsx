@@ -1,17 +1,6 @@
 import { FiX } from "react-icons/fi";
-
-const navLinks = [
-  "New In",
-  "Women",
-  "Men",
-  "Kids",
-  "Footwear",
-  "Bags & Accessories",
-  "Beauty",
-  "Home & Living",
-  "Deals",
-];
-
+import { NavLink } from "react-router-dom";
+import {navLinks} from '../../constants/navigation'
 const MobileMenu = ({ isOpen, onClose }) => {
   return (
     <div
@@ -28,14 +17,28 @@ const MobileMenu = ({ isOpen, onClose }) => {
         </div>
 
         <div className="flex flex-col gap-4">
-          {navLinks.map((link) => (
-            <a
-              key={link}
-              href="#"
-              className="text-sm font-semibold text-slate-700 hover:text-red-500"
-            >
-              {link}
-            </a>
+          {navLinks.map((item) => (
+            <NavLink
+          key={item.path}
+          to={item.path}
+          className={({ isActive }) =>
+            `
+              relative
+              text-sm
+              font-semibold
+              transition-colors
+              duration-300
+
+              ${
+                isActive
+                  ? "text-blue-500"
+                  : "text-slate-700 hover:text-red-500"
+              }
+            `
+          }
+        >
+          {item.name}
+        </NavLink>
           ))}
         </div>
       </div>

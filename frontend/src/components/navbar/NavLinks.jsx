@@ -1,29 +1,28 @@
+import { NavLink } from "react-router-dom";
+import { navLinks } from "../../constants/navigation";
 const NavLinks = () => {
-  const navLinks = [
-    "New In",
-    "Women",
-    "Men",
-    "Kids",
-    "Footwear",
-    "Bags & Accessories",
-    "Beauty",
-    "Home & Living",
-    "Deals",
-  ];
-
   return (
     <>
-      <nav className="hidden lg:flex flex-nowrap items-center gap-7 text-sm font-semibold text-slate-800">
-        {navLinks.map((link) => (
-          <a
-            key={link}
-            href="#"
-            className={`hover:text-red-500 transition ${
-              link === "Deals" ? "text-red-500" : ""
-            }`}
+      <nav className="hidden lg:flex items-center gap-7">
+        {navLinks.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              `relative
+              pb-6
+              text-sm
+              font-semibold
+              transition-all
+              ${
+                isActive
+                  ? "text-red-500 after:absolute after:left-0 after:-bottom-1 after:w-full after:h-0.75 after:bg-red-500"
+                  : "text-slate-700 hover:text-red-500"
+              }`
+            }
           >
-            {link}
-          </a>
+            {item.name}
+          </NavLink>
         ))}
       </nav>
     </>
