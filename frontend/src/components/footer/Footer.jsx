@@ -60,7 +60,7 @@ const footerSections = [
 const Footer = () => {
   return (
     <footer className="bg-white border-t border-slate-200 mt-10">
-      <div className="max-w-7xl mx-auto px-4 py-10">
+      <div className="max-w-8xl mx-auto px-4 py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8">
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">

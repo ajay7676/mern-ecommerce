@@ -13,7 +13,7 @@ const NavLinks = () => {
 
   return (
     <>
-      <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-slate-800">
+      <nav className="hidden lg:flex flex-nowrap items-center gap-7 text-sm font-semibold text-slate-800">
         {navLinks.map((link) => (
           <a
             key={link}
