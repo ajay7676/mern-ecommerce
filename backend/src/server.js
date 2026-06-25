@@ -6,6 +6,7 @@ process.on("uncaughtException", (err) => {
 
 import express from "express";
 import dotenv from "dotenv";
+import cors from 'cors'
 import productRoutes from './routes/productRoutes.js'
 import userRoutes from './routes/userRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
@@ -19,8 +20,13 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+}));
 
 const PORT = process.env.PORT || 5000;
+
 
 app.use("/api/v1" ,productRoutes );
 app.use("/api/v1" ,userRoutes);

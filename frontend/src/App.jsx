@@ -3,8 +3,22 @@ import './App.css'
 import { useProducts } from './hooks/useProducts';
 
 function App() {
-  const { data } = useProducts();
-   console.log(data)
+ const {
+  data,
+  isPending,
+  isSuccess,
+  isError,
+  error,
+} = useProducts();
+
+console.log({
+  data,
+  isPending,
+  isSuccess,
+  isError,
+  error,
+});
+ console.log(data?.products)
 
   return (
     <>
