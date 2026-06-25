@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { FiMenu, FiBox } from "react-icons/fi";
 import NavLinks from "./NavLinks";
 import SearchBar from "./SearchBar";
@@ -7,6 +7,19 @@ import MobileMenu from "./MobileMenu";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+  
 
   return (
     <>
@@ -21,7 +34,7 @@ const Navbar = () => {
           </div>
         </div>
       </div> */}
-      <header className="bg-white sticky top-0 z-40 shadow-sm">
+      <header className={`bg-white sticky top-0 z-40 ${isScrolled ? "shadow-md": "shadow-sm"}`}>
         <div className="max-w-8xl mx-auto px-4 py-4 flex items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <button
