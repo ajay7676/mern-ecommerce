@@ -1,7 +1,8 @@
 
 const ProductDetails = () => {
   return (
-    <div>ProductDetails</div>
+      <div className="min-h-screen">ProductDetails</div>
+
   )
 }
 

@@ -1,8 +1,13 @@
+import { Navigate, Outlet } from "react-router-dom";
 
 const ProtectedRoute = () => {
-  return (
-    <div>ProtectedRoute</div>
-  )
-}
+  const isAuthenticated = false; // later get from Redux/auth API
 
-export default ProtectedRoute
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Outlet />;
+};
+
+export default ProtectedRoute;

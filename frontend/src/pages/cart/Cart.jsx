@@ -1,7 +1,7 @@
 
 const Cart = () => {
   return (
-    <div>Cart</div>
+    <div className="min-h-screen">Cart</div>
   )
 }
 

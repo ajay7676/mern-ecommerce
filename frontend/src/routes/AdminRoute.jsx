@@ -1,8 +1,18 @@
+import { Navigate, Outlet } from "react-router-dom";
 
 const AdminRoute = () => {
-  return (
-    <div>AdminRoute</div>
-  )
-}
+  const isAuthenticated = false;
+  const user = null;
 
-export default AdminRoute
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
+};
+
+export default AdminRoute;

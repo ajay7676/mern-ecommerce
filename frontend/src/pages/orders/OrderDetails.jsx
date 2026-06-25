@@ -1,7 +1,7 @@
 
 const OrderDetails = () => {
   return (
-    <div>OrderDetails</div>
+      <div className="min-h-screen">Order Details</div>
   )
 }
 
