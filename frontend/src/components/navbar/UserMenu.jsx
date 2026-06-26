@@ -1,26 +1,114 @@
-import { FiUser, FiHeart, FiShoppingBag } from "react-icons/fi";
+import { useEffect, useRef, useState } from "react";
+import { FiHeart, FiShoppingBag, FiUser } from "react-icons/fi";
+import ProfileDropdown from "./ProfileDropdown";
 
 const UserMenu = () => {
+  const [showProfile, setShowProfile] = useState(false);
+
+  const profileRef = useRef(null);
+  const closeTimerRef = useRef(null);
+
+  const isAuthenticated = false;
+
+  const user = {
+    name: "Ajay Chauhan",
+    email: "ajay@example.com",
+  };
+
+  const openProfile = () => {
+    clearTimeout(closeTimerRef.current);
+    setShowProfile(true);
+  };
+
+  const closeProfileWithDelay = () => {
+    closeTimerRef.current = setTimeout(() => {
+      setShowProfile(false);
+    }, 150);
+  };
+
+  const closeProfile = () => {
+    clearTimeout(closeTimerRef.current);
+    setShowProfile(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target)
+      ) {
+        closeProfile();
+      }
+    };
+
+    const handleEscKey = (event) => {
+      if (event.key === "Escape") {
+        closeProfile();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscKey);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscKey);
+      clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
   return (
     <div className="hidden md:flex items-center gap-6">
-      <div className="flex flex-col items-center text-xs font-semibold text-slate-800 cursor-pointer">
-        <FiUser className="text-2xl" />
-        <span>Sign In</span>
+      <div
+        ref={profileRef}
+        className="relative"
+        onMouseEnter={openProfile}
+        onMouseLeave={closeProfileWithDelay}
+      >
+        <button
+          type="button"
+          className="flex flex-col items-center cursor-pointer text-xs font-semibold text-slate-800 hover:text-red-500 transition"
+          aria-haspopup="menu"
+          aria-expanded={showProfile}
+        >
+          <FiUser className="text-2xl" />
+          <span>{isAuthenticated ? "Profile" : "Sign In"}</span>
+        </button>
+
+        <div
+          className={`absolute -right-15 top-full mt-3 z-50 transition-all duration-200 ease-out ${
+            showProfile
+              ? "opacity-100 visible translate-y-0 scale-100"
+              : "opacity-0 invisible -translate-y-2 scale-95"
+          }`}
+        >
+          <ProfileDropdown
+            isAuthenticated={isAuthenticated}
+            user={user}
+            onClose={closeProfile}
+          />
+        </div>
       </div>
 
-      <div className="flex flex-col items-center text-xs font-semibold text-slate-800 cursor-pointer">
+      <button
+        type="button"
+        className="flex flex-col items-center text-xs font-semibold text-slate-800 hover:text-red-500 transition"
+      >
         <FiHeart className="text-2xl" />
         <span>Wishlist</span>
-      </div>
+      </button>
 
-      <div className="relative flex flex-col items-center text-xs font-semibold text-slate-800 cursor-pointer">
+      <button
+        type="button"
+        className="relative flex flex-col items-center text-xs font-semibold text-slate-800 hover:text-red-500 transition"
+      >
         <FiShoppingBag className="text-2xl" />
         <span>Bag</span>
 
         <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
           2
         </span>
-      </div>
+      </button>
     </div>
   );
 };

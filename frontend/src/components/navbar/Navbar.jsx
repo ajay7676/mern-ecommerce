@@ -41,7 +41,7 @@ const Navbar = () => {
               className="lg:hidden"
               onClick={() => setIsOpen(true)}
             >
-              <FiMenu className="text-2xl" />
+              <FiMenu className="text-2xl cursor-pointer" />
             </button>
 
             <div className="flex items-center flex-nowrap gap-2">
