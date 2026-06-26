@@ -6,3 +6,13 @@ export const getProducts = async() => {
       return response.data;
 
 }
+
+export const searchProducts = async(keyword) => {
+      const response = await api.get("/products" , {
+            params: {
+                  keyword
+            }
+      })
+      return response.data;
+
+}

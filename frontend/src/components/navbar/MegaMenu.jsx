@@ -1,6 +1,6 @@
 const MegaMenu = ({ menu }) => {
   return (
-    <div className="absolute left-0 max-w-3xl mx-auto top-full w-full bg-white shadow-xl border-t border-slate-100 z-50">
+    <div className=" w-full bg-white shadow-xl border-t border-slate-100 z-50">
       <div className="px-6 py-6 grid grid-cols-3 gap-x-10 gap-y-8">
         {menu.map((column) => (
           <div key={column.title}>

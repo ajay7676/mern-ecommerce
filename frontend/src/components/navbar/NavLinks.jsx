@@ -34,7 +34,7 @@ const NavLinks = () => {
             {item.name}
           </NavLink>
           <div
-            className={`fixed w-3xl mx-auto left-80 top-24 transition-all duration-300 ease-out ${
+            className={`fixed w-3xl mx-auto left-1/6 top-24 transition-all duration-300 ease-out ${
               activeMenu === item.name
                 ? "opacity-100 visible translate-y-0"
                 : "opacity-0 invisible -translate-y-3"
