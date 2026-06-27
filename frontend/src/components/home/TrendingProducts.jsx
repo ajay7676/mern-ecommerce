@@ -1,6 +1,6 @@
 import ProductCard from "./ProductCard";
 import { useProducts } from "../../hooks/queries/useProducts";
-import ProductCardSkeleton from "../product/ProductCardSkeleton";
+import ProductCardSkeleton from "../skeleton/ProductCardSkeleton";
 
 const TrendingProducts = () => {
   const { data, isPending, isError, error } = useProducts();
@@ -22,6 +22,22 @@ const TrendingProducts = () => {
       </section>
     );
   }
+  if (isError) {
+    return (
+      <section className="mt-8">
+        <p className="text-red-500 text-sm">
+          {error?.message || "Failed to load products"}
+        </p>
+      </section>
+    );
+  }
+  if (!products.length) {
+    return (
+      <section className="mt-8">
+        <p className="text-slate-500 text-sm">No products found.</p>
+      </section>
+    );
+  }
   return (
     <section className="mt-8">
       <div className="flex items-center justify-between mb-4">
@@ -35,7 +51,7 @@ const TrendingProducts = () => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        {products.map((product) => (
+        {products.slice(0, 6).map((product) => (
           <ProductCard key={product._id} product={product} />
         ))}
       </div>
