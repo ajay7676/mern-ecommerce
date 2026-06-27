@@ -25,7 +25,7 @@ const SearchBar = () => {
     setSearchTerm("");
   };
   const showDropdown = isFocused && searchTerm.trim().length > 1;
-   console.log(showDropdown)
+  //  console.log(showDropdown)
 
   return (
     <div className="relative hidden md:flex items-center w-[320px] xl:w-105">
