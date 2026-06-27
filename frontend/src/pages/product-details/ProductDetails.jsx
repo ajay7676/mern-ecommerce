@@ -23,7 +23,12 @@ const ProductDetails = () => {
   return (
     <div className="bg-white">
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <Breadcrumbs product={product} />
+        <Breadcrumbs 
+           category={product.category}
+           brand={product.brand}
+           name={product.name}
+        
+        />
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr_0.8fr] gap-8 mt-5">
           <ProductGallery  product={product}/>
           <ProductInfo  product={product} />

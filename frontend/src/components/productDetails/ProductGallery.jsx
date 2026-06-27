@@ -1,27 +1,24 @@
+import { useState } from "react";
 import { FiChevronLeft, FiChevronRight, FiHeart, FiPlay } from "react-icons/fi";
-
-const images = [
-  "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800",
-  "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=800",
-  "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=800",
-  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800",
-];
  
-const ProductGallery = () => {
+const ProductGallery = ({product}) => {
+  const images = product?.images || [];
+  const [selectedImage, setSelectedImage] = useState(0);
   return (
     <div className="flex gap-4">
       <div className="hidden md:flex flex-col gap-4 w-24">
         {images.map((img, index) => (
           <button
-            key={img}
+            key={img.public_id}
             className={`h-28 rounded-xl overflow-hidden border
-                ${index === 0 ? "border-indigo-500" : "border-slate-200"}
+                ${index === selectedImage ? "border-indigo-500" : "border-slate-200"}
                 
                 `}
+            onClick={() => setSelectedImage(index)}
           >
             <img
-              src={img}
-              alt="Product"
+              src={img.url}
+              alt={product?.name}
               className="w-full h-full object-cover"
             />
           </button>
@@ -40,16 +37,22 @@ const ProductGallery = () => {
         </button>
 
         <img
-          src={images[0]}
-          alt="Floral dress"
+          src={images[selectedImage]?.url}
+           alt={product.name}
           className="w-full h-full object-cover"
         />
 
-        <button className="absolute left-5 top-1/2 -translate-y-1/2 btn btn-circle bg-white border-none shadow">
+        <button className="absolute left-5 top-1/2 -translate-y-1/2
+         btn btn-circle bg-white border-none shadow"
+          onClick={() =>setSelectedImage((prev) => prev + 1) }
+         >
           <FiChevronLeft />
         </button>
 
-        <button className="absolute right-5 top-1/2 -translate-y-1/2 btn btn-circle bg-white border-none shadow">
+        <button className="absolute right-5 top-1/2 -translate-y-1/2
+         btn btn-circle bg-white border-none shadow"
+           onClick={() =>setSelectedImage((prev) => prev - 1) } 
+         >
           <FiChevronRight />
         </button>
       </div>
