@@ -65,7 +65,7 @@ const Register = () => {
           disabled={registerUserMutation.isPending}
           className="btn w-full bg-blue-600 hover:bg-blue-700 text-white border-none"
         >
-          {registerUserMutation.isPending ? "Creating account..." : "Sign Up"}Sign Up
+          {registerUserMutation.isPending ? "Creating account..." : "Sign Up"}
         </button>
       </form>
       <p className="text-center text-sm text-slate-500 mt-7">
