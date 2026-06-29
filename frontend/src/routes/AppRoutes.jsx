@@ -1,16 +1,16 @@
 import { createBrowserRouter } from "react-router"
 import MainLayout from "../layouts/MainLayout"
-import Home from "../pages/home/Home"
-import ProductList from "../pages/products/ProductList"
-import ProductDetails from "../pages/product-details/ProductDetails"
-import Login from "../pages/auth/Login"
-import Register from "../pages/auth/Register"
-import NotFound from "../pages/NotFound"
+import Home from "../pages/client/home/Home"
+import ProductList from "../pages/client/products/ProductList"
+import ProductDetails from "../pages/client/product-details/ProductDetails"
+import Login from "../pages/client/auth/Login"
+import Register from "../pages/client/auth/Register"
+import NotFound from "../pages/client/NotFound"
 import ProtectedRoute from './ProtectedRoute'
-import Cart from "../pages/cart/Cart"
-import Profile from "../pages/profile/Profile"
-import Orders from "../pages/orders/Orders"
-import OrderDetails from "../pages/orders/OrderDetails"
+import Cart from "../pages/client/cart/Cart"
+import Profile from "../pages/client/profile/Profile"
+import Orders from "../pages/client/orders/Orders"
+import OrderDetails from "../pages/client/orders/OrderDetails"
 import AdminRoute from './AdminRoute'
 
 

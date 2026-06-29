@@ -1,8 +1,8 @@
-import Breadcrumbs from "../../components/productDetails/Breadcrumbs";
-import ProductGallery from "../../components/productDetails/ProductGallery";
-import ProductInfo from "../../components/productDetails/ProductInfo";
-import DeliveryInfo from "../../components/productDetails/DeliveryInfo";
-import useProduct from '../../hooks/queries/useProduct'
+import Breadcrumbs from "../../../components/productDetails/Breadcrumbs";
+import ProductGallery from "../../../components/productDetails/ProductGallery";
+import ProductInfo from "../../../components/productDetails/ProductInfo";
+import DeliveryInfo from "../../../components/productDetails/DeliveryInfo";
+import useProduct from '../../../hooks/queries/useProduct'
 import { useParams } from "react-router";
 
 const ProductDetails = () => {

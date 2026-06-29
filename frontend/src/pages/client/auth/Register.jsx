@@ -3,12 +3,12 @@ import { FiMail, FiUser } from "react-icons/fi";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import AuthLayout from "../../components/auth/AuthLayout";
-import AuthHeader from "../../components/auth/AuthHeader";
-import FormInput from "../../components/common/FormInput";
-import PasswordInput from "../../components/common/PasswordInput";
-import useRegister from "../../hooks/mutations/useRegister";
-import { registerSchema } from "../../validation/authSchema";
+import AuthLayout from "../../../components/auth/AuthLayout";
+import AuthHeader from "../../../components/auth/AuthHeader";
+import FormInput from "../../../components/common/FormInput";
+import PasswordInput from "../../../components/common/PasswordInput";
+import useRegister from "../../../hooks/mutations/useRegister";
+import { registerSchema } from "../../../validation/authSchema";
 
 const Register = () => {
   const registerUserMutation = useRegister();
