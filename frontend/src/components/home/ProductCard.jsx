@@ -1,8 +1,12 @@
 import { FiHeart } from "react-icons/fi";
 import { FaStar } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { calculateDiscount } from "../../utils/calculateDiscount";
 
 const ProductCard = ({ product }) => {
+  const finalPrice = product?.discountPrice || product?.price;
+  const discountPrice = calculateDiscount(product.price, product.discountPrice);
+  
   return (
     <Link to={`/products/${product._id}`} className="group relative bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition">
       {product.badge && (
@@ -32,20 +36,20 @@ const ProductCard = ({ product }) => {
 
         <div className="flex items-center gap-2 mt-2">
           <span className="text-sm font-bold text-slate-900">
-            ₹{product.price}
+            ₹{finalPrice}
           </span>
           <span className="text-xs text-slate-400 line-through">
-            ₹{product.originalPrice}
+            ₹{product.price}
           </span>
           <span className="text-xs text-red-500 font-semibold">
-            {product.discount}% OFF
+            {discountPrice}% OFF
           </span>
         </div>
 
         <div className="flex items-center gap-1 mt-2 text-xs text-slate-600">
           <FaStar className="text-orange-400" />
-          <span>{product.rating}</span>
-          <span>({product.reviews})</span>
+          <span>{product.ratings}</span>
+          <span>({product.numReviews})</span>
         </div>
       </div>
     </Link>
