@@ -1,97 +1,85 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { FiEye, FiEyeOff, FiLock, FiMail } from "react-icons/fi";
+import { FiMail } from "react-icons/fi";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import AuthLayout from "../../../components/auth/AuthLayout";
+import AuthHeader from "../../../components/auth/AuthHeader";
+import { loginSchema } from "../../../validation/authSchema";
+import useLogin from "../../../hooks/mutations/useLogin";
+import FormInput from "../../../components/common/FormInput";
+import PasswordInput from "../../../components/common/PasswordInput";
 
 const Login = () => {
-  const [showPassword, setShowPassword] = useState(false);
+
+const loginMutation = useLogin();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = (formData) => {
+    loginMutation.mutate(formData);
+  };
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-100 to-cyan-100 px-4 py-10">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 md:p-8">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-8 h-8 rounded bg-blue-600 text-white flex items-center justify-center font-bold">
-              V
-            </div>
-            <h2 className="text-2xl font-bold text-blue-600">Valid India</h2>
-          </div>
+     <AuthLayout>
+      <AuthHeader
+        title="Welcome back"
+        subtitle="Login to continue shopping"
+      />
+       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <FormInput
+          label="Email address"
+          icon={FiMail}
+          type="email"
+          placeholder="Enter your email"
+          disabled={loginMutation.isPending}
+          error={errors.email?.message}
+          {...register("email")}
+        />
 
-          <h1 className="text-2xl font-bold text-slate-700 mt-7">
-            Welcome back
-          </h1>
+        <PasswordInput
+          placeholder="Enter your password"
+          disabled={loginMutation.isPending}
+          error={errors.password?.message}
+          {...register("password")}
+        />
 
-          <p className="text-sm text-slate-500 mt-2">
-            Login to continue shopping
-          </p>
+        <div className="flex items-center justify-between text-sm">
+          <label className="flex items-center gap-2 text-slate-500">
+            <input type="checkbox" className="checkbox checkbox-sm" />
+            Remember me
+          </label>
+
+          <Link to="/forgot-password" className="text-blue-600 font-medium">
+            Forgot your password?
+          </Link>
         </div>
 
-        <form className="space-y-4">
-          <label className="form-control">
-            <span className="label-text font-semibold text-slate-700">
-              Email address
-            </span>
+        <button
+          type="submit"
+          disabled={loginMutation.isPending}
+          className="btn w-full bg-blue-600 hover:bg-blue-700 text-white border-none"
+        >
+          {loginMutation.isPending ? "Logging in..." : "Log In"}
+        </button>
+      </form>
 
-            <div className="input input-bordered flex items-center gap-3 bg-white w-full mt-2 mb-2">
-              <FiMail className="text-slate-500" />
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="grow"
-              />
-            </div>
-          </label>
-
-          <label className="form-control">
-            <span className="label-text font-semibold text-slate-700">
-              Password
-            </span>
-
-            <div className="input input-bordered flex items-center gap-3 bg-white w-full mt-2 mb-2">
-              <FiLock className="text-slate-500" />
-
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
-                className="grow"
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="h-full px-4 border-l border-slate-200"
-              >
-                {showPassword ? <FiEyeOff /> : <FiEye />}
-              </button>
-            </div>
-          </label>
-
-          <div className="flex items-center justify-between text-sm mt-3">
-            <label className="flex items-center gap-2 text-slate-500">
-              <input type="checkbox" className="checkbox checkbox-sm" />
-              Remember me
-            </label>
-
-            <Link to="/forgot-password" className="text-blue-600 font-medium">
-              Forgot your password?
-            </Link>
-          </div>
-
-          <button
-            type="submit"
-            className="btn w-full bg-blue-600 hover:bg-blue-700 text-white border-none"
-          >
-            Log In
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-slate-500 mt-7">
-          Don’t have an account?{" "}
-          <Link to="/register" className="font-bold text-blue-600">
-            Register
-          </Link>
-        </p>
-      </div>
-    </section>
+      <p className="text-center text-sm text-slate-500 mt-7">
+        Don’t have an account?{" "}
+        <Link to="/register" className="font-bold text-blue-600">
+          Register
+        </Link>
+      </p>
+      </AuthLayout>
   );
 };
 
