@@ -12,7 +12,7 @@ import Profile from "../pages/client/profile/Profile"
 import Orders from "../pages/client/orders/Orders"
 import OrderDetails from "../pages/client/orders/OrderDetails"
 import AdminRoute from './AdminRoute'
-
+import PublicRoute from "./PublicRoute";
 
 import { RouterProvider } from "react-router-dom"
 
@@ -33,14 +33,19 @@ const router = createBrowserRouter([
         element: <ProductDetails />,
       },
       {
-        path: "login",
-        element: <Login />,
+        element: <PublicRoute />,
+        children: [
+          {
+            path: "login",
+            element: <Login />,
+          },
+          {
+            path: "register",
+            element: <Register />,
+          },
+        ],
       },
       {
-        path: "register",
-        element: <Register />,
-      },
-       {
         element: <ProtectedRoute />,
         children: [
           {
