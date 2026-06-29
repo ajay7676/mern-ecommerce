@@ -121,7 +121,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-in-out ${
                     isActive
-                      ? "max-h-[900px] opacity-100"
+                      ? "max-h-225 opacity-100"
                       : "max-h-0 opacity-0"
                   }`}
                 >

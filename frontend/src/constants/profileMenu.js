@@ -56,7 +56,7 @@ export const userMenu = [
   },
   {
     label: "Logout",
-    path: "/logout",
+    action: "logout", 
     icon: FiLogOut,
     danger: true,
   },

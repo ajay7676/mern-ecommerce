@@ -6,6 +6,8 @@ import {
 } from "react-icons/fi";
 import { GiClothes, GiRunningShoe, GiLipstick } from "react-icons/gi";
 import { PiTShirtBold, PiPantsBold } from "react-icons/pi";
+import { useNavigate } from "react-router-dom";
+
 
 const categories = [
   { name: "New In", icon: GiClothes, badge: "Hot", bg: "bg-red-100" },
@@ -22,6 +24,10 @@ const categories = [
 ];
 
 const CategoryStrip = () => {
+  const navigate = useNavigate();
+  const handleGoToProduct = () => {
+    navigate("/products");
+  };
   return (
     <section className="mt-5">
       <div className="flex gap-5 overflow-x-auto pb-3 scrollbar-hide justify-center">
@@ -32,7 +38,8 @@ const CategoryStrip = () => {
             <button
               key={category.name}
               type="button"
-              className="group min-w-20.5 flex flex-col items-center gap-2"
+              onClick={handleGoToProduct}
+              className="group min-w-20.5 flex flex-col items-center gap-2 cursor-pointer"
             >
               <div
                 className={`relative w-16 h-16 md:w-20 md:h-20 rounded-full ${category.bg} border border-slate-200 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition`}

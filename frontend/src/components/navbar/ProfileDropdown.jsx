@@ -1,12 +1,15 @@
 import { NavLink } from "react-router-dom";
 import { guestMenu, userMenu } from "../../constants/profileMenu";
+import useLogout from "../../hooks/mutations/useLogout";
 
 const ProfileDropdown = ({
   isAuthenticated = false,
   user = null,
   onClose,
 }) => {
+
     const menus = isAuthenticated ? userMenu : guestMenu;
+    const logoutMutation = useLogout();
   return (
         <div className="mt-3 w-72 rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}
@@ -45,6 +48,28 @@ const ProfileDropdown = ({
                 {menus.map((item) => {
                 const Icon = item.icon;
 
+                if (item.action === "logout") {
+                    return (
+                        <button
+                        key={item.label}
+                        type="button"
+                        onClick={() => logoutMutation.mutate()}
+                        disabled={logoutMutation.isPending}
+                        className="flex w-full cursor-pointer items-center gap-4 px-6 py-3 text-red-500 hover:bg-red-50 transition"
+                        >
+                        <Icon className="text-lg" />
+
+                        <span className="text-sm font-medium">
+                            {item.label}
+                        </span>
+                        </button>
+                    );
+                }
+                // if (item.type === "button") {
+                // // Render button
+                // } else {
+                // // Render NavLink
+                // }
                 return (
                     <NavLink
                     key={item.label}

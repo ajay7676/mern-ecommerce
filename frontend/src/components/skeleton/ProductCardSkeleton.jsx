@@ -20,9 +20,6 @@ const ProductCardSkeleton = () => {
           <div className="skeleton h-4 w-12" />
           <div className="skeleton h-4 w-16" />
         </div>
-
-        {/* Button */}
-        <div className="skeleton h-10 w-full rounded-lg mt-4" />
       </div>
     </div>
   );
