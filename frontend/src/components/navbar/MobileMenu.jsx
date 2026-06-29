@@ -9,10 +9,15 @@ import {
 } from "react-icons/fi";
 
 import { navLinks } from "../../constants/navigation";
+import { useSelector } from "react-redux";
 
 const MobileMenu = ({ isOpen, onClose }) => {
   const [openMenu, setOpenMenu] = useState(null);
-
+  const { user, isAuthenticated } = useSelector(
+    (state) => state.auth
+  );
+  const firstName = user?.name?.split(" ")[0];
+  const firstLetter = user?.name?.charAt(0)?.toUpperCase();
   const toggleMenu = (menuName) => {
     setOpenMenu((prev) => (prev === menuName ? null : menuName));
   };
@@ -55,20 +60,37 @@ const MobileMenu = ({ isOpen, onClose }) => {
         </div>
 
         <div className="px-5 py-5 border-b border-slate-100">
-          <p className="text-sm font-semibold text-slate-900">
-            Welcome to Valid India
-          </p>
-          <p className="text-xs text-slate-500 mt-1">
-            Login for a better shopping experience.
-          </p>
+           {isAuthenticated ? (
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-full bg-red-500 text-white flex items-center justify-center font-bold">
+                {firstLetter}
+              </div>
 
-          <NavLink
-            to="/login"
-            onClick={onClose}
-            className="btn btn-sm bg-red-500 hover:bg-red-600 text-white border-none rounded-full mt-4"
-          >
-            Login / Register
-          </NavLink>
+              <div>
+                <p className="text-sm font-bold text-slate-900">
+                  Hi, {firstName}
+                </p>
+                <p className="text-xs text-slate-500">{user?.email}</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm font-semibold text-slate-900">
+                Welcome to Valid India
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Login for a better shopping experience.
+              </p>
+
+              <NavLink
+                to="/login"
+                onClick={onClose}
+                className="btn btn-sm bg-red-500 hover:bg-red-600 text-white border-none rounded-full mt-4"
+              >
+                Login / Register
+              </NavLink>
+            </>
+          )}
         </div>
 
         <nav className="py-3">

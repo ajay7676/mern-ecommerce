@@ -1,19 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { FiHeart, FiShoppingBag, FiUser } from "react-icons/fi";
 import ProfileDropdown from "./ProfileDropdown";
+import { useSelector } from "react-redux";
 
 const UserMenu = () => {
   const [showProfile, setShowProfile] = useState(false);
-
+  const { user, isAuthenticated } = useSelector(
+    (state) => state.auth
+  );
   const profileRef = useRef(null);
   const closeTimerRef = useRef(null);
-
-  const isAuthenticated = false;
-
-  const user = {
-    name: "Ajay Chauhan",
-    email: "ajay@example.com",
-  };
 
   const openProfile = () => {
     clearTimeout(closeTimerRef.current);
@@ -56,6 +52,7 @@ const UserMenu = () => {
       clearTimeout(closeTimerRef.current);
     };
   }, []);
+   
 
   return (
     <div className="hidden md:flex items-center gap-6">
@@ -72,7 +69,7 @@ const UserMenu = () => {
           aria-expanded={showProfile}
         >
           <FiUser className="text-2xl" />
-          <span>{isAuthenticated ? "Profile" : "Sign In"}</span>
+          <span >{isAuthenticated ? `${user?.name?.split(" ")[0]}` : "Sign In"}</span>
         </button>
 
         <div
