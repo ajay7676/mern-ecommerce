@@ -11,6 +11,7 @@ const ProductInfo = ({ product }) => {
   const [quantity, setQuantity] = useState(1);
   const finalPrice = product?.discountPrice || product?.price;
   const discountPrice = calculateDiscount(product.price, product.discountPrice);
+
   return (
     <div className="flex flex-col">
       <p className="font-bold text-slate-700">{product?.brand || "Brand"}</p>
@@ -19,12 +20,22 @@ const ProductInfo = ({ product }) => {
       </h1>
       <div className="flex items-center gap-3 mt-4 text-sm text-slate-600">
         <span className="flex items-center gap-1 font-semibold text-slate-700">
-          {product?.ratings || 0} <FaStar className="text-orange-400" />
+          {
+            product?.ratings
+            ?<>{product?.ratings}<FaStar className="text-orange-400"   /></>
+            : " "
+
+          }
         </span>
         <span>|</span>
-        <span>1.1K Ratings</span>
-        <span>|</span>
-        <span>{product?.reviews?.length} Reviews</span>
+        {/* <span>1.1K Ratings</span>
+        <span>|</span> */}
+        
+        {
+          product?.reviews && (
+             <span>{product?.reviews?.length} Reviews</span>
+          )
+        } 
       </div>
       <div className="mt-5">
         <h2 className="text-3xl font-black text-slate-700">₹{finalPrice}</h2>

@@ -30,7 +30,7 @@ const ProductDetails = () => {
         
         />
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr_0.8fr] gap-8 mt-5">
-          <ProductGallery  product={product}/>
+          <ProductGallery key={product._id}  product={product}/>
           <ProductInfo  product={product} />
           <DeliveryInfo  product={product} />
         </div>

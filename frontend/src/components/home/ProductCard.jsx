@@ -6,9 +6,14 @@ import { calculateDiscount } from "../../utils/calculateDiscount";
 const ProductCard = ({ product }) => {
   const finalPrice = product?.discountPrice || product?.price;
   const discountPrice = calculateDiscount(product.price, product.discountPrice);
-  
   return (
-    <Link to={`/products/${product._id}`} className="group relative bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition">
+    <Link
+      to={`/products/${product._id}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group relative bg-white rounded-xl border
+      border-slate-200 overflow-hidden hover:shadow-lg transition"
+    >
       {product.badge && (
         <span className="absolute top-3 left-3 z-10 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md">
           {product.badge}
@@ -46,11 +51,15 @@ const ProductCard = ({ product }) => {
           </span>
         </div>
 
-        <div className="flex items-center gap-1 mt-2 text-xs text-slate-600">
-          <FaStar className="text-orange-400" />
-          <span>{product.ratings}</span>
-          <span>({product.numReviews})</span>
-        </div>
+        {product?.ratings ? (
+          <div className="flex items-center gap-1 mt-2 text-xs text-slate-600">
+            <FaStar className="text-orange-400" />
+            <span>{product.ratings}</span>
+            <span>({product.numReviews})</span>
+          </div>
+        ) : (
+          ""
+        )}
       </div>
     </Link>
   );

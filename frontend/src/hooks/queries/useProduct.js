@@ -2,7 +2,7 @@
 import { getSingleProduct } from '../../api/productApi';
  const useProduct =  (productId) => {
     return  useQuery({
-        queryKey: ["product"],
+        queryKey: ["product" ,  productId],
         queryFn: () => getSingleProduct(productId),
         enabled: !!productId,
         staleTime: 5 * 60 * 1000,

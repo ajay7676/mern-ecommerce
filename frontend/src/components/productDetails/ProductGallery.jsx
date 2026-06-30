@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { FiChevronLeft, FiChevronRight, FiHeart, FiPlay } from "react-icons/fi";
  
-const ProductGallery = ({product}) => {
+const ProductGallery = ({ product}) => {
   const images = product?.images || [];
   const [selectedImage, setSelectedImage] = useState(0);
+ 
   return (
     <div className="flex gap-4">
       <div className="hidden md:flex flex-col gap-4 w-24">
