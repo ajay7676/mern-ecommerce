@@ -8,6 +8,8 @@ import { calculateDiscount } from "../../utils/calculateDiscount";
 import { useState } from "react";
 
 const ProductInfo = ({ product }) => {
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const finalPrice = product?.discountPrice || product?.price;
   const discountPrice = calculateDiscount(product.price, product.discountPrice);
@@ -59,14 +61,25 @@ const ProductInfo = ({ product }) => {
         </p>
       </div>
       <OfferBox />
-      <ColorSelector />
-      <SizeSelector />
+      <ColorSelector
+        selectedColor={selectedColor}
+        setSelectedColor={setSelectedColor}
+      />
+      <SizeSelector
+        selectedSize={selectedSize}
+        setSelectedSize={setSelectedSize}
+      />
       <QuantitySelector
         quantity={quantity}
         setQuantity={setQuantity}
         stock={product?.stock}
       />
-      <ProductActions quantity={quantity} product={product} />
+      <ProductActions
+        quantity={quantity}
+        product={product}
+        selectedColor={selectedColor}
+        selectedSize={selectedSize}
+       />
     </div>
   );
 };
