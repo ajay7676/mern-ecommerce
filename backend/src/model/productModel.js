@@ -228,7 +228,7 @@ const productSchema = new mongoose.Schema(
   },
 );
 
-productSchema.pre("save" , function(next) {
+productSchema.pre("save" , function() {
     const activeVariants = this.variants?.filter((v) => v.isActive) || [];
 
     this.stock = activeVariants.reduce((total, variant) => {
@@ -240,8 +240,6 @@ productSchema.pre("save" , function(next) {
 
     this.minPrice = prices.length ? Math.min(...prices) : 0;
     this.maxPrice = prices.length ? Math.max(...prices) : 0;
-
-    next();
 
 });
 

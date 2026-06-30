@@ -2,46 +2,43 @@ import ProductModel from "../model/productModel.js";
 import buildSearchQuery from "../utils/buildSearchQuery.js";
 import generateSlug from "../utils/generateSlug.js";
 import HandleError from "../utils/handleError.js";
+import { normalizeVariants } from "../utils/productHelpers.js";
 
 // Creating Prouduct API
 const createProduct = async (req, res, next) => {
   try {
-    const {
+     const {
       name,
       description,
-      price,
-      discountPrice,
-      images,
+      images = [],
       category,
       brand,
-      stock,
+      variants,
+      isFeatured = false,
+      isActive = true,
     } = req.body;
-   console.log(req.user?._id)
-    if (!name || !description || !price || !category) {
-      return res.status(400).json({
-        success: false,
-        message: "Please fill all required fields",
-        statusCode: 400,
-      });
+    if (!name || !description || !category || !brand) {
+      return next(
+        new HandleError("Please provide name, description, category and brand", 400)
+      );
     }
-    const genSlug = generateSlug(name);
-    const existingProduct = await ProductModel.findOne({ genSlug });
+    const slug = generateSlug(name);
+    const existingProduct = await ProductModel.findOne({ slug });
     if (existingProduct) {
-      return next(new HandleError("Product already exists", 404));
+      return next(new HandleError("Product already exists with this name", 400));
     }
-    //  console.log(req.user);
-      
-    req.body.createdBy = req.user._id;
+
+    const normalizedVariants = normalizeVariants(variants);
     const product = await ProductModel.create({
       name,
       description,
-      slug: genSlug,
-      price,
-      discountPrice,
+      slug,
       images,
       category,
       brand,
-      stock,
+      variants: normalizedVariants,
+      isFeatured,
+      isActive,
       createdBy: req.user._id,
     });
 
