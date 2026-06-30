@@ -1,39 +1,101 @@
 import mongoose from "mongoose";
 import validator from "validator";
 
-const variantSchema = new mongoose.Schema(
+const imageSchema  = new mongoose.Schema(
   {
-    color: {
+    public_id: { type: String, required: true },
+    url: { type: String, required: true },
+  },
+   { _id: false }
+)
+
+const  variantAttributeSchema  = new mongoose.Schema(
+  {
+    name: {
       type: String,
-      required: [true, "Variant color is required"],
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+    value: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+    displayName: {
+      type: String,
+      trim: true,
+    },
+    displayValue: {
+      type: String,
       trim: true,
     },
     colorCode: {
       type: String,
       trim: true,
-      default: "",
+      match: [/^#([0-9A-Fa-f]{3}){1,2}$/, "Invalid color code"],
     },
-    size: {
-      type: String,
-      required: [true, "Variant size is required"],
-      trim: true,
-      uppercase: true,
-    },
-    stock: {
-      type: Number,
-      required: [true, "Variant stock is required"],
-      min: [0, "Variant stock cannot be negative"],
-      default: 0,
-    },
+ },
+  { _id: false }
+)
+
+const variantSchema = new mongoose.Schema(
+  {
     sku: {
       type: String,
       required: [true, "SKU is required"],
       trim: true,
       uppercase: true,
     },
+
+    attributes: {
+      type: [variantAttributeSchema],
+      validate: {
+        validator: (attributes) => attributes && attributes.length > 0,
+        message: "At least one variant attribute is required",
+      },
+    },
+
+    price: {
+      type: Number,
+      required: [true, "Variant price is required"],
+      min: [0, "Variant price cannot be negative"],
+    },
+
+    discountPrice: {
+      type: Number,
+      min: [0, "Variant discount price cannot be negative"],
+      validate: {
+        validator(value) {
+          return value == null || value < this.price;
+        },
+        message: "Variant discount price must be less than variant price",
+      },
+    },
+
+    stock: {
+      type: Number,
+      required: [true, "Variant stock is required"],
+      min: [0, "Variant stock cannot be negative"],
+      default: 0,
+    },
+
+    images: [imageSchema],
+
+    isDefault: {
+      type: Boolean,
+      default: false,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
-  { _id: false },
+  { timestamps: true }
 );
+
 
 const reviewSchema = new mongoose.Schema(
   {
@@ -77,38 +139,13 @@ const productSchema = new mongoose.Schema(
     },
     slug: {
       type: String,
+      required: true,
       unique: true,
       lowercase: true,
       trim: true,
+      index: true,
     },
-    price: {
-      type: Number,
-      required: [true, "Product price is required"],
-      min: [0, "Price cannot be negative"],
-      maxlength: [100, "Price cannot be exced more than 7 digit"],
-    },
-    discountPrice: {
-      type: Number,
-      min: [0, "Discount price cannot be negative"],
-      validate: {
-        validator: function (value) {
-          return !value || value < this.price;
-        },
-        message: "Discount price must be less than original price",
-      },
-    },
-    images: [
-      {
-        public_id: {
-          type: String,
-          required: true,
-        },
-        url: {
-          type: String,
-          required: true,
-        },
-      },
-    ],
+    images: [imageSchema],
     category: {
       type: String,
       required: [true, "Product category is required"],
@@ -122,9 +159,7 @@ const productSchema = new mongoose.Schema(
     variants: {
       type: [variantSchema],
       validate: {
-        validator: function (variants) {
-          return variants && variants.length > 0;
-        },
+        validator: (variants) => variants && variants.length > 0,
         message: "At least one product variant is required",
       },
     },
@@ -134,9 +169,18 @@ const productSchema = new mongoose.Schema(
       min: [0, "Stock cannot be negative"],
       default: 0,
     },
+    minPrice: {
+      type: Number,
+      default: 0,
+    },
+    maxPrice: {
+      type: Number,
+      default: 0,
+    },
     sold: {
       type: Number,
       default: 0,
+      min: 0,
     },
     reviews: [reviewSchema],
     numReviews: {
@@ -184,20 +228,40 @@ const productSchema = new mongoose.Schema(
   },
 );
 
-productSchema.pre("save" , function (next){
-  if(this.variants && this.variants.length > 0){
-    this.stock = this.variants.reduce((total, variant) => {
-      return total +(variant.stock || 0);
-    },0)
-  }
+productSchema.pre("save" , function(next) {
+    const activeVariants = this.variants?.filter((v) => v.isActive) || [];
 
-  next();
+    this.stock = activeVariants.reduce((total, variant) => {
+      return total + variant.stock;
+    }, 0);
+    const prices = activeVariants.map((variant) => {
+      return variant.discountPrice || variant.price;
+    });
+
+    this.minPrice = prices.length ? Math.min(...prices) : 0;
+    this.maxPrice = prices.length ? Math.max(...prices) : 0;
+
+    next();
 
 });
 
-productSchema.index({ name: "text", description: "text", brand: "text", category: "text" });
+productSchema.index({
+  name: "text",
+  description: "text",
+  brand: "text",
+  category: "text",
+});
+
 productSchema.index({ category: 1, brand: 1 });
 productSchema.index({ isActive: 1, isDeleted: 1 });
+productSchema.index(
+  { "variants.sku": 1 }, 
+  { 
+    unique: true,
+    partialFilterExpression: {
+      "variants.sku": { $exists: true, $type: "string" },
+    },
+   });
 
 const ProductModel = mongoose.model("ProductModel", productSchema);
 
