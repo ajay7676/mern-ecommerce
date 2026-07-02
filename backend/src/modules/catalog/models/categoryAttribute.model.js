@@ -1,6 +1,15 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const categoryAttributeSchema = new mongoose.Schema(
+const ATTRIBUTE_TYPES = [
+  "text",
+  "number",
+  "boolean",
+  "select",
+  "multi_select",
+  "color",
+];
+
+const categoryAttributeSchema  =  new mongoose.Schema(
   {
     category: {
       type: mongoose.Schema.Types.ObjectId,
@@ -8,12 +17,48 @@ const categoryAttributeSchema = new mongoose.Schema(
       required: [true, "Category is required"],
       index: true,
     },
+     name: {
+      type: String,
+      required: [true, "Attribute name is required"],
+      trim: true,
+      maxlength: [80, "Attribute name cannot exceed 80 characters"],
+    },
 
-    attribute: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ProductAttribute",
-      required: [true, "Product attribute is required"],
-      index: true,
+    slug: {
+      type: String,
+      required: [true, "Attribute slug is required"],
+      lowercase: true,
+      trim: true,
+    },
+
+    type: {
+      type: String,
+      enum: ATTRIBUTE_TYPES,
+      required: [true, "Attribute type is required"],
+      default: "text",
+    },
+    options: [
+      {
+        label: {
+          type: String,
+          trim: true,
+        },
+
+        value: {
+          type: String,
+          trim: true,
+          lowercase: true,
+        },
+
+        colorCode: {
+          type: String,
+          trim: true,
+        },
+      },
+    ],
+     unit: {
+      type: String,
+      trim: true,
     },
 
     isRequired: {
@@ -21,19 +66,19 @@ const categoryAttributeSchema = new mongoose.Schema(
       default: false,
     },
 
-    isVariant: {
-      type: Boolean,
-      default: true,
-    },
-
     isFilterable: {
       type: Boolean,
       default: true,
     },
 
-    isSearchable: {
+    isComparable: {
       type: Boolean,
       default: false,
+    },
+
+    showOnProductPage: {
+      type: Boolean,
+      default: true,
     },
 
     sortOrder: {
@@ -44,36 +89,59 @@ const categoryAttributeSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+      index: true,
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
     },
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: [true, "createdBy is required"],
     },
 
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 categoryAttributeSchema.index(
-  { category: 1, attribute: 1 },
+  { category: 1, slug: 1 },
   { unique: true }
 );
 
 categoryAttributeSchema.index({
   category: 1,
   isActive: 1,
-  sortOrder: 1,
+  isDeleted: 1,
 });
 
-const CategoryAttributeModel = mongoose.model(
+categoryAttributeSchema.index({
+  isFilterable: 1,
+  isActive: 1,
+  isDeleted: 1,
+});
+
+const CategoryAttribute = mongoose.model(
   "CategoryAttribute",
   categoryAttributeSchema
 );
 
-export default CategoryAttributeModel;
+export default CategoryAttribute;
