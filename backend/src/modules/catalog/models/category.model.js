@@ -1,40 +1,67 @@
 import mongoose from "mongoose";
 
-const imageSchema = new mongoose.Schema(
+const categoryImageSchema  = new mongoose.Schema(
   {
-    public_id: { type: String, trim: true },
-    url: { type: String, trim: true },
-  },
-  { _id: false },
-);
+    public_id: {
+      type: String,
+      trim: true,
+    },
 
-const seoSchema = new mongoose.Schema(
+    url: {
+      type: String,
+      trim: true,
+    },
+
+    alt: {
+      type: String,
+      trim: true,
+      maxlength: [120, "Image alt text cannot exceed 120 characters"],
+    },
+  },
   {
-    metaTitle: {
-         type: String, trim: true, maxlength: 70
+    _id: false,
+  }
+)
+
+const categorySeoSchema = new mongoose.Schema(
+  {
+     title: {
+      type: String,
+      trim: true,
+      maxlength: [70, "SEO title cannot exceed 70 characters"],
     },
-    metaDescription: {
-         type: String, trim: true, maxlength: 160 
+
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [170, "SEO description cannot exceed 170 characters"],
     },
-    metaKeywords: [
-        { type: String, trim: true }
+
+    keywords: [
+      {
+        type: String,
+        trim: true,
+        lowercase: true,
+      },
     ],
   },
-  { _id: false }
-);
+  {
+    _id: false,
+  }
+)
 
-const categorySchema = new mongoose.Schema(
+const categorySchema  = new mongoose.Schema(
   {
     name: {
       type: String,
       required: [true, "Category name is required"],
       trim: true,
-      maxlength: 100,
+      minlength: [2, "Category name must be at least 2 characters"],
+      maxlength: [80, "Category name cannot exceed 80 characters"],
     },
-
-    slug: {
+      slug: {
       type: String,
-      required: true,
+      required: [true, "Category slug is required"],
       unique: true,
       lowercase: true,
       trim: true,
@@ -44,45 +71,51 @@ const categorySchema = new mongoose.Schema(
     description: {
       type: String,
       trim: true,
-      default: "",
+      maxlength: [1000, "Category description cannot exceed 1000 characters"],
     },
-
-    image: imageSchema,
-
+    image: categoryImageSchema,
     parentCategory: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
       default: null,
+      index: true,
     },
-
-    sortOrder: {
+     level: {
       type: Number,
       default: 0,
+      min: [0, "Category level cannot be negative"],
+    },
+     sortOrder: {
+      type: Number,
+      default: 0,
+    },
+    seo: categorySeoSchema,
+     isActive: {
+      type: Boolean,
+      default: true,
+      index: true,
     },
 
     isFeatured: {
       type: Boolean,
       default: false,
-    },
-
-    isActive: {
-      type: Boolean,
-      default: true,
+      index: true,
     },
 
     isDeleted: {
       type: Boolean,
       default: false,
+      index: true,
     },
 
-    deletedAt: Date,
-
-    seo: seoSchema,
+    deletedAt: {
+      type: Date,
+    },
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: [true, "createdBy is required"],
     },
 
     updatedBy: {
@@ -95,12 +128,18 @@ const categorySchema = new mongoose.Schema(
       ref: "User",
     },
   },
-  { timestamps: true }
-);
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+)
 
-categorySchema.index({ parentCategory: 1 });
-categorySchema.index({ isActive: 1, isDeleted: 1 });
+categorySchema.index({ parentCategory: 1, isActive: 1, isDeleted: 1 });
+categorySchema.index({ isFeatured: 1, isActive: 1, isDeleted: 1 });
+categorySchema.index({ sortOrder: 1 });
+categorySchema.index({ createdAt: -1 });
 
-const CategoryModel = mongoose.model("Category", categorySchema);
+const Category = mongoose.model("Category", categorySchema);
 
-export default CategoryModel;
+export default Category;
