@@ -84,69 +84,68 @@ const getActiveBrandOrThrow = async (brandId) => {
  */
 
 const buildProductQuery = (queryParams = {}, options = {}) => {
-    const {isAdmin} = options;
+  const { isAdmin } = options;
 
-    const{
-        keyword,
-        category: categoryId,
-        brand: brandId,
-        status,
-        visibility,
-        minPrice,
-        maxPrice,
-        isFeatured, 
-    } =  queryParams;
+  const {
+    keyword,
+    category: categoryId,
+    brand: brandId,
+    status,
+    visibility,
+    minPrice,
+    maxPrice,
+    isFeatured,
+  } = queryParams;
 
-    const query = {
-        isDeleted : false,
-    };
-    
-    /**
-     *  Customer side should only see published public products.
-     *  Admin side can see draft, published, archived etc.
-     */
+  const query = {
+    isDeleted: false,
+  };
 
-    if(!admin){
-        query.status = "published";
-        query.visibility = "public";
-    }
-     if (isAdmin && status) {
-        query.status = status;
-    }
+  /**
+   *  Customer side should only see published public products.
+   *  Admin side can see draft, published, archived etc.
+   */
 
-    if (isAdmin && visibility) {
-        query.visibility = visibility;
-    }
-    if (keyword && typeof keyword === "string" && keyword.trim()) {
-        query.$or = [
-        { name: { $regex: keyword.trim(), $options: "i" } },
-        { shortDescription: { $regex: keyword.trim(), $options: "i" } },
-        { description: { $regex: keyword.trim(), $options: "i" } },
-        { sku: { $regex: keyword.trim(), $options: "i" } },
-        ];
-    }
-    if(categoryId && isValidObjectId(categoryId)){
-        query.category = categoryId 
-    }
-    if(brandId && isValidObjectId(brandId)){
-        query.brand = brandId 
-    }
-    if(minPrice || maxPrice){
-        query.price = {};
+  if (!isAdmin) {
+    query.status = "published";
+    query.visibility = "public";
+  }
+  if (isAdmin && status) {
+    query.status = status;
+  }
 
-        if(minPrice){
-            query.price.$gte = Number(minPrice);
-        }
-        if (maxPrice) {
-           query.price.$lte = Number(maxPrice);
-        }
-    }
-    if (isFeatured !== undefined) {
-        query.isFeatured = isFeatured === "true";
-    }
+  if (isAdmin && visibility) {
+    query.visibility = visibility;
+  }
+  if (keyword && typeof keyword === "string" && keyword.trim()) {
+    query.$or = [
+      { name: { $regex: keyword.trim(), $options: "i" } },
+      { shortDescription: { $regex: keyword.trim(), $options: "i" } },
+      { description: { $regex: keyword.trim(), $options: "i" } },
+      { sku: { $regex: keyword.trim(), $options: "i" } },
+    ];
+  }
+  if (categoryId && isValidObjectId(categoryId)) {
+    query.category = categoryId;
+  }
+  if (brandId && isValidObjectId(brandId)) {
+    query.brand = brandId;
+  }
+  if (minPrice || maxPrice) {
+    query.price = {};
 
-    return query;
+    if (minPrice) {
+      query.price.$gte = Number(minPrice);
+    }
+    if (maxPrice) {
+      query.price.$lte = Number(maxPrice);
+    }
+  }
+  if (isFeatured !== undefined) {
+    query.isFeatured = isFeatured === "true";
+  }
 
+  return query;
 };
 
 /**
@@ -178,30 +177,102 @@ const createProductService = async (productData, adminId) => {
   await getActiveCategoryOrThrow(category);
   await getActiveBrandOrThrow(brand);
 
-  const slug = productData.slug 
-   ? generateSlug(productData.slug)
-   : generateSlug(name) ;
+  const slug = productData.slug
+    ? generateSlug(productData.slug)
+    : generateSlug(name);
 
-const normalizedSku = sku.toUpperCase().trim();
+  const normalizedSku = sku.toUpperCase().trim();
 
-const existingProduct = await Product.findOne({
+  const existingProduct = await Product.findOne({
     $or: [{ slug }, { sku: normalizedSku }],
-});
+  });
 
-if (existingProduct) {
+  if (existingProduct) {
     throw new HandleError("Product with this slug or SKU already exists", 409);
-}
+  }
 
-const product = await Product.create({
-   ...productData ,
-   slug,
-   sku:normalizedSku,
-   createdBy: adminId ,
-});
+  const product = await Product.create({
+    ...productData,
+    slug,
+    sku: normalizedSku,
+    createdBy: adminId,
+  });
 
-return product;
+  return product;
 };
 
-export {
-  createProductService,
+/**
+ *  Get all products
+ */
+
+const getAllProductsService = async (queryParams = {}, options = {}) => {
+  const page = Number(queryParams.page) || 1;
+  const limit = Number(queryParams.limit) || 12;
+  const skip = (page - 1) * limit;
+
+  const sortOptions = {
+    newest: { createdAt: -1 },
+    oldest: { createdAt: 1 },
+    price_low: { price: 1 },
+    price_high: { price: -1 },
+    rating: { ratings: -1 },
+    popular: { sold: -1 },
+  };
+
+  const sortBy = sortOptions[queryParams.sort] || sortOptions.newest;
+  const query = buildProductQuery(queryParams, options);
+
+  const [products, totalProducts] = await Promise.all([
+    Product.find(query)
+      .populate("category", "name slug")
+      .populate("brand", "name slug logo")
+      .sort(sortBy)
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Product.countDocuments(query),
+  ]);
+
+  return {
+    products,
+    pagination: {
+      totalProducts,
+      currentPage: page,
+      totalPages: Math.ceil(totalProducts / limit),
+      limit,
+    },
+  };
 };
+
+/**
+ * Get single product
+ */
+
+const getSingleProductService = async (productId, options = {}) => {
+  const { isAdmin = false } = options;
+
+  if (!isValidObjectId(productId)) {
+    throw new HandleError("Invalid product ID", 400);
+  }
+
+  const query = {
+    _id: productId,
+    isDeleted: false,
+  };
+  if (!isAdmin) {
+    query.status = "published";
+    query.visibility = "public";
+  }
+
+  const product = await Product.findOne(query)
+    .populate("category", "name slug")
+    .populate("brand", "name slug logo")
+    .lean();
+
+  if (!product) {
+    throw new HandleError("Product not found", 404);
+  }
+
+  return product;
+};
+export { createProductService, getAllProductsService , getSingleProductService };
