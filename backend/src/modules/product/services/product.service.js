@@ -275,4 +275,118 @@ const getSingleProductService = async (productId, options = {}) => {
 
   return product;
 };
-export { createProductService, getAllProductsService , getSingleProductService };
+
+/**
+ * Update product By Admin
+ */
+
+const updateProductService = async (productId, updateData, adminId) => {
+  if (!isValidObjectId(productId)) {
+    throw new HandleError("Invalid product ID", 400);
+  }
+
+  const product = await Product.findOne({
+    _id: productId,
+    isDeleted: false,
+  });
+
+  if (!product) {
+    throw new HandleError("Product not found", 404);
+  }
+  if (updateData.category) {
+    await getActiveCategoryOrThrow(updateData.category);
+  }
+
+  if (updateData.brand) {
+    await getActiveBrandOrThrow(updateData.brand);
+  }
+
+  if (updateData.name && !updateData.slug) {
+    updateData.slug = generateSlug(updateData.name);
+  }
+
+  if (updateData.slug) {
+    updateData.slug = generateSlug(updateData.slug);
+  }
+
+  if (updateData.sku) {
+    updateData.sku = updateData.sku.toUpperCase().trim();
+  }
+
+  if (updateData.slug || updateData.sku) {
+    const duplicateProduct = await Product.findOne({
+      _id: { $ne: productId },
+      $or: [
+        ...(updateData.slug ? [{ slug: updateData.slug }] : []),
+        ...(updateData.sku ? [{ sku: updateData.sku }] : []),
+      ],
+    });
+
+    if (duplicateProduct) {
+      throw new HandleError(
+        "Product with this slug or SKU already exists",
+        409,
+      );
+    }
+  }
+  const allowedFields = [
+    "name",
+    "slug",
+    "shortDescription",
+    "description",
+    "category",
+    "brand",
+    "price",
+    "discountPrice",
+    "costPrice",
+    "currency",
+    "sku",
+    "stock",
+    "lowStockThreshold",
+    "trackInventory",
+    "images",
+    "seo",
+    "status",
+    "visibility",
+    "isFeatured",
+  ];
+  updateAllowedFields(product, updateData, allowedFields);
+  product.updatedBy = adminId;
+
+  await product.save();
+
+  return product;
+};
+
+/**
+ *  Soft delete product by admin
+ */
+
+const softDeleteProductService = async (productId, adminId) => {
+  if (!isValidObjectId(productId)) {
+    throw new HandleError("Invalid product Id", 400);
+  }
+  const product = await Product.findOne({
+    _id: productId,
+    isDeleted: false,
+  });
+
+  if (!product) {
+    throw new HandleError("Product not found", 404);
+  }
+
+  product.isDeleted = true;
+  product.deletedAt = new Date();
+  product.deletedBy = adminId;
+  product.status = "archived";
+  await product.save();
+  return product;
+};
+
+export {
+  createProductService,
+  getAllProductsService,
+  getSingleProductService,
+  updateProductService,
+  softDeleteProductService,
+}; 

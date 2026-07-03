@@ -2,6 +2,8 @@ import {
   createProductService,
   getAllProductsService,
   getSingleProductService,
+  updateProductService,
+  softDeleteProductService,
 } from "../services/product.service.js";
 
 const createProduct = async (req, res, next) => {
@@ -65,8 +67,8 @@ const getSingleProduct = async (req, res, next) => {
   try {
     const { productId } = req.params;
 
-    const product = await getSingleProductService(productId , {
-         isAdmin : false,
+    const product = await getSingleProductService(productId, {
+      isAdmin: false,
     });
 
     res.status(200).json({
@@ -74,14 +76,13 @@ const getSingleProduct = async (req, res, next) => {
       message: "Product fetched successfully",
       product,
     });
-
   } catch (error) {
-     next(error)
+    next(error);
   }
 };
 
 /**
- *  Get single product by admin 
+ *  Get single product by admin
  */
 const getAdminSingleProduct = async (req, res, next) => {
   try {
@@ -100,4 +101,50 @@ const getAdminSingleProduct = async (req, res, next) => {
     next(error);
   }
 };
-export { createProduct, getAllProducts, getAdminProducts, getSingleProduct , getAdminSingleProduct };
+
+/**
+ *  Update Product by Admin
+ */
+
+const updateSingleProductByAdmin = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    const adminId = req.user?._id || req.user?.id;
+    const product = await updateProductService(productId, req.body, adminId);
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ *  Soft delete product
+ */
+
+const deleteProduct = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    const adminId = req.user?._id || req.user?.id;
+    const product = await softDeleteProductService(productId, adminId);
+    res.status(200).json({
+      success: true,
+      message: "Product deleted successfully",
+      product,
+    });
+  } catch (error) {
+     next(error)
+  }
+};
+export {
+  createProduct,
+  getAllProducts,
+  getAdminProducts,
+  getSingleProduct,
+  getAdminSingleProduct,
+  updateSingleProductByAdmin,
+  deleteProduct
+};
