@@ -1,0 +1,143 @@
+import mongoose from "mongoose";
+import Product from "../models/product.model.js";
+import Category from "../../catalog/models/category.model.js";
+import Brand from "../../catalog/models/brand.model.js";
+import HandleError from "../../../utils/handleError.js";
+
+/**
+ *  Genrate SEO friendly slug
+ */
+
+const generateSlug = (text = " ") => {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
+
+/**
+ *  Check Valid MongoDB ObjectId
+ */
+
+const isValidObjectId = (id) => {
+  return mongoose.Types.ObjectId.isValid(id);
+};
+
+/**
+ * Update only allowed fields
+ */
+const updateAllowedFields = (document, data, allowedFields = []) => {
+  allowedFields.forEach((field) => {
+    //   Ye check karta hai ki data ke andar wo field available hai ya nahi.
+    if (Object.prototype.hasOwnProperty.call(data, field)) {
+      document[field] = data[field];
+    }
+  });
+  return document;
+};
+
+/**
+ * Check category exists
+ */
+
+const getActiveCategoryOrThrow = async (categoryId) => {
+  if (!isValidObjectId(categoryId)) {
+    throw new HandleError("Invalid category ID", 400);
+  }
+  const category = await Category.findOne({
+    _id: categoryId,
+    isActive: true,
+    isDeleted: false,
+  });
+
+  if (!category) {
+    throw new HandleError("Category not found or inactive", 404);
+  }
+  return category;
+};
+
+/**
+ * Check Brand exists
+ */
+
+const getActiveBrandOrThrow = async (brandId) => {
+  if (!isValidObjectId(brandId)) {
+    throw new HandleError("Invalid brand ID", 400);
+  }
+  const brand = await Brand.findOne({
+    _id: brandId,
+    isActive: true,
+    isDeleted: false,
+  });
+
+  if (!brand) {
+    throw new HandleError("Brand not found or inactive", 404);
+  }
+  return brand;
+};
+
+/**
+ * Build product query for list/search/filter
+ */
+
+const buildProductQuery = (queryParams = {}, options = {}) => {};
+
+/**
+ *  Create product
+ */
+
+const createProductService = async (productData, adminId) => {
+  const { name, category, brand, sku, images = [] } = productData;
+
+  if (!name) {
+    throw new HandleError("Product name is required", 400);
+  }
+
+  if (!category) {
+    throw new HandleError("Product category is required", 400);
+  }
+
+  if (!brand) {
+    throw new HandleError("Product brand is required", 400);
+  }
+
+  if (!sku) {
+    throw new HandleError("Product SKU is required", 400);
+  }
+
+  if (!Array.isArray(images) || images.length === 0) {
+    throw new HandleError("At least one product image is required", 400);
+  }
+  await getActiveCategoryOrThrow(category);
+  await getActiveBrandOrThrow(brand);
+
+  const slug = productData.slug 
+   ? generateSlug(productData.slug)
+   : generateSlug(name) ;
+
+const normalizedSku = sku.toUpperCase().trim();
+
+const existingProduct = await Product.findOne({
+    $or: [{ slug }, { sku: normalizedSku }],
+});
+
+if (existingProduct) {
+    throw new HandleError("Product with this slug or SKU already exists", 409);
+}
+
+const product = await Product.create({
+   ...productData ,
+   slug,
+   sku:normalizedSku,
+   createdBy: adminId ,
+});
+
+return product;
+};
+
+export {
+  createProductService,
+};
