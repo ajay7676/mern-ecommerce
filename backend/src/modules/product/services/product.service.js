@@ -83,7 +83,71 @@ const getActiveBrandOrThrow = async (brandId) => {
  * Build product query for list/search/filter
  */
 
-const buildProductQuery = (queryParams = {}, options = {}) => {};
+const buildProductQuery = (queryParams = {}, options = {}) => {
+    const {isAdmin} = options;
+
+    const{
+        keyword,
+        category: categoryId,
+        brand: brandId,
+        status,
+        visibility,
+        minPrice,
+        maxPrice,
+        isFeatured, 
+    } =  queryParams;
+
+    const query = {
+        isDeleted : false,
+    };
+    
+    /**
+     *  Customer side should only see published public products.
+     *  Admin side can see draft, published, archived etc.
+     */
+
+    if(!admin){
+        query.status = "published";
+        query.visibility = "public";
+    }
+     if (isAdmin && status) {
+        query.status = status;
+    }
+
+    if (isAdmin && visibility) {
+        query.visibility = visibility;
+    }
+    if (keyword && typeof keyword === "string" && keyword.trim()) {
+        query.$or = [
+        { name: { $regex: keyword.trim(), $options: "i" } },
+        { shortDescription: { $regex: keyword.trim(), $options: "i" } },
+        { description: { $regex: keyword.trim(), $options: "i" } },
+        { sku: { $regex: keyword.trim(), $options: "i" } },
+        ];
+    }
+    if(categoryId && isValidObjectId(categoryId)){
+        query.category = categoryId 
+    }
+    if(brandId && isValidObjectId(brandId)){
+        query.brand = brandId 
+    }
+    if(minPrice || maxPrice){
+        query.price = {};
+
+        if(minPrice){
+            query.price.$gte = Number(minPrice);
+        }
+        if (maxPrice) {
+           query.price.$lte = Number(maxPrice);
+        }
+    }
+    if (isFeatured !== undefined) {
+        query.isFeatured = isFeatured === "true";
+    }
+
+    return query;
+
+};
 
 /**
  *  Create product
