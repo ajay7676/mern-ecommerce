@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const categoryImageSchema  = new mongoose.Schema(
+const categoryImageSchema = new mongoose.Schema(
   {
     public_id: {
       type: String,
@@ -20,12 +20,12 @@ const categoryImageSchema  = new mongoose.Schema(
   },
   {
     _id: false,
-  }
-)
+  },
+);
 
 const categorySeoSchema = new mongoose.Schema(
   {
-     title: {
+    title: {
       type: String,
       trim: true,
       maxlength: [70, "SEO title cannot exceed 70 characters"],
@@ -47,10 +47,10 @@ const categorySeoSchema = new mongoose.Schema(
   },
   {
     _id: false,
-  }
-)
+  },
+);
 
-const categorySchema  = new mongoose.Schema(
+const categorySchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -59,7 +59,7 @@ const categorySchema  = new mongoose.Schema(
       minlength: [2, "Category name must be at least 2 characters"],
       maxlength: [80, "Category name cannot exceed 80 characters"],
     },
-      slug: {
+    slug: {
       type: String,
       required: [true, "Category slug is required"],
       unique: true,
@@ -80,17 +80,28 @@ const categorySchema  = new mongoose.Schema(
       default: null,
       index: true,
     },
-     level: {
+    ancestors: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+      },
+    ],
+    level: {
       type: Number,
       default: 0,
       min: [0, "Category level cannot be negative"],
     },
-     sortOrder: {
+    path: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    sortOrder: {
       type: Number,
       default: 0,
     },
     seo: categorySeoSchema,
-     isActive: {
+    isActive: {
       type: Boolean,
       default: true,
       index: true,
@@ -132,14 +143,24 @@ const categorySchema  = new mongoose.Schema(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
-)
+  },
+);
+
+/**
+ * Same parent ke andar duplicate category allowed nahi hai.
+ * But different parent ke andar same category name allowed hai.
+ */
+categorySchema.index(
+  { parentCategory: 1, slug: 1 },
+  { unique: true }
+);
+
 
 categorySchema.index({ parentCategory: 1, isActive: 1, isDeleted: 1 });
-categorySchema.index({ isFeatured: 1, isActive: 1, isDeleted: 1 });
-categorySchema.index({ sortOrder: 1 });
+categorySchema.index({ ancestors: 1 });
+categorySchema.index({ level: 1 });
 categorySchema.index({ createdAt: -1 });
 
-const Category = mongoose.model("Category", categorySchema);
+const Category = mongoose.models.Category ||  mongoose.model("Category", categorySchema);
 
 export default Category;

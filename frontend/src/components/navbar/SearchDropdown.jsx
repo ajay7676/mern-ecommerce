@@ -63,7 +63,7 @@ const SearchDropdown = ({
                   </h4>
 
                   <p className="text-xs text-slate-500 truncate">
-                    {product.brand} • {product.category}
+                    {product?.brand?.name} • {product?.category?.name}
                   </p>
                 </div>
 

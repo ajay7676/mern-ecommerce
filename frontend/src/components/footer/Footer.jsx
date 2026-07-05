@@ -68,7 +68,7 @@ const Footer = () => {
                 <FiBox className="text-xl" />
               </div>
               <h2 className="text-xl font-bold text-slate-900">
-                Valid India
+                Valid Super Store
               </h2>
             </div>
 
@@ -93,7 +93,7 @@ const Footer = () => {
 
         <div className="border-t border-slate-200 mt-10 pt-5 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-slate-500">
-            © 2026 Valid India. All Rights Reserved.
+            © 2026 Valid Super Store. All Rights Reserved.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-slate-500">

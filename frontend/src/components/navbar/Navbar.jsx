@@ -49,7 +49,7 @@ const Navbar = () => {
                 <FiBox className="text-2xl" />
               </div>
               <h1 className="text-2xl font-bold text-slate-900">
-                Valid India
+                Valid Super Store
               </h1>
             </div>
           </div>

@@ -2,7 +2,7 @@ const Newsletter = () => {
   return (
     <div>
       <h3 className="text-sm font-bold text-slate-900 uppercase mb-4">
-        Stay with Valid India
+        Stay with Valid Super Store
       </h3>
 
       <p className="text-sm text-slate-600 mb-4 max-w-xs">

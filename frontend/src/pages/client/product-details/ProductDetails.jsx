@@ -19,6 +19,7 @@ const ProductDetails = () => {
     );
   }
   const product = data?.product;
+   console.log(product)
 
   return (
     <div className="bg-white">
