@@ -28,7 +28,7 @@ const features = [
     icon: FiCheckCircle,
   },
   {
-    title: "Valid India Promise",
+    title: "Valid Super Store Promise",
     text: "We’ve got your back",
     icon: FiAward,
   },

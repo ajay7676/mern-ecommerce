@@ -5,7 +5,7 @@ const AuthHeader = ({ title, subtitle }) => {
         <div className="w-8 h-8 rounded bg-blue-600 text-white flex items-center justify-center font-bold">
           V
         </div>
-        <h2 className="text-2xl font-bold text-blue-600">Valid India</h2>
+        <h2 className="text-2xl font-bold text-blue-600">Valid Super Store</h2>
       </div>
 
       <h1 className="text-2xl font-bold text-slate-900 mt-7">{title}</h1>

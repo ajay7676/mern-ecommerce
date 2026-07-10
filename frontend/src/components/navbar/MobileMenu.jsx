@@ -47,7 +47,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
         }`}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-          <h2 className="text-xl font-bold text-slate-900">Valid India</h2>
+          <h2 className="text-xl font-bold text-slate-900">Valid Super Store</h2>
 
           <button
             type="button"
@@ -76,7 +76,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
           ) : (
             <>
               <p className="text-sm font-semibold text-slate-900">
-                Welcome to Valid India
+                Welcome to Valid Super Store
               </p>
               <p className="text-xs text-slate-500 mt-1">
                 Login for a better shopping experience.
