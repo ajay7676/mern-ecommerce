@@ -1,15 +1,24 @@
 import { NavLink } from "react-router-dom";
 import { guestMenu, userMenu } from "../../constants/profileMenu";
 import useLogout from "../../hooks/mutations/useLogout";
+import useAuth from '../../hooks/queries/useAuth'
 
 const ProfileDropdown = ({
   isAuthenticated = false,
   user = null,
   onClose,
 }) => {
+     const logoutMutation = useLogout();
+    const baseMenus  = isAuthenticated ? userMenu : guestMenu;
+    const menus = baseMenus.filter((item) => {
+    // Menu is visible to everyone
+    if (!item.access) {
+        return true;
+    }
+    // Menu is role-based
+    return item.access.includes(user?.role);
+    });
 
-    const menus = isAuthenticated ? userMenu : guestMenu;
-    const logoutMutation = useLogout();
   return (
         <div className="mt-3 w-72 rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}

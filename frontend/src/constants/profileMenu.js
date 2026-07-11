@@ -8,6 +8,7 @@ import {
   FiLogIn,
   FiUserPlus,
   FiHelpCircle,
+  FiLayout,
 } from "react-icons/fi";
 
 export const guestMenu = [
@@ -33,6 +34,12 @@ export const userMenu = [
     label: "My Profile",
     path: "/profile",
     icon: FiUser,
+  },
+  {
+    label: "Dashboard",
+    path: "/admin",
+    icon: FiLayout,
+    access: ["admin"],
   },
   {
     label: "My Orders",
