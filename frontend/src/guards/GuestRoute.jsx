@@ -4,12 +4,7 @@ import { ROUTES } from "../constants/routes";
 import AuthLoader from "../components/common/loader/AuthLoader";
 
 const GuestRoute = () => {
-  // const { isLoading, isAuthChecked, isAuthenticated, isAdmin } = useAuth();
-  const auth = useAuth();
-   console.log(auth)
-  const { isLoading, isAuthChecked, isAuthenticated, isAdmin } = auth;
-
- console.log(isAuthChecked)
+  const { isLoading, isAuthChecked, isAuthenticated, isAdmin } = useAuth();
   const location = useLocation();
 
   // Wait until auth check completes

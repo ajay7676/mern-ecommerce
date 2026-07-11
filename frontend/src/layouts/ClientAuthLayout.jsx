@@ -8,7 +8,6 @@ const ClientAuthLayout = () => {
       <main>
         <Outlet />
       </main>
-
       <Footer />
     </div>
   )

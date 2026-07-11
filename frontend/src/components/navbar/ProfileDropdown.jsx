@@ -1,7 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { guestMenu, userMenu } from "../../constants/profileMenu";
 import useLogout from "../../hooks/mutations/useLogout";
-import useAuth from '../../hooks/queries/useAuth'
 
 const ProfileDropdown = ({
   isAuthenticated = false,

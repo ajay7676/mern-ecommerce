@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 const menuItems = [
   { name: "Dashboard", path: "/admin", icon: "📊" },
   { name: "Products", path: "/admin/products", icon: "🛍️" },
@@ -14,7 +14,9 @@ const Sidebar = () => {
     <aside className="min-h-full w-72 bg-white border-r border-gray-200">
       <div className="h-16 flex items-center px-6 border-b border-gray-200">
         <div>
-          <h1 className="text-2xl font-bold text-blue-600">ValidBazar</h1>
+          <h1 className="text-2xl font-bold text-blue-600">
+            <Link to="/">Valid Super Store</Link>
+          </h1>
           <p className="text-xs text-gray-500">Admin Panel</p>
         </div>
       </div>

@@ -1,5 +1,12 @@
-
+import { Link } from 'react-router-dom'
+import { useSelector } from "react-redux";
+import useLogout from "../../../hooks/mutations/useLogout";
 const Navbar = () => {
+  const logoutMutation = useLogout();
+   const { user } = useSelector(
+    (state) => state.auth
+  );
+   console.log(user)
   return (
       <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
       <div className="navbar px-4 lg:px-6 min-h-16">
@@ -35,8 +42,8 @@ const Navbar = () => {
 
         <div className="dropdown dropdown-end ml-2">
           <div tabIndex={0} role="button" className="avatar placeholder">
-            <div className="bg-blue-600 text-white rounded-full w-10">
-              <span className="font-bold">A</span>
+            <div className="bg-blue-600 text-white rounded-full w-10 flex justify-center items-center">
+              <span className="font-bold ">A</span>
             </div>
           </div>
 
@@ -45,13 +52,17 @@ const Navbar = () => {
             className="dropdown-content menu bg-white rounded-box z-50 w-52 p-2 shadow border border-gray-200"
           >
             <li>
-              <a>Profile</a>
+              <Link>Profile</Link>
             </li>
             <li>
-              <a>Settings</a>
+              <Link>Settings</Link>
             </li>
             <li>
-              <a className="text-red-500">Logout</a>
+              <Link 
+              className="text-red-500"
+               onClick={() => logoutMutation.mutate()}
+              disabled={logoutMutation.isPending}
+              >Logout</Link>
             </li>
           </ul>
         </div>

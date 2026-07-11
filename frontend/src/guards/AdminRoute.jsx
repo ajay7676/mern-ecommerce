@@ -21,9 +21,13 @@ const AdminRoute = () => {
   // Guest user
   if (!isAuthenticated) {
     return (
+      // <Navigate
+      //   to={ROUTES.ADMIN.LOGIN}
+      //   state={{ from: location }}
+      //   replace
+      // />
       <Navigate
-        to={ROUTES.ADMIN.LOGIN}
-        state={{ from: location }}
+        to={ROUTES.PUBLIC.HOME}
         replace
       />
     );
