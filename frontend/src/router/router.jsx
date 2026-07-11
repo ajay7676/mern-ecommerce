@@ -2,12 +2,16 @@ import { createBrowserRouter } from "react-router";
 
 import { clientRoutes } from "../routes/client.routes";
 import { authRoutes } from "../routes/auth.routes";
-import { customerRoutes } from "../routes/customer.routes";
+import { userRoutes } from "../routes/user.routes";
 import { adminRoutes } from "../routes/admin.routes";
+import { errorRoutes } from "../routes/error.routes";
+
 
 export const router = createBrowserRouter([
-    ...clientRoutes,
-    ...authRoutes,
-    ...customerRoutes,
-    ...adminRoutes,
+  ...clientRoutes,
+  ...authRoutes,
+  ...userRoutes,
+  ...adminRoutes,
+  ...errorRoutes,
 ]);
+

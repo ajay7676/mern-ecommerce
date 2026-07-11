@@ -5,22 +5,16 @@ import { authChecked, logout, setUser } from "../../features/auth/authSlice";
 import { useEffect } from "react";
 
 const useAuthProfile = () => {
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-    const query = useQuery({
-        queryKey: ["auth-profile"],
-        queryFn: getProfile,
-        retry: false,
-        refetchOnWindowFocus: false,
-        onSuccess: (data) => {
-          dispatch(setUser(data.user));
-        },
-        onError: () => {
-          dispatch(logout());
-        },
-    });
+  const query = useQuery({
+    queryKey: ["auth-profile"],
+    queryFn: getProfile,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
 
-    useEffect(() => {
+  useEffect(() => {
     if (query.isSuccess) {
       dispatch(setUser(query.data.user));
     }
@@ -34,11 +28,7 @@ const useAuthProfile = () => {
     }
   }, [query.isSuccess, query.isError, query.data, dispatch]);
 
-
-    return query;
-
-
-
-}
+  return query;
+};
 
 export default useAuthProfile;
