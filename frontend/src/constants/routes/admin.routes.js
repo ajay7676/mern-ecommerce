@@ -7,6 +7,19 @@ export const ADMIN_ROUTES = {
 
     DASHBOARD: "/admin",
 
+    LISTINGS: "/admin/listings",
+    CREATE_LISTINGS: "/admin/listings/create",
+    EDIT_LISTINGS: "/admin/listings/:id/edit",
+    DELETE_LISTINGS: "/admin/listings/:id/delete",
+
+    PAYMENTS: "/admin/payments",
+
+    GROWTH: "/admin/growth",
+
+    ADS: "/admin/ads",
+
+    REPORTS: "/admin/reports",
+
     PRODUCTS: "/admin/products",
     CREATE_PRODUCT: "/admin/products/create",
     EDIT_PRODUCT: "/admin/products/:id/edit",

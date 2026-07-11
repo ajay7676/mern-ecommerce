@@ -1,28 +1,35 @@
 import { Outlet } from "react-router-dom";
-import Navbar from '../components/admin/elements/Navbar'
-import Sidebar from "../components/admin/Sidebar";
+import AdminSidebar from '../components/admin/sidebar/AdminSidebar';
+import AdminNavbar from '../components/admin/navbar/AdminNavbar';
+
+
 const AdminLayout = () => {
   return (
-    <div className="drawer lg:drawer-open" data-theme="light">
-      <input id="admin-drawer" type="checkbox" className="drawer-toggle" />
-      <div className="drawer-content flex flex-col min-h-screen bg-gray-100">
-        <Navbar />
-        <main className="p-4 lg:p-6">
+    <div className="drawer lg:drawer-open">
+      {/* Mobile Drawer Toggle */}
+
+      <input
+        id="admin-drawer"
+        type="checkbox"
+        className="drawer-toggle"
+      />
+
+      {/* Main Content */}
+
+      <div className="drawer-content flex min-h-screen flex-col bg-base-200">
+        <AdminNavbar />
+        <main className="flex-1 p-4 md:p-6">
           <Outlet />
         </main>
+
       </div>
 
-      <div className="drawer-side z-40">
-        <label
-          htmlFor="admin-drawer"
-          aria-label="close sidebar"
-          className="drawer-overlay"
-        ></label>
+      {/* Sidebar */}
 
-        <Sidebar />
-      </div>
+      <AdminSidebar />
     </div>
-  );
-};
 
-export default AdminLayout;
+  )
+}
+
+export default AdminLayout
