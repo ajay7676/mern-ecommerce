@@ -31,6 +31,11 @@ import SettingsPage from '../pages/admin/settings/SettingsPage';
 
 import AdminProfilePage from '../pages/admin/profile/AdminProfilePage';
 
+import GrowthPage from '../pages/admin/growth/GrowthPage';
+import AdsPage from '../pages/admin/ads/AdsPage';
+import ReportsPage from '../pages/admin/reports/ReportsPage';
+
+
 import { ROUTES } from "../constants/routes/";
 
 // src/routes/admin.routes.jsx
@@ -102,6 +107,18 @@ export const adminRoutes = [
             element: <CouponListPage />,
           },
 
+          {
+            path: ROUTES.ADMIN.GROWTH,
+            element: <GrowthPage />,
+          },
+          {
+            path: ROUTES.ADMIN.ADS,
+            element: <AdsPage />,
+          },
+          {
+            path: ROUTES.ADMIN.REPORTS,
+            element: <ReportsPage />,
+          },
           {
             path: ROUTES.ADMIN.BANNERS,
             element: <BannerListPage />,
