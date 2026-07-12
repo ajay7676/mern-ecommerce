@@ -1,7 +1,14 @@
+import { Menu } from "lucide-react";
 
 const MobileMenuButton = () => {
   return (
-    <div>MobileMenuButton</div>
+    <label
+      htmlFor="admin-drawer"
+      className="btn btn-ghost btn-square lg:hidden"
+      aria-label="Open sidebar"
+    >
+      <Menu size={22} />
+    </label>
   )
 }
 

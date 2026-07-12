@@ -4,7 +4,7 @@ import { sidebarMenu } from "./sidebarMenu";
 
 const AdminSidebar = () => {
   return (
-    <div className="drawer-side z-40">
+    <div className="sticky top-0  drawer-side z-30">
       {/* Overlay (mobile only) */}
       <label
         htmlFor="admin-drawer"
@@ -12,12 +12,12 @@ const AdminSidebar = () => {
         className="drawer-overlay"
       />
 
-      <aside className="flex h-full w-72 flex-col border-r border-base-300 bg-base-100">
+      <aside className="flex h-full w-65 flex-col border-r border-base-300 bg-base-100">
         {/* Logo */}
         <SidebarLogo />
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <nav className="flex-1 overflow-y-hidden px-3 py-4">
           <ul className="space-y-1">
             {sidebarMenu.map((item) => (
               <li key={item.id}>
