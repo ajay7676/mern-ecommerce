@@ -41,6 +41,7 @@ import ReportsPage from '../pages/admin/reports/ReportsPage';
 
 
 import { ROUTES } from "../constants/routes/";
+import PaymentsPage from '../pages/admin/payments/PaymentsPage'
 
 // src/routes/admin.routes.jsx
 
@@ -75,6 +76,10 @@ export const adminRoutes = [
             element: <EditProductPage />,
           },
 
+          {
+            path: ROUTES.ADMIN.PAYMENTS,
+            element: <PaymentsPage />,
+          },
           {
             path: ROUTES.ADMIN.CATEGORIES,
             element: <CategoryPage />,

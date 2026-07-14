@@ -42,7 +42,7 @@ export  const sidebarMenu  = [
     id: "payments",
     label: "Payments",
     icon: Users,
-    path: ROUTES.ADMIN.USERS,
+    path: ROUTES.ADMIN.PAYMENTS,
   },
     {
     id: "growth",
