@@ -4,7 +4,7 @@ import { sidebarMenu } from "./sidebarMenu";
 
 const AdminSidebar = () => {
   return (
-    <div className="sticky top-0  drawer-side z-30">
+    <div className="drawer-side z-30">
       {/* Overlay (mobile only) */}
       <label
         htmlFor="admin-drawer"

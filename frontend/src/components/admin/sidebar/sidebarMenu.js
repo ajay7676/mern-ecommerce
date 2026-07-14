@@ -23,7 +23,7 @@ export  const sidebarMenu  = [
     id: "listings",
     label: "Listings",
     icon: Package,
-    path: ROUTES.ADMIN.PRODUCTS,
+    path: ROUTES.ADMIN.LISTINGS,
   },
    {
     id: "inventory",

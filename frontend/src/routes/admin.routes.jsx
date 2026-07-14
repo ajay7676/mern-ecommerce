@@ -9,6 +9,10 @@ import EditProductPage from '../pages/admin/products/EditProductPage'
 import CreateProductPage from '../pages/admin/products/CreateProductPage'
 
 
+import ListingPage from '../pages/admin/listings/ListingPage'
+
+
+
 import CategoryPage from '../pages/admin/categories/CategoryPage';
 
 import BrandsPage from '../pages/admin/brands/BrandsPage';
@@ -55,6 +59,10 @@ export const adminRoutes = [
           {
             path: ROUTES.ADMIN.PRODUCTS,
             element: <ProductListPage />,
+          },
+          {
+            path: ROUTES.ADMIN.LISTINGS,
+            element: <ListingPage />,
           },
 
           {
