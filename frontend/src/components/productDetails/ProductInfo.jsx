@@ -11,7 +11,8 @@ const ProductInfo = ({ product }) => {
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const finalPrice = product?.discountPrice || product?.price;
+  console.log(product.variants[0].discountPrice)
+  const finalPrice = product?.variants[0]?.discountPrice || product?.variants[0]?.price;
   const discountPrice = calculateDiscount(product.price, product.discountPrice);
 
   return (

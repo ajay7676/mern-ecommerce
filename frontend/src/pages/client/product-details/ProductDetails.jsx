@@ -6,8 +6,8 @@ import useProduct from '../../../hooks/queries/useProduct'
 import { useParams } from "react-router";
 
 const ProductDetails = () => {
-    const { productId } = useParams(); 
-    const {data, isPending,isError, error} = useProduct(productId);
+    const  {slug}  = useParams(); 
+    const {data, isPending,isError, error} = useProduct(slug);
 
     if (isPending) return <p className="p-6">Loading product...</p>
 
@@ -19,8 +19,6 @@ const ProductDetails = () => {
     );
   }
   const product = data?.product;
-   console.log(product)
-
   return (
     <div className="bg-white">
       <div className="max-w-7xl mx-auto px-4 py-6">
