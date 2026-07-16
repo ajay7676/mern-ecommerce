@@ -1,7 +1,6 @@
 
 import {
   MessageSquare,
-//   ArrowRight,
   AlertCircle,
 } from "lucide-react";
 import Card from "./Card";
@@ -46,7 +45,11 @@ const CustomerCard = () => {
             </p>
 
           </div>
+
         </div>
+
+       
+
       </div>
     </Card>
   )
