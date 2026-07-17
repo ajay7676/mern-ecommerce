@@ -1,13 +1,26 @@
-
+import { useState } from "react";
 import ToolbarButton from "./ToolbarButton";
 import SortButton from "./SortButton";
+import {SORT_OPTIONS} from './sortOptions'
+
 
 const ActionButtons = ({
-  onSort,
   onDownload,
   onUpload,
   onAction,
 }) => {
+
+  const [sortBy, setSortBy] = useState("newest");
+  const handleSort = (sort) => {
+    setSortBy(sort);
+
+    // React Query
+    // refetch()
+
+    // API
+    // GET /products?sort=newest
+  };
+
   return (
     <div
       className="
@@ -20,7 +33,11 @@ const ActionButtons = ({
         lg:w-auto
       "
     >
-      <SortButton onClick={onSort} />
+      <SortButton
+        value={sortBy}
+      options={SORT_OPTIONS}
+      onChange={handleSort}
+        />
 
       <ToolbarButton onClick={onDownload}>
         Downloads

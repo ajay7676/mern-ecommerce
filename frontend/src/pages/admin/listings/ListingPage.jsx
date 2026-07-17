@@ -6,6 +6,8 @@ import StatusTabs from "../../../components/admin/listings/statustabs/StatusTabs
 import { recommendationTabs } from "../../../components/admin/listings/listingsData";
 import FilterOption from "../../../components/admin/listings/filters/FilterOption";
 import ActionButtons from "../../../components/admin/listings/filters/ActionButtons";
+import ListingsTable from "../../../components/admin/listings/table/ListingsTable";
+import listings from './data/listings'
 
 const ListingPage = () => {
   const [activeRecommendation, setActiveRecommendation] = useState("all");
@@ -34,6 +36,7 @@ const ListingPage = () => {
                 onAction={() => console.log("Action")}
             />
         </div>
+        <ListingsTable data={listings}/>
       </div>
     </div>
   );

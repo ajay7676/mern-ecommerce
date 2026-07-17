@@ -1,33 +1,71 @@
+import { ArrowDownWideNarrow, ChevronDown } from "lucide-react";
 
-import { ChevronDown } from "lucide-react";
+import Dropdown from '../../common/dropdown/Dropdown';
+import DropdownMenu from '../../common/dropdown/DropdownMenu';
+import DropdownItem from '../../common/dropdown/DropdownItem';
 
 const SortButton = ({
-  label = "Sort By",
-  onClick,
+  options = [],
+  value,
+  onChange,
+  loading = false,
+  disabled = false,
 }) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="
-        btn btn-sm
-        h-9 min-h-9
-        rounded-lg
-        border
-        border-[#E5E7EB]
-        bg-white
-        px-4
-        font-medium
-        normal-case
-        shadow-none
-        hover:border-[#2874F0]
-        hover:bg-[#F8FAFF]
-      "
-    >
-      <span>{label}</span>
+  const selected =
+    options.find((item) => item.id === value) || null;
 
-      <ChevronDown size={16} />
-    </button>
+  return (
+    <Dropdown
+      disabled={disabled || loading}
+      trigger={
+        <button
+          className="
+            btn btn-sm
+            h-9
+            w-50
+            rounded-lg
+            border
+            border-base-300
+            bg-white
+            px-4
+            normal-case
+            shadow-none
+            hover:bg-base-100
+          "
+        >
+          <ArrowDownWideNarrow size={16} />
+
+          <span className="mx-1">
+            {selected ? selected.label : "Sort By"}
+          </span>
+
+          <ChevronDown size={16} />
+        </button>
+      }
+    >
+      {({ close }) => (
+        <DropdownMenu>
+          {options.map((option) => (
+            <DropdownItem
+              key={option.id}
+              active={option.id === value}
+              icon={
+                option.icon && (
+                  <option.icon size={16} />
+                )
+              }
+              onClick={() => {
+                onChange(option.id);
+
+                close();
+              }}
+            >
+              {option.label}
+            </DropdownItem>
+          ))}
+        </DropdownMenu>
+      )}
+    </Dropdown>
   );
 };
 
