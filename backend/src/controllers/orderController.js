@@ -122,7 +122,6 @@ const getSingleOrder = async (req, res, next) => {
         select: "name email",
       })
       .lean();
-    console.log(order);
     if (!order) {
       return next(new HandleError("Order not found", 404));
     }

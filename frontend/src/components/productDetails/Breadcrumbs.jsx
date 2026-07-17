@@ -1,6 +1,4 @@
 const Breadcrumbs = ({ category,brand ,name }) => {
-   console.log(category);
-   console.log(brand)
   return (
     <div className="text-sm breadcrumbs text-slate-500">
       <ul>

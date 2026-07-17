@@ -96,7 +96,6 @@ const getSingleProduct = async (req, res, next) => {
       message: "Product fetched successfully",
       product,
     });
-    console.log(product);
   } catch (error) {
     next(error);
   }
@@ -242,8 +241,6 @@ const deleteProductReview = async (req, res, next) => {
   try {
     const { productId } = req.params;
     const { reviewId } = req.params;
-    console.log(productId);
-    console.log(reviewId);
     const product = await ProductModel.findById(productId);
     if (!product) {
       return next(new HandleError("Product not found", 404));

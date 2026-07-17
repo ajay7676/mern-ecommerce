@@ -5,7 +5,6 @@ const ReportsHeader = ({
   description = "Generate and download your business reports.",
 }) => {
   const onRequestReport = () => {
-     console.log("Open Request Report Modal")  
   }
   return (
     <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

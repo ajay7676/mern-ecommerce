@@ -2,7 +2,6 @@ import { FiHeart, FiMinus, FiPlus, FiTrash2 } from "react-icons/fi";
 import { FaRegCheckCircle } from "react-icons/fa";
 
 const CartItem = ({ item }) => {
-  console.log(item);
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm">
       <div className="grid grid-cols-[110px_1fr] md:grid-cols-[160px_1fr_auto] gap-4 md:gap-6">

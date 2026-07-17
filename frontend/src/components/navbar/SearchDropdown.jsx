@@ -10,7 +10,6 @@ const SearchDropdown = ({
   if (!searchTerm || searchTerm.trim().length < 2) {
     return null;
   }
-   console.log(products)
   return  <div className="absolute left-0 top-full mt-2 w-full bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden">
       <div className="px-4 py-3 border-b border-slate-100">
         <p className="text-xs font-semibold text-slate-500">

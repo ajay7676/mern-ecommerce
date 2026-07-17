@@ -2,7 +2,6 @@
 import clsx from "clsx";
 
 const StatsCard = ({columns, className }) => {
-   console.log(columns)
   return (
      <div
       className={clsx(

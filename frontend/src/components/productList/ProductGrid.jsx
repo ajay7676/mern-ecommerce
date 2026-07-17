@@ -6,7 +6,6 @@ import ProductCardSkeleton from "../skeleton/ProductCardSkeleton";
 const ProductGrid = () => {
   const { data, isPending, isError, error } = useProducts();
   const products = data?.products || [];
-  console.log(products);
    if (isPending) {
     return (
       <section className="mt-8">

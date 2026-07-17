@@ -6,7 +6,6 @@ const Navbar = () => {
    const { user } = useSelector(
     (state) => state.auth
   );
-   console.log(user)
   return (
       <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
       <div className="navbar px-4 lg:px-6 min-h-16">

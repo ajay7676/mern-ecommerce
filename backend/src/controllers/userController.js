@@ -232,7 +232,6 @@ const getAllUserByAdmin = async (req, res, next) => {
       .select("-password")
       .sort({ createdAt: -1 })
       .lean();
-    console.log(users);
     if (!users) {
       return next(new HandleError("Users not exists", 400));
     }
