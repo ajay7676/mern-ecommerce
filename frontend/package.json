@@ -16,6 +16,7 @@
     "@tanstack/react-query": "^5.101.1",
     "@tanstack/react-table": "^8.21.3",
     "axios": "^1.18.1",
+    "backend": "file:..",
     "clsx": "^2.1.1",
     "daisyui": "^5.5.23",
     "date-fns": "^4.4.0",
