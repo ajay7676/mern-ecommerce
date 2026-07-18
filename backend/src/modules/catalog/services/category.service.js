@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import Category from "../models/category.model.js";
-import HandleError from "../../../utils/HandleError.js";
+import HandleError from '../../../utils/handleError.js'
 
 const generateSlug = (text = "") => {
   return text
