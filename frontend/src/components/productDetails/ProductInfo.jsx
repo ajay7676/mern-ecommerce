@@ -11,12 +11,12 @@ const ProductInfo = ({ product }) => {
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const finalPrice = product?.variants[0]?.discountPrice || product?.variants[0]?.price;
+  const finalPrice = product?.discountPrice || product?.price;
   const discountPrice = calculateDiscount(product.price, product.discountPrice);
 
   return (
     <div className="flex flex-col">
-      <p className="font-bold text-slate-700">{product?.brand || "Brand"}</p>
+      <p className="font-bold text-slate-700">{product?.brand.name || "Brand"}</p>
       <h1 className="text-2xl font-semibold text-slate-700 mt-1">
         {product?.name}
       </h1>
@@ -29,7 +29,7 @@ const ProductInfo = ({ product }) => {
 
           }
         </span>
-        <span>|</span>
+        {/* <span>|</span> */}
         {/* <span>1.1K Ratings</span>
         <span>|</span> */}
         
@@ -60,26 +60,29 @@ const ProductInfo = ({ product }) => {
           Earn Style Points with every purchase
         </p>
       </div>
-      <OfferBox />
+       <OfferBox />
       <ColorSelector
         selectedColor={selectedColor}
         setSelectedColor={setSelectedColor}
       />
+     
       <SizeSelector
         selectedSize={selectedSize}
         setSelectedSize={setSelectedSize}
       />
+      
       <QuantitySelector
         quantity={quantity}
         setQuantity={setQuantity}
         stock={product?.stock}
       />
+      
       <ProductActions
         quantity={quantity}
         product={product}
         selectedColor={selectedColor}
         selectedSize={selectedSize}
-       />
+       /> 
     </div>
   );
 };

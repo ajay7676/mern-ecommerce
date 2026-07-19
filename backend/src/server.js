@@ -7,8 +7,8 @@ process.on("uncaughtException", (err) => {
 import express from "express";
 import dotenv from "dotenv";
 import cors from 'cors'
-import productRoutes from './routes/productRoutes.js'
-// import productRoutes from './modules/product/routes/product.routes.js'
+// import productRoutes from './routes/productRoutes.js'
+import productRoutes from './modules/product/routes/product.routes.js'
 import userRoutes from './routes/userRoutes.js'
 import categoryRoutes from './modules/catalog/routes/category.routes.js'
 import cartRoutes from './routes/cartRoutes.js'

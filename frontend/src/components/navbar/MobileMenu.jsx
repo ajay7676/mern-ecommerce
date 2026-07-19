@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import {
   FiChevronDown,
   FiHeart,
+  FiLogOut,
   FiShoppingBag,
   FiUser,
   FiX,
@@ -10,14 +11,14 @@ import {
 
 import { navLinks } from "../../constants/navigation";
 import { useSelector } from "react-redux";
+import useLogout from "../../hooks/mutations/useLogout";
 
-const MobileMenu = ({ isOpen, onClose }) => {
+const MobileMenu = ({ isOpen, onClose, isLoggingOut = false }) => {
   const [openMenu, setOpenMenu] = useState(null);
-  const { user, isAuthenticated } = useSelector(
-    (state) => state.auth
-  );
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
   const firstName = user?.name?.split(" ")[0];
   const firstLetter = user?.name?.charAt(0)?.toUpperCase();
+  const logoutMutation = useLogout();
   const toggleMenu = (menuName) => {
     setOpenMenu((prev) => (prev === menuName ? null : menuName));
   };
@@ -47,7 +48,9 @@ const MobileMenu = ({ isOpen, onClose }) => {
         }`}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-          <h2 className="text-xl font-bold text-slate-900">Valid Super Store</h2>
+          <h2 className="text-xl font-bold text-slate-900">
+            Valid Super Store
+          </h2>
 
           <button
             type="button"
@@ -60,7 +63,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
         </div>
 
         <div className="px-5 py-5 border-b border-slate-100">
-           {isAuthenticated ? (
+          {isAuthenticated ? (
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-full bg-red-500 text-white flex items-center justify-center font-bold">
                 {firstLetter}
@@ -119,36 +122,38 @@ const MobileMenu = ({ isOpen, onClose }) => {
                 </button>
 
                 <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  className={`grid transition-all duration-300 ${
                     isActive
-                      ? "max-h-225 opacity-100"
-                      : "max-h-0 opacity-0"
+                      ? "grid-rows-[1fr] opacity-100"
+                      : "grid-rows-[0fr] opacity-0"
                   }`}
                 >
-                  <div className="bg-slate-50 px-5 py-4 space-y-5">
-                    {item.megaMenu?.map((section) => (
-                      <div key={section.title}>
-                        <h4 className="text-sm font-bold text-red-500 mb-2">
-                          {section.title}
-                        </h4>
+                  <div className="overflow-hidden">
+                    <div className="bg-slate-50 px-5 py-4 space-y-5">
+                      {item.megaMenu?.map((section) => (
+                        <div key={section.title}>
+                          <h4 className="text-sm font-bold text-red-500 mb-2">
+                            {section.title}
+                          </h4>
 
-                        <ul className="grid grid-cols-2 gap-2">
-                          {section.items.map((subItem) => (
-                            <li key={subItem}>
-                              <NavLink
-                                to={`${item.path}?keyword=${encodeURIComponent(
-                                  subItem
-                                )}`}
-                                onClick={onClose}
-                                className="block text-sm text-slate-600 hover:text-red-500 transition"
-                              >
-                                {subItem}
-                              </NavLink>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
+                          <ul className="grid grid-cols-2 gap-2">
+                            {section.items.map((subItem) => (
+                              <li key={subItem}>
+                                <NavLink
+                                  to={`${item.path}?keyword=${encodeURIComponent(
+                                    subItem,
+                                  )}`}
+                                  onClick={onClose}
+                                  className="block text-sm text-slate-600 hover:text-red-500 transition"
+                                >
+                                  {subItem}
+                                </NavLink>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -184,6 +189,25 @@ const MobileMenu = ({ isOpen, onClose }) => {
             Bag
           </NavLink>
         </div>
+        {/* Sticky bottom logout */}
+        {isAuthenticated && (
+          <footer className="border-t border-slate-200 bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+            <button
+              type="button"
+              onClick={() => logoutMutation.mutate()}
+              disabled={logoutMutation.isPending}
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-sm font-semibold text-red-600 transition hover:border-red-300 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoggingOut ? (
+                <span className="loading loading-spinner loading-sm" />
+              ) : (
+                <FiLogOut className="text-lg" />
+              )}
+
+              {isLoggingOut ? "Logging out..." : "Logout"}
+            </button>
+          </footer>
+        )}
       </aside>
     </div>
   );

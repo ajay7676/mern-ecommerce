@@ -14,11 +14,11 @@ const ProductCard = ({ product }) => {
       className="group relative bg-white rounded-xl border
       border-slate-200 overflow-hidden hover:shadow-lg transition"
     >
-      {product.badge && (
+      {/* {product.badge && (
         <span className="absolute top-3 left-3 z-10 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md">
           {product.badge}
         </span>
-      )}
+      )} */}
 
       <button className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center hover:text-red-500">
         <FiHeart />
@@ -34,7 +34,7 @@ const ProductCard = ({ product }) => {
 
       <div className="p-3">
         <h3 className="text-sm font-bold text-slate-900 truncate">
-          {product.brand}
+          {product.brand.name}
         </h3>
 
         <p className="text-xs text-slate-500 truncate">{product.name}</p>
@@ -62,6 +62,7 @@ const ProductCard = ({ product }) => {
         )}
       </div>
     </Link>
+    
   );
 };
 

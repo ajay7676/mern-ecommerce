@@ -18,7 +18,7 @@ export const searchProducts = async(keyword) => {
 }
 
 export const getSingleProduct = async(productId) => {
-      const reseponse = await api.get(`/product/${productId}`);
+      const reseponse = await api.get(`/products/${productId}`);
 
       return reseponse.data;
 }

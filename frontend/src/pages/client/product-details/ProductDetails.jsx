@@ -19,6 +19,7 @@ const ProductDetails = () => {
     );
   }
   const product = data?.product;
+   console.log(product)
   return (
     <div className="bg-white">
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -30,7 +31,8 @@ const ProductDetails = () => {
         />
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr_0.8fr] gap-8 mt-5">
           <ProductGallery key={product._id}  product={product}/>
-          <ProductInfo  product={product} />
+           <ProductInfo  product={product} />
+           
           <DeliveryInfo  product={product} />
         </div>
       </div>

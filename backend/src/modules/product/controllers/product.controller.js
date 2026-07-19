@@ -31,7 +31,7 @@ const getAllProducts = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Products fetched successfully",
+      message: "Products fetched successfully ALL",
       products: result.products,
       pagination: result.pagination,
     });
