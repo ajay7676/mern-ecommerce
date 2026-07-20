@@ -207,7 +207,7 @@ const createProductService = async (productData, adminId) => {
 
 const getAllProductsService = async (queryParams = {}, options = {}) => {
   const page = Number(queryParams.page) || 1;
-  const limit = Number(queryParams.limit) || 12;
+  const limit = Number(queryParams.limit) || 20;
   const skip = (page - 1) * limit;
 
   const sortOptions = {

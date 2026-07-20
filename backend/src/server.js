@@ -9,8 +9,10 @@ import dotenv from "dotenv";
 import cors from 'cors'
 // import productRoutes from './routes/productRoutes.js'
 import productRoutes from './modules/product/routes/product.routes.js'
+import productVariantRoutes from './modules/catalog/routes/productVariant.routes.js'
 import userRoutes from './routes/userRoutes.js'
 import categoryRoutes from './modules/catalog/routes/category.routes.js'
+import categoryAttributeRoutes from "./modules/catalog/routes/categoryAttribute.routes.js";
 import cartRoutes from './routes/cartRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
 import connectDB from "./config/db.js";
@@ -25,6 +27,7 @@ const app = express();
 const __dirname= path.resolve();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
     // origin: "http://localhost:5173",
@@ -36,7 +39,9 @@ const PORT = process.env.PORT || 5000;
 
 
 app.use("/api/v1" ,productRoutes );
+app.use("/api/v1", productVariantRoutes);
 app.use("/api/v1" ,categoryRoutes );
+app.use("/api/v1", categoryAttributeRoutes);
 app.use("/api/v1" ,userRoutes);
 app.use("/api/v1" ,cartRoutes);
 app.use("/api/v1" ,orderRoutes);

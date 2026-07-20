@@ -121,10 +121,14 @@ const categoryAttributeSchema  =  new mongoose.Schema(
     timestamps: true,
   }
 );
-
 categoryAttributeSchema.index(
   { category: 1, slug: 1 },
-  { unique: true }
+  {
+    unique: true,
+    partialFilterExpression: {
+      isDeleted: false,
+    },
+  }
 );
 
 categoryAttributeSchema.index({
@@ -139,9 +143,8 @@ categoryAttributeSchema.index({
   isDeleted: 1,
 });
 
-const CategoryAttribute = mongoose.model(
-  "CategoryAttribute",
-  categoryAttributeSchema
-);
+const CategoryAttribute =
+  mongoose.models.CategoryAttribute ||
+  mongoose.model("CategoryAttribute", categoryAttributeSchema);
 
 export default CategoryAttribute;
