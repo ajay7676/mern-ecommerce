@@ -25,15 +25,6 @@ router.get("/products/:productId/variants", getProductVariants);
  */
 
 /**
- * Create single variant
- */
-router.post(
-  "/admin/products/:productId/variants",
-  userAuth,
-  adminOnly,
-  createProductVariant
-);
-/**
  * Get single variant
  */
 router.get(
@@ -42,6 +33,17 @@ router.get(
   adminOnly,
   getAdminProductVariants
 );
+
+/**
+ * Create single variant
+ */
+router.post(
+  "/admin/products/:productId/variants",
+  userAuth,
+  adminOnly,
+  createProductVariant
+);
+
 /**
  * Create multiple variants
  */
