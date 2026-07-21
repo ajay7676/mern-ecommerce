@@ -5,6 +5,8 @@ import CategoryAttribute  from '../models/categoryAttribute.model.js';
 import HandleError from '../../../utils/handleError.js';
 
 const ALLOWED_VARIANT_ATTRIBUTE_TYPES = ["select", "color"];
+const VARIANT_STATUSES = ["active", "inactive", "archived"];
+
 
 /**
  * Check valid MongoDB ObjectId
@@ -847,9 +849,452 @@ const getProductVariantsService = async (productId, options = {}) => {
   };
 };
 
+
+const getVariantOrThrow = async ({
+  productId,
+  variantId,
+  includeDeleted = false,
+  session = null,
+}) => {
+  if (!isValidObjectId(productId)) {
+    throw new HandleError("Invalid product ID", 400);
+  }
+
+  if (!isValidObjectId(variantId)) {
+    throw new HandleError("Invalid variant ID", 400);
+  }
+
+  const query = {
+    _id: variantId,
+    product: productId,
+  };
+
+  if (!includeDeleted) {
+    query.isDeleted = false;
+  }
+
+  const variantQuery = ProductVariant.findOne(query);
+
+  if (session) {
+    variantQuery.session(session);
+  }
+
+  const variant = await variantQuery;
+
+  if (!variant) {
+    throw new HandleError("Product variant not found", 404);
+  }
+
+  return variant;
+};
+
+const checkVariantSkuDuplicateForUpdate = async ({
+  sku,
+  variantId,
+  session = null,
+}) => {
+  const normalizedSku = normalizeSku(sku);
+
+  if (!normalizedSku) {
+    throw new HandleError("Variant SKU is required", 400);
+  }
+
+  const query = ProductVariant.findOne({
+    sku: normalizedSku,
+    _id: { $ne: variantId },
+  });
+
+  if (session) {
+    query.session(session);
+  }
+
+  const existingVariant = await query;
+
+  if (existingVariant) {
+    throw new HandleError("Variant SKU already exists", 409);
+  }
+
+  return normalizedSku;
+};
+
+const checkVariantCombinationDuplicateForUpdate = async ({
+  productId,
+  variantId,
+  optionSignature,
+  session = null,
+}) => {
+  const query = ProductVariant.findOne({
+    product: productId,
+    optionSignature,
+    isDeleted: false,
+    _id: { $ne: variantId },
+  });
+
+  if (session) {
+    query.session(session);
+  }
+
+  const existingVariant = await query;
+
+  if (existingVariant) {
+    throw new HandleError(
+      `Variant combination already exists: ${optionSignature}`,
+      409
+    );
+  }
+};
+
+const findNextDefaultVariant = async ({ productId, excludeVariantId, session }) => {
+  return ProductVariant.findOne({
+    product: productId,
+    _id: { $ne: excludeVariantId },
+    status: "active",
+    isDeleted: false,
+  })
+    .sort({ createdAt: 1 })
+    .session(session);
+};
+
+const updateProductVariantService = async (
+  productId,
+  variantId,
+  updateData = {},
+  adminId
+) => {
+  const session = await mongoose.startSession();
+
+  try {
+    let updatedVariant;
+
+    await session.withTransaction(async () => {
+      const product = await getProductOrThrow(productId, session);
+
+      const variant = await getVariantOrThrow({
+        productId,
+        variantId,
+        session,
+      });
+
+      /**
+       * Update SKU
+       */
+      if (updateData.sku && updateData.sku !== variant.sku) {
+        variant.sku = await checkVariantSkuDuplicateForUpdate({
+          sku: updateData.sku,
+          variantId: variant._id,
+          session,
+        });
+      }
+
+      /**
+       * Update attributes and regenerate optionSignature
+       */
+      if (Array.isArray(updateData.attributes)) {
+        const normalizedAttributes = await normalizeVariantAttributes({
+          attributes: updateData.attributes,
+          product,
+          session,
+        });
+
+        const optionSignature = generateOptionSignature(normalizedAttributes);
+
+        await checkVariantCombinationDuplicateForUpdate({
+          productId: product._id,
+          variantId: variant._id,
+          optionSignature,
+          session,
+        });
+
+        variant.attributes = normalizedAttributes;
+        variant.optionSignature = optionSignature;
+
+        /**
+         * If title is not manually sent, regenerate title from attributes.
+         */
+        if (!Object.prototype.hasOwnProperty.call(updateData, "title")) {
+          variant.title = normalizedAttributes
+            .map((attribute) => attribute.optionLabel)
+            .join(" / ");
+        }
+      }
+
+      /**
+       * Update normal fields
+       */
+      const allowedFields = [
+        "title",
+        "barcode",
+        "price",
+        "discountPrice",
+        "costPrice",
+        "stock",
+        "lowStockThreshold",
+        "trackInventory",
+        "allowBackorder",
+        "images",
+        "weight",
+        "dimensions",
+      ];
+
+      allowedFields.forEach((field) => {
+        if (Object.prototype.hasOwnProperty.call(updateData, field)) {
+          variant[field] = updateData[field];
+        }
+      });
+
+      /**
+       * Validate price and discountPrice after update
+       */
+      const finalPrice =
+        variant.price !== undefined && variant.price !== null
+          ? variant.price
+          : product.price;
+
+      if (
+        variant.discountPrice !== undefined &&
+        variant.discountPrice !== null &&
+        Number(variant.discountPrice) >= Number(finalPrice)
+      ) {
+        throw new HandleError(
+          "Variant discount price must be less than variant price",
+          400
+        );
+      }
+
+      /**
+       * If admin sends isDefault true, make this variant default.
+       */
+      if (updateData.isDefault === true) {
+        if (variant.status !== "active") {
+          throw new HandleError("Only active variant can be set as default", 400);
+        }
+
+        await ProductVariant.updateMany(
+          {
+            product: product._id,
+            isDefault: true,
+            isDeleted: false,
+            _id: { $ne: variant._id },
+          },
+          {
+            $set: {
+              isDefault: false,
+              updatedBy: adminId,
+            },
+          },
+          { session }
+        );
+
+        variant.isDefault = true;
+      }
+
+      variant.updatedBy = adminId;
+
+      await variant.save({ session });
+
+      updatedVariant = variant;
+    });
+
+    return updatedVariant;
+  } catch (error) {
+    if (error?.code === 11000) {
+      throw new HandleError(
+        "Variant SKU or variant combination already exists",
+        409
+      );
+    }
+
+    throw error;
+  } finally {
+    await session.endSession();
+  }
+};
+
+const softDeleteProductVariantService = async (
+  productId,
+  variantId,
+  adminId
+) => {
+  const session = await mongoose.startSession();
+
+  try {
+    let deletedVariant;
+
+    await session.withTransaction(async () => {
+      await getProductOrThrow(productId, session);
+
+      const variant = await getVariantOrThrow({
+        productId,
+        variantId,
+        session,
+      });
+
+      const wasDefaultVariant = variant.isDefault;
+
+      /**
+       * First remove default and soft delete current variant.
+       */
+      variant.isDefault = false;
+      variant.isDeleted = true;
+      variant.deletedAt = new Date();
+      variant.deletedBy = adminId;
+      variant.updatedBy = adminId;
+
+      await variant.save({ session });
+
+      /**
+       * Then assign another active variant as default.
+       */
+      if (wasDefaultVariant) {
+        const nextDefaultVariant = await findNextDefaultVariant({
+          productId,
+          excludeVariantId: variant._id,
+          session,
+        });
+
+        if (nextDefaultVariant) {
+          nextDefaultVariant.isDefault = true;
+          nextDefaultVariant.updatedBy = adminId;
+          await nextDefaultVariant.save({ session });
+        }
+      }
+
+      deletedVariant = variant;
+    });
+
+    return deletedVariant;
+  } finally {
+    await session.endSession();
+  }
+};
+
+const setDefaultProductVariantService = async (
+  productId,
+  variantId,
+  adminId
+) => {
+  const session = await mongoose.startSession();
+
+  try {
+    let defaultVariant;
+
+    await session.withTransaction(async () => {
+      await getProductOrThrow(productId, session);
+
+      const variant = await getVariantOrThrow({
+        productId,
+        variantId,
+        session,
+      });
+
+      if (variant.status !== "active") {
+        throw new HandleError("Only active variant can be set as default", 400);
+      }
+
+      await ProductVariant.updateMany(
+        {
+          product: productId,
+          isDefault: true,
+          isDeleted: false,
+        },
+        {
+          $set: {
+            isDefault: false,
+            updatedBy: adminId,
+          },
+        },
+        { session }
+      );
+
+      variant.isDefault = true;
+      variant.updatedBy = adminId;
+
+      await variant.save({ session });
+
+      defaultVariant = variant;
+    });
+
+    return defaultVariant;
+  } finally {
+    await session.endSession();
+  }
+};
+
+const updateProductVariantStatusService = async (
+  productId,
+  variantId,
+  status,
+  adminId
+) => {
+  if (!VARIANT_STATUSES.includes(status)) {
+    throw new HandleError("Invalid variant status", 400);
+  }
+
+  const session = await mongoose.startSession();
+
+  try {
+    let updatedVariant;
+
+    await session.withTransaction(async () => {
+      await getProductOrThrow(productId, session);
+
+      const variant = await getVariantOrThrow({
+        productId,
+        variantId,
+        session,
+      });
+
+      const wasDefaultVariant = variant.isDefault;
+
+      /**
+       * First update current variant.
+       * This avoids duplicate default variant issue.
+       */
+      variant.status = status;
+      variant.updatedBy = adminId;
+
+      if (wasDefaultVariant && status !== "active") {
+        variant.isDefault = false;
+      }
+
+      await variant.save({ session });
+
+      /**
+       * After current default is removed,
+       * assign another active variant as default.
+       */
+      if (wasDefaultVariant && status !== "active") {
+        const nextDefaultVariant = await findNextDefaultVariant({
+          productId,
+          excludeVariantId: variant._id,
+          session,
+        });
+
+        if (nextDefaultVariant) {
+          nextDefaultVariant.isDefault = true;
+          nextDefaultVariant.updatedBy = adminId;
+          await nextDefaultVariant.save({ session });
+        }
+      }
+
+      updatedVariant = await ProductVariant.findById(variant._id)
+        .select("+reservedStock +costPrice")
+        .session(session);
+    });
+
+    return updatedVariant;
+  } finally {
+    await session.endSession();
+  }
+};
+
 export {
   createProductVariantService,
   createManyProductVariantsService,
   getProductVariantsService,
+  updateProductVariantService,
+  softDeleteProductVariantService,
+  setDefaultProductVariantService,
+  updateProductVariantStatusService,
 };
 

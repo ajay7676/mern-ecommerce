@@ -4,7 +4,11 @@ import {
     createProductVariant,
     createManyProductVariants,
     getProductVariants,
-    getAdminProductVariants
+    getAdminProductVariants,
+    updateProductVariant,
+    deleteProductVariant,
+    setDefaultProductVariant,
+    updateProductVariantStatus
 
  } from "../controllers/productVariant.controller.js";
 
@@ -52,6 +56,34 @@ router.post(
   userAuth,
   adminOnly,
   createManyProductVariants
+);
+
+router.patch(
+  "/admin/products/:productId/variants/:variantId/default",
+  userAuth,
+  adminOnly,
+  setDefaultProductVariant
+);
+
+router.patch(
+  "/admin/products/:productId/variants/:variantId/status",
+  userAuth,
+  adminOnly,
+  updateProductVariantStatus
+);
+
+router.patch(
+  "/admin/products/:productId/variants/:variantId",
+  userAuth,
+  adminOnly,
+  updateProductVariant
+);
+
+router.delete(
+  "/admin/products/:productId/variants/:variantId",
+  userAuth,
+  adminOnly,
+  deleteProductVariant
 );
 
 export default router;

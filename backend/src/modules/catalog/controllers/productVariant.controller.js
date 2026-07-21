@@ -2,7 +2,11 @@ import HandleError from "../../../utils/handleError.js";
 import {
   createProductVariantService,
   createManyProductVariantsService,
-  getProductVariantsService
+  getProductVariantsService,
+  updateProductVariantService,
+  softDeleteProductVariantService,
+  setDefaultProductVariantService,
+  updateProductVariantStatusService,
 } from "../services/productVariant.service.js";
 
 /**
@@ -51,10 +55,10 @@ const createManyProductVariants = async (req, res, next) => {
       return next(new HandleError("Variants array is required", 400));
     }
 
-     const createdVariants = await createManyProductVariantsService(
+    const createdVariants = await createManyProductVariantsService(
       productId,
       variants,
-      adminId
+      adminId,
     );
 
     res.status(201).json({
@@ -63,12 +67,10 @@ const createManyProductVariants = async (req, res, next) => {
       count: createdVariants.length,
       variants: createdVariants,
     });
-
   } catch (error) {
     next(error);
   }
 };
-
 
 /**
  * @desc    Get public product variants
@@ -126,9 +128,108 @@ const getAdminProductVariants = async (req, res, next) => {
   }
 };
 
+const updateProductVariant = async (req, res, next) => {
+  try {
+    const { productId, variantId } = req.params;
+    const adminId = req.user?._id || req.user?.id;
+
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return next(new HandleError("Variant update data is required", 400));
+    }
+
+    const variant = await updateProductVariantService(
+      productId,
+      variantId,
+      req.body,
+      adminId,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Product variant updated successfully",
+      variant,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const deleteProductVariant = async (req, res, next) => {
+  try {
+    const { productId, variantId } = req.params;
+    const adminId = req.user?._id || req.user?.id;
+
+    const variant = await softDeleteProductVariantService(
+      productId,
+      variantId,
+      adminId,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Product variant deleted successfully",
+      variant,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const setDefaultProductVariant = async (req, res, next) => {
+  try {
+    const { productId, variantId } = req.params;
+    const adminId = req.user?._id || req.user?.id;
+
+    const variant = await setDefaultProductVariantService(
+      productId,
+      variantId,
+      adminId,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Default product variant updated successfully",
+      variant,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateProductVariantStatus = async (req, res, next) => {
+  try {
+    const { productId, variantId } = req.params;
+    const adminId = req.user?._id || req.user?.id;
+    const { status } = req.body;
+
+    if (!status) {
+      return next(new HandleError("Variant status is required", 400));
+    }
+
+    const variant = await updateProductVariantStatusService(
+      productId,
+      variantId,
+      status,
+      adminId,
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Product variant status updated successfully",
+      variant,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
-     createProductVariant,
-     createManyProductVariants,
-     getProductVariants,
-     getAdminProductVariants
-     };
+  createProductVariant,
+  createManyProductVariants,
+  getProductVariants,
+  getAdminProductVariants,
+  updateProductVariant,
+  deleteProductVariant,
+  setDefaultProductVariant,
+  updateProductVariantStatus,
+};
