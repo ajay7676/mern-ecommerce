@@ -638,28 +638,213 @@ const createManyProductVariantsService = async (
   }
 };
 
+
+
 /**
- * Get variants by product
+ * Build frontend-friendly variant options.
+ * Example output:
+ * {
+ *   color: [
+ *     { label: "Black", value: "black", colorCode: "#000000", isAvailable: true }
+ *   ],
+ *   size: [
+ *     { label: "M", value: "m", isAvailable: true }
+ *   ]
+ * }
  */
-const getProductVariantsService = async (productId, options = {}) => {
+
+const buildVariantOptions = (variants = []) => {
+  const optionsMap = new Map();
+
+  variants.forEach((variant) => {
+    const isVariantAvailable = variant.isInStock;
+
+    variant.attributes.forEach((attribute) => {
+      const attributeSlug = attribute.attributeSlug;
+      const optionValue = attribute.optionValue;
+
+      if (!optionsMap.has(attributeSlug)) {
+        optionsMap.set(attributeSlug, new Map());
+      }
+
+      const attributeOptionsMap = optionsMap.get(attributeSlug);
+
+      if (!attributeOptionsMap.has(optionValue)) {
+        attributeOptionsMap.set(optionValue, {
+          attributeName: attribute.attributeName,
+          attributeSlug: attribute.attributeSlug,
+          attributeType: attribute.attributeType,
+          label: attribute.optionLabel,
+          value: attribute.optionValue,
+          colorCode: attribute.colorCode,
+          isAvailable: false,
+        });
+      }
+
+      if (isVariantAvailable) {
+        attributeOptionsMap.get(optionValue).isAvailable = true;
+      }
+    });
+  });
+
+  const finalOptions = {};
+
+  optionsMap.forEach((optionMap, attributeSlug) => {
+    finalOptions[attributeSlug] = Array.from(optionMap.values());
+  });
+
+  return finalOptions;
+};
+
+
+
+/**
+ * Format variant for public & admin  response.
+ */
+
+const formatVariantForResponse = (variant, options = {}) => {
   const { isAdmin = false } = options;
 
-  await getProductOrThrow(productId);
+  const stock = Number(variant.stock || 0);
+  const reservedStock = Number(variant.reservedStock || 0);
+  const lowStockThreshold = Number(variant.lowStockThreshold || 0);
 
-  const query = {
-    product: productId,
+  const availableStock = variant.trackInventory
+    ? Math.max(stock - reservedStock, 0)
+    : null;
+
+  const isInStock = variant.trackInventory
+    ? availableStock > 0 || variant.allowBackorder
+    : true;
+
+  const isLowStock = variant.trackInventory
+    ? availableStock > 0 && availableStock <= lowStockThreshold
+    : false;
+
+  const finalPrice = variant.discountPrice || variant.price;
+
+  const discountPercentage =
+    variant.discountPrice && variant.price
+      ? Math.round(
+          ((variant.price - variant.discountPrice) / variant.price) * 100
+        )
+      : 0;
+
+  const formattedVariant = {
+    ...variant,
+    availableStock,
+    isInStock,
+    isLowStock,
+    finalPrice,
+    discountPercentage,
+  };
+
+  /**
+   * Public users should not see internal stock reservation and cost price.
+   */
+  if (!isAdmin) {
+    delete formattedVariant.reservedStock;
+    delete formattedVariant.costPrice;
+  }
+
+  return formattedVariant;
+};
+
+/**
+ * Get product variants
+ * Public: only active variants of published/public product
+ * Admin: active/inactive/archived variants of any non-deleted product
+ */
+const getProductVariantsService = async (productId, options = {}) => {
+  const { isAdmin = false, queryParams = {} } = options;
+
+  const {
+    status,
+    isDefault,
+    includeDeleted = "false",
+  } = queryParams;
+
+  if (!isValidObjectId(productId)) {
+    throw new HandleError("Invalid product ID", 400);
+  }
+
+  const productQuery = {
+    _id: productId,
     isDeleted: false,
   };
 
+  /**
+   * Public users should only access published + public products.
+   */
   if (!isAdmin) {
-    query.status = "active";
+    productQuery.status = "published";
+    productQuery.visibility = "public";
   }
 
-  const variants = await ProductVariant.find(query)
-    .sort({ isDefault: -1, createdAt: 1 })
+  const product = await Product.findOne(productQuery)
+    .select("_id name slug status visibility price discountPrice currency stock")
     .lean();
 
-  return variants;
+  if (!product) {
+    throw new HandleError("Product not found", 404);
+  }
+
+  const variantQuery = {
+    product: productId,
+  };
+
+  /**
+   * Public users should not see deleted variants.
+   * Admin can include deleted variants only if includeDeleted=true.
+   */
+  if (!isAdmin || includeDeleted !== "true") {
+    variantQuery.isDeleted = false;
+  }
+
+  /**
+   * Public users should only see active variants.
+   */
+  if (!isAdmin) {
+    variantQuery.status = "active";
+  }
+
+  /**
+   * Admin filters
+   */
+  if (isAdmin && status) {
+    variantQuery.status = status;
+  }
+
+  if (isAdmin && isDefault !== undefined) {
+    variantQuery.isDefault = isDefault === "true";
+  }
+
+  const variants = await ProductVariant.find(variantQuery)
+    .select(isAdmin ? "+reservedStock +costPrice" : "+reservedStock")
+    .populate("createdBy", "name email")
+    .populate("updatedBy", "name email")
+    .populate("deletedBy", "name email")
+    .sort({ isDefault: -1, status: 1, createdAt: 1 })
+    .lean();
+
+  const formattedVariants = variants.map((variant) =>
+    formatVariantForResponse(variant, { isAdmin })
+  );
+
+  const variantOptions = buildVariantOptions(formattedVariants);
+
+  const defaultVariant =
+    formattedVariants.find((variant) => variant.isDefault) ||
+    formattedVariants[0] ||
+    null;
+
+  return {
+    product,
+    variants: formattedVariants,
+    options: variantOptions,
+    defaultVariant,
+    count: formattedVariants.length,
+  };
 };
 
 export {
