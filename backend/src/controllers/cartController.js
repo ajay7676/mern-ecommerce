@@ -1,5 +1,6 @@
 import Cart from "../model/cartModel.js";
 import ProductModel from "../model/productModel.js";
+// import Product from '../modules/product/models/product.model.js'
 import HandleError from "../utils/handleError.js";
 
 // Create an API to Add Item in cart
@@ -12,7 +13,7 @@ const addToCart = async (req, res, next) => {
     }
 
     const product = await ProductModel.findById(productId).select(
-      "name price discountPrice stock isActive",
+      "name minPrice maxPrice stock isActive",
     );
     if (!product) {
       return next(new HandleError("Product not found", 404));
@@ -25,7 +26,8 @@ const addToCart = async (req, res, next) => {
       return next(new HandleError("Not enough stock available", 400));
     }
     let cart = await Cart.findOne({ user: req.user._id });
-    const itemPrice = product.price || product.discountPrice;
+     console.log(cart)
+    const itemPrice = product.minPrice || product.maxPrice;
     if (!cart) {
       cart = await Cart.create({
         user: req.user._id,
