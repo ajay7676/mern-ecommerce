@@ -3,6 +3,7 @@ import { CART_ACTIONS } from "../constants/cart.constants.js";
 
 import {
   addToCartService,
+  clearCartService,
   removeCartItemService,
   updateCartItemQuantityService,
 } from "../services/cart.service.js";
@@ -123,6 +124,45 @@ export const updateCartItemQuantity = async (req, res, next) => {
 
       data: {
         updatedItem,
+        cart,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Remove all items from the authenticated
+ * user's cart.
+ *
+ * DELETE /api/v1/cart
+ */
+export const clearCart = async (req, res, next) => {
+  try {
+    const userId = req.user?._id || req.user?.id;
+
+    if (!userId) {
+      throw new HandleError("Authentication is required", 401);
+    }
+
+    const { cart, clearedItemsCount, wasAlreadyEmpty } = await clearCartService(
+      { userId },
+    );
+
+    const message = wasAlreadyEmpty
+      ? "Cart is already empty"
+      : "Cart cleared successfully";
+
+    res.setHeader("Cache-Control", "no-store");
+
+    return res.status(200).json({
+      success: true,
+      message,
+
+      data: {
+        clearedItemsCount,
+        wasAlreadyEmpty,
         cart,
       },
     });

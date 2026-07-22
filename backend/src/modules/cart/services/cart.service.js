@@ -11,6 +11,7 @@ import {
   validateAddToCartInput,
   validateRemoveCartItemInput,
   validateUpdateCartItemInput,
+  validateClearCartInput,
 } from "../validation/cart.validators.js";
 
 import {
@@ -649,5 +650,88 @@ export const updateCartItemQuantityService = async ({
 
       itemTotal: itemSnapshot.finalPrice * validQuantity,
     },
+  };
+};
+
+/**
+ * Remove all items from the authenticated
+ * user's cart.
+ */
+export const clearCartService = async ({ userId }) => {
+  const { userId: validUserId } = validateClearCartInput({
+    userId,
+  });
+
+  const cart = await findCartByUser({
+    userId: validUserId,
+  });
+
+  /*
+   * Clear Cart should be idempotent.
+   *
+   * If a cart does not exist, it is already
+   * considered empty.
+   */
+  if (!cart) {
+    return {
+      cart: null,
+      clearedItemsCount: 0,
+      wasAlreadyEmpty: true,
+    };
+  }
+
+  const clearedItemsCount = cart.items.length;
+
+  if (clearedItemsCount === 0) {
+    const emptyCart = await findPopulatedCartByUser({
+      userId: validUserId,
+    });
+
+    return {
+      cart: emptyCart,
+      clearedItemsCount: 0,
+      wasAlreadyEmpty: true,
+    };
+  }
+
+  /*
+   * splice() removes all cart subdocuments
+   * while keeping the Mongoose document array.
+   */
+  cart.items.splice(0, cart.items.length);
+
+  try {
+    /*
+     * Pre-save middleware recalculates:
+     *
+     * totalItems = 0
+     * totalAmount = 0
+     */
+    await saveCart({
+      cart,
+    });
+  } catch (error) {
+    if (error?.name === "VersionError") {
+      throw new HandleError(
+        "Your cart was updated by another request. Please try again.",
+        409,
+      );
+    }
+
+    throw error;
+  }
+
+  const updatedCart = await findPopulatedCartByUser({
+    userId: validUserId,
+  });
+
+  if (!updatedCart) {
+    throw new HandleError("Unable to load the updated cart", 500);
+  }
+
+  return {
+    cart: updatedCart,
+    clearedItemsCount,
+    wasAlreadyEmpty: false,
   };
 };

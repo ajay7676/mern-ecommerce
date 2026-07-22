@@ -4,7 +4,7 @@ import { userAuth } from '../../../middleware/userAuthMIddleware.js'
 // import adminOnly from "../../../middleware/adminMddleware.js";
 
 
-import {addToCart , removeCartItem , updateCartItemQuantity} from '../controllers/cart.controller.js'
+import {addToCart , removeCartItem , updateCartItemQuantity , clearCart} from '../controllers/cart.controller.js'
 
 
 const router = express.Router();
@@ -32,6 +32,11 @@ router.delete(
   removeCartItem
 );
 
+router.delete(
+  "/cart/clear",
+  userAuth,
+  clearCart
+);
 
 
 export default router;

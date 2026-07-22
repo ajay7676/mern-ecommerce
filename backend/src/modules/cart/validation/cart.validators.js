@@ -183,3 +183,17 @@ export const validateUpdateCartItemInput = ({
     quantity: normalizedQuantity,
   };
 };
+
+/**
+ * Validate Clear Cart input.
+ */
+export const validateClearCartInput = ({ userId }) => {
+  const normalizedUserId = validateObjectId({
+    id: userId,
+    fieldName: "User ID",
+  });
+
+  return {
+    userId: normalizedUserId,
+  };
+};
