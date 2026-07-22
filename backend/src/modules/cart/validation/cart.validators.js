@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
-import HandleError from "../../../utils/handleError";
+import HandleError from "../../../utils/handleError.js";
 import {
   DEFAULT_CART_QUANTITY,
   MAX_CART_ITEM_QUANTITY,
-} from "../constants/cart.constants";
+} from "../constants/cart.constants.js";
+
 
 /**
  * Validate a required MongoDB ObjectId.
@@ -126,5 +127,30 @@ export const validateAddToCartInput = ({
     productId: normalizedProductId,
     variantId: normalizedVariantId,
     quantity: normalizedQuantity,
+  };
+};
+
+/**
+ * Validate Remove Cart Item input.
+ */
+export const validateRemoveCartItemInput = ({
+  userId,
+  cartItemId,
+}) => {
+  const normalizedUserId =
+    validateObjectId({
+      id: userId,
+      fieldName: "User ID",
+    });
+
+  const normalizedCartItemId =
+    validateObjectId({
+      id: cartItemId,
+      fieldName: "Cart item ID",
+    });
+
+  return {
+    userId: normalizedUserId,
+    cartItemId: normalizedCartItemId,
   };
 };

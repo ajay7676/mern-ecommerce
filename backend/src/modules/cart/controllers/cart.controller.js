@@ -1,7 +1,10 @@
 import HandleError from "../../../utils/handleError.js";
 import { CART_ACTIONS } from "../constants/cart.constants.js";
 
-import { addToCartService } from "../services/cart.service.js";
+import {
+  addToCartService,
+  removeCartItemService,
+} from "../services/cart.service.js";
 
 export const addToCart = async (req, res, next) => {
   try {
@@ -40,6 +43,41 @@ export const addToCart = async (req, res, next) => {
       message,
       data: {
         action,
+        cart,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Remove one item from the authenticated
+ * user's cart.
+ *
+ * DELETE /api/v1/cart/items/:cartItemId
+ */
+
+export const removeCartItem = async (req, res, next) => {
+  try {
+    const userId = req.user?._id || req.user?.id;
+    if (!userId) {
+      throw new HandleError("Authentication is required", 401);
+    }
+
+    const { cartItemId } = req.params;
+    const { cart, removedItem } = await removeCartItemService({
+      userId,
+      cartItemId,
+    });
+    
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(200).json({
+      success: true,
+      message: "Cart item removed successfully",
+
+      data: {
+        removedItem,
         cart,
       },
     });

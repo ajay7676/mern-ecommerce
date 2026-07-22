@@ -13,8 +13,9 @@ import productVariantRoutes from './modules/catalog/routes/productVariant.routes
 import userRoutes from './routes/userRoutes.js'
 import categoryRoutes from './modules/catalog/routes/category.routes.js'
 import categoryAttributeRoutes from "./modules/catalog/routes/categoryAttribute.routes.js";
-import cartRoutes from './routes/cartRoutes.js'
-import orderRoutes from './routes/orderRoutes.js'
+// import cartRoutes from './routes/cartRoutes.js'
+import cartRoutes from "./modules/cart/routes/cart.routes.js";
+// import orderRoutes from './routes/orderRoutes.js'
 import connectDB from "./config/db.js";
 import errorHandler from "./middleware/errorMiddleware.js";
 import cookieParser from "cookie-parser";
@@ -44,7 +45,7 @@ app.use("/api/v1" ,categoryRoutes );
 app.use("/api/v1", categoryAttributeRoutes);
 app.use("/api/v1" ,userRoutes);
 app.use("/api/v1" ,cartRoutes);
-app.use("/api/v1" ,orderRoutes);
+// app.use("/api/v1" ,orderRoutes);
 
 app.use(express.static(path.join(__dirname, "/frontend/dist")));
 app.use((req, res) => {

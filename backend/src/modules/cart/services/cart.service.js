@@ -7,7 +7,10 @@ import {
   MAX_CART_ITEM_QUANTITY,
 } from "../constants/cart.constants.js";
 
-import { validateAddToCartInput } from "../validation/cart.validators.js";
+import { 
+    validateAddToCartInput,
+    validateRemoveCartItemInput
+} from "../validation/cart.validators.js";
 
 import {
   buildCartItemSnapshot,
@@ -385,5 +388,115 @@ export const addToCartService = async ({
   return {
     cart,
     action,
+  };
+};
+
+/**
+ * Remove one item from the authenticated
+ * user's cart.
+ */
+export const removeCartItemService = async ({
+  userId,
+  cartItemId,
+}) => {
+  const {
+    userId: validUserId,
+    cartItemId: validCartItemId,
+  } = validateRemoveCartItemInput({
+    userId,
+    cartItemId,
+  });
+
+  const cart = await findCartByUser({
+    userId: validUserId,
+  });
+
+  if (!cart) {
+    throw new HandleError(
+      "Cart not found",
+      404
+    );
+  }
+
+  const cartItem =
+    cart.items.id(validCartItemId);
+
+  /*
+   * Return 404 instead of revealing whether the item
+   * belongs to another user's cart.
+   */
+  if (!cartItem) {
+    throw new HandleError(
+      "Cart item not found",
+      404
+    );
+  }
+
+  /*
+   * Keep a small snapshot for the response before
+   * removing the subdocument.
+   */
+  const removedItem = {
+    cartItemId:
+      cartItem._id.toString(),
+
+    productId:
+      cartItem.product?.toString() ??
+      null,
+
+    variantId:
+      cartItem.variant?.toString() ??
+      null,
+
+    name: cartItem.name,
+    sku: cartItem.sku,
+    quantity: cartItem.quantity,
+  };
+
+  /*
+   * Remove the subdocument from the items array.
+   */
+  cart.items.pull(cartItem._id);
+
+  try {
+    /*
+     * The cart pre-save middleware automatically
+     * recalculates:
+     *
+     * - totalItems
+     * - totalAmount
+     * - itemTotal
+     */
+    await saveCart({
+      cart,
+    });
+  } catch (error) {
+    if (
+      error?.name === "VersionError"
+    ) {
+      throw new HandleError(
+        "Your cart was updated by another request. Please try again.",
+        409
+      );
+    }
+
+    throw error;
+  }
+
+  const updatedCart =
+    await findPopulatedCartByUser({
+      userId: validUserId,
+    });
+
+  if (!updatedCart) {
+    throw new HandleError(
+      "Unable to load the updated cart",
+      500
+    );
+  }
+
+  return {
+    cart: updatedCart,
+    removedItem,
   };
 };

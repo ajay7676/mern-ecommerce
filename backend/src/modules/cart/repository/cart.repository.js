@@ -1,6 +1,6 @@
-import Cart from "../models/cart.model";
-import Product from "../../product/models/product.model";
-import ProductVariant from "../../catalog/models/productVariant.model";
+import Cart from "../models/cart.model.js";
+import Product from "../../product/models/product.model.js";
+import ProductVariant from "../../catalog/models/productVariant.model.js";
 
 /**
  * Attach a MongoDB session when one is provided.
