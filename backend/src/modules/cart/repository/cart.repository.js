@@ -1,75 +1,192 @@
 import Cart from "../models/cart.model";
 import Product from "../../product/models/product.model";
 import ProductVariant from "../../catalog/models/productVariant.model";
-import HandleError from "../../../utils/handleError";
 
 /**
- * Database queries can be kept here:
+ * Attach a MongoDB session when one is provided.
  */
 
-export const getPurchasableProduct = async (productId, session) => {
-  const product = await Product.findOne({
+const applySession = (query, session = null) => {
+  if (session) {
+    query.session(session);
+  }
+
+  return query;
+};
+
+/**
+ * Find a customer-purchasable product.
+ */
+export const findPurchasableProduct = async ({ productId, session = null }) => {
+  const query = Product.findOne({
     _id: productId,
     isDeleted: false,
     status: "published",
     visibility: "public",
-  }).session(session);
+  }).select(
+    [
+      "name",
+      "slug",
+      "sku",
+      "price",
+      "discountPrice",
+      "currency",
+      "stock",
+      "trackInventory",
+      "allowBackorder",
+      "images",
+      "status",
+      "visibility",
+      "isDeleted",
+      "+reservedStock",
+    ].join(" "),
+  );
 
-  if (!product) {
-    throw new HandleError("Product is unavailable or does not exist", 404);
-  }
+  applySession(query, session);
 
-  return product;
+  return query.exec();
 };
 
-export const getPurchasableVariant = async ({
-  product,
+/**
+ * Check whether a product has variants.
+ *
+ * It also checks inactive variants because a product
+ * containing variants should not be purchased as a
+ * non-variant product.
+ */
+export const productHasVariants = async ({ productId, session = null }) => {
+  const query = ProductVariant.exists({
+    product: productId,
+    isDeleted: false,
+  });
+
+  applySession(query, session);
+
+  const result = await query.exec();
+
+  return Boolean(result);
+};
+
+/**
+ * Find a purchasable variant that belongs
+ * to the given product.
+ */
+export const findPurchasableVariant = async ({
+  productId,
   variantId,
-  session,
+  session = null,
 }) => {
-  if (!variantId) {
-    const hasVariants = await ProductVariant.exists({
-      product: product._id,
-      isDeleted: false,
-    }).session(session);
-
-    if (hasVariants) {
-      throw new HandleError("Please select product options", 400);
-    }
-
-    return null;
-  }
-
-  const variant = await ProductVariant.findOne({
+  const query = ProductVariant.findOne({
     _id: variantId,
-    product: product._id,
+    product: productId,
     status: "active",
     isDeleted: false,
-  })
-    .select("+reservedStock")
-    .session(session);
+  }).select(
+    [
+      "product",
+      "title",
+      "sku",
+      "attributes",
+      "price",
+      "discountPrice",
+      "currency",
+      "stock",
+      "trackInventory",
+      "allowBackorder",
+      "images",
+      "status",
+      "isDeleted",
+      "+reservedStock",
+    ].join(" "),
+  );
 
-  if (!variant) {
-    throw new HandleError("Selected variant is unavailable", 404);
+  applySession(query, session);
+
+  return query.exec();
+};
+
+/**
+ * Find a cart belonging to a user.
+ */
+export const findCartByUser = async ({ userId, session = null }) => {
+  const query = Cart.findOne({
+    user: userId,
+  });
+
+  applySession(query, session);
+
+  return query.exec();
+};
+
+/**
+ * Create a new unsaved cart document.
+ *
+ * Calling this function does not immediately save
+ * anything to MongoDB.
+ */
+export const createCartDocument = ({ userId }) => {
+  return new Cart({
+    user: userId,
+    items: [],
+    totalItems: 0,
+    totalAmount: 0,
+  });
+};
+
+/**
+ * Save a cart document.
+ */
+export const saveCart = async ({ cart, session = null }) => {
+  const saveOptions = {};
+
+  if (session) {
+    saveOptions.session = session;
   }
 
-  return variant;
+  return cart.save(saveOptions);
 };
 
-export const findCartByUser = (userId, session) => {
-  return Cart.findOne({
+/**
+ * Find the cart and populate current product
+ * and variant information.
+ *
+ * Cart snapshot fields such as name, price and image
+ * remain available even if a referenced document is
+ * later unavailable.
+ */
+export const findPopulatedCartByUser = async ({ userId, session = null }) => {
+  const query = Cart.findOne({
     user: userId,
-  }).session(session);
-};
-
-export const getPopulatedCart = (userId) => {
-  return Cart.findOne({ user: userId })
+  })
     .populate({
       path: "items.product",
-      select: "name slug status visibility isDeleted",
+      select: [
+        "name",
+        "slug",
+        "sku",
+        "images",
+        "status",
+        "visibility",
+        "isDeleted",
+      ].join(" "),
     })
     .populate({
       path: "items.variant",
-      select: "sku status attributes images stock trackInventory isDeleted",
+
+      select: [
+        "title",
+        "sku",
+        "attributes",
+        "images",
+        "stock",
+        "trackInventory",
+        "allowBackorder",
+        "status",
+        "isDeleted",
+      ].join(" "),
     });
+
+  applySession(query, session);
+
+  return query.exec();
 };
