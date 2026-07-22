@@ -150,7 +150,6 @@ const createNewCartItem = ({
   });
 };
 
-
 /**
  * Add a product or product variant to a cart.
  */
@@ -176,8 +175,7 @@ export const addToCartService = async ({
     quantity,
   });
 
-  const session =
-    await mongoose.startSession();
+  const session = await mongoose.startSession();
 
   let action = CART_ACTIONS.ADDED;
 
@@ -188,17 +186,15 @@ export const addToCartService = async ({
          * Only published, public and non-deleted
          * products will be returned.
          */
-        const product =
-          await findPurchasableProduct({
-            productId:
-              validProductId,
-            session,
-          });
+        const product = await findPurchasableProduct({
+          productId: validProductId,
+          session,
+        });
 
         if (!product) {
           throw new HandleError(
             "Product is unavailable or does not exist",
-            404
+            404,
           );
         }
 
@@ -209,33 +205,28 @@ export const addToCartService = async ({
            * The repository also verifies that
            * the variant belongs to this product.
            */
-          variant =
-            await findPurchasableVariant({
-              productId:
-                product._id,
-              variantId:
-                validVariantId,
-              session,
-            });
+          variant = await findPurchasableVariant({
+            productId: product._id,
+            variantId: validVariantId,
+            session,
+          });
 
           if (!variant) {
             throw new HandleError(
               "Selected product variant is unavailable",
-              404
+              404,
             );
           }
         } else {
-          const hasVariants =
-            await productHasVariants({
-              productId:
-                product._id,
-              session,
-            });
+          const hasVariants = await productHasVariants({
+            productId: product._id,
+            session,
+          });
 
           if (hasVariants) {
             throw new HandleError(
               "Please select product options before adding this product to the cart",
-              400
+              400,
             );
           }
         }
@@ -246,41 +237,24 @@ export const addToCartService = async ({
          *
          * Otherwise, product inventory is used.
          */
-        const inventorySource =
-          variant ?? product;
+        const inventorySource = variant ?? product;
 
-        const availableStock =
-          getAvailableStock(
-            inventorySource
-          );
+        const availableStock = getAvailableStock(inventorySource);
 
-        if (
-          Number.isFinite(
-            availableStock
-          ) &&
-          availableStock <= 0
-        ) {
-          throw new HandleError(
-            "This item is out of stock",
-            409
-          );
+        if (Number.isFinite(availableStock) && availableStock <= 0) {
+          throw new HandleError("This item is out of stock", 409);
         }
 
         /*
          * Price always comes from MongoDB,
          * never from req.body.
          */
-        const priceSnapshot =
-          getPriceSnapshot(
-            product,
-            variant
-          );
+        const priceSnapshot = getPriceSnapshot(product, variant);
 
-        let cart =
-          await findCartByUser({
-            userId: validUserId,
-            session,
-          });
+        let cart = await findCartByUser({
+          userId: validUserId,
+          session,
+        });
 
         if (!cart) {
           cart = createCartDocument({
@@ -288,33 +262,25 @@ export const addToCartService = async ({
           });
         }
 
-        const existingItem =
-          findExistingCartItem({
-            cart,
-            productId:
-              product._id,
-            variantId:
-              variant?._id ?? null,
-          });
+        const existingItem = findExistingCartItem({
+          cart,
+          productId: product._id,
+          variantId: variant?._id ?? null,
+        });
 
-        const currentQuantity =
-          getCurrentItemQuantity(
-            existingItem
-          );
+        const currentQuantity = getCurrentItemQuantity(existingItem);
 
-        const finalQuantity =
-          calculateFinalQuantity({
-            currentQuantity,
-            requestedQuantity,
-            availableStock,
-          });
+        const finalQuantity = calculateFinalQuantity({
+          currentQuantity,
+          requestedQuantity,
+          availableStock,
+        });
 
-        const itemSnapshot =
-          buildCartItemSnapshot({
-            product,
-            variant,
-            priceSnapshot,
-          });
+        const itemSnapshot = buildCartItemSnapshot({
+          product,
+          variant,
+          priceSnapshot,
+        });
 
         if (existingItem) {
           updateExistingCartItem({
@@ -323,20 +289,17 @@ export const addToCartService = async ({
             itemSnapshot,
           });
 
-          action =
-            CART_ACTIONS.UPDATED;
+          action = CART_ACTIONS.UPDATED;
         } else {
           createNewCartItem({
             cart,
             product,
             variant,
-            quantity:
-              finalQuantity,
+            quantity: finalQuantity,
             itemSnapshot,
           });
 
-          action =
-            CART_ACTIONS.ADDED;
+          action = CART_ACTIONS.ADDED;
         }
 
         /*
@@ -362,7 +325,7 @@ export const addToCartService = async ({
         writeConcern: {
           w: "majority",
         },
-      }
+      },
     );
   } catch (error) {
     /*
@@ -373,7 +336,7 @@ export const addToCartService = async ({
     if (error?.code === 11000) {
       throw new HandleError(
         "Your cart was changed by another request. Please try again.",
-        409
+        409,
       );
     }
 
@@ -381,12 +344,10 @@ export const addToCartService = async ({
      * optimisticConcurrency may produce this
      * error if another request updates the cart.
      */
-    if (
-      error?.name === "VersionError"
-    ) {
+    if (error?.name === "VersionError") {
       throw new HandleError(
         "Your cart was updated by another request. Please try again.",
-        409
+        409,
       );
     }
 
@@ -396,7 +357,7 @@ export const addToCartService = async ({
     if (error?.code === 112) {
       throw new HandleError(
         "Your cart could not be updated because of another request. Please try again.",
-        409
+        409,
       );
     }
 
@@ -413,16 +374,12 @@ export const addToCartService = async ({
    * Load the committed cart after the
    * transaction is complete.
    */
-  const cart =
-    await findPopulatedCartByUser({
-      userId: validUserId,
-    });
+  const cart = await findPopulatedCartByUser({
+    userId: validUserId,
+  });
 
   if (!cart) {
-    throw new HandleError(
-      "Unable to load the updated cart",
-      500
-    );
+    throw new HandleError("Unable to load the updated cart", 500);
   }
 
   return {
