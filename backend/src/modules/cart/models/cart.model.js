@@ -36,7 +36,7 @@ const selectedAttributeSchema = new mongoose.Schema(
   },
   {
     _id: false,
-  }
+  },
 );
 
 const cartItemSchema = new mongoose.Schema(
@@ -130,7 +130,7 @@ const cartItemSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const cartSchema = new mongoose.Schema(
@@ -162,7 +162,7 @@ const cartSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 import mongoose from "mongoose";
@@ -203,7 +203,7 @@ const selectedAttributeSchema = new mongoose.Schema(
   },
   {
     _id: false,
-  }
+  },
 );
 
 const cartItemSchema = new mongoose.Schema(
@@ -297,7 +297,7 @@ const cartItemSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const cartSchema = new mongoose.Schema(
@@ -329,37 +329,34 @@ const cartSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 cartSchema.methods.recalculateCartTotals = function () {
-  this.totalItems = this.items.reduce((total, item) => {
+  this.totalItems = 0;
+  this.totalAmount = 0;
+
+  for (const item of this.items) {
     const quantity = Number(item.quantity);
+    const finalPrice = Number(item.finalPrice);
 
     if (!Number.isInteger(quantity) || quantity < 1) {
-      throw new HandleError("Invalid cart item quantity", 400);
+      throw new Error("Invalid cart item quantity");
     }
 
-    return total + quantity;
-  }, 0);
-
-  this.totalAmount = this.items.reduce((total, item) => {
-    const finalPrice = Number(item.finalPrice);
-    const quantity = Number(item.quantity);
-
     if (!Number.isFinite(finalPrice) || finalPrice < 0) {
-      throw new HandleError("Invalid cart item final price", 400);
+      throw new Error("Invalid cart item final price");
     }
 
     item.itemTotal = finalPrice * quantity;
 
-    return total + item.itemTotal;
-  }, 0);
+    this.totalItems += quantity;
+    this.totalAmount += item.itemTotal;
+  }
 };
 
-cartSchema.pre("save", function (next) {
+cartSchema.pre("save", function () {
   this.recalculateCartTotals();
-  next();
 });
 
 const Cart = mongoose.models.Cart || mongoose.model("Cart", cartSchema);
