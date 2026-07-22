@@ -4,16 +4,19 @@ import { userAuth } from '../../../middleware/userAuthMIddleware.js'
 // import adminOnly from "../../../middleware/adminMddleware.js";
 
 
-import {addToCart , removeCartItem , updateCartItemQuantity , clearCart} from '../controllers/cart.controller.js'
+import {
+    addToCart , removeCartItem , updateCartItemQuantity , clearCart , getCartItems
+} from '../controllers/cart.controller.js'
 
 
 const router = express.Router();
 
+router.get(
+  "/cart",
+  userAuth,
+  getCartItems
+);
 
-/**
- * Add a new item or increase the quantity
- * of an existing item.
- */
 router.post(
   "/cart/items",
   userAuth,

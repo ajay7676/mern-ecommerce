@@ -12,6 +12,7 @@ import {
   validateRemoveCartItemInput,
   validateUpdateCartItemInput,
   validateClearCartInput,
+  validateGetCartInput
 } from "../validation/cart.validators.js";
 
 import {
@@ -23,6 +24,7 @@ import {
 
 import {
   createCartDocument,
+  findCartForDisplay ,
   findCartByUser,
   findPopulatedCartByUser,
   findPurchasableProduct,
@@ -733,5 +735,319 @@ export const clearCartService = async ({ userId }) => {
     cart: updatedCart,
     clearedItemsCount,
     wasAlreadyEmpty: false,
+  };
+};
+
+/**
+ * Round money to two decimal places.
+ */
+const roundMoney = (value) => {
+  return (
+    Math.round(
+      (Number(value) + Number.EPSILON) *
+        100
+    ) / 100
+  );
+};
+
+/**
+ * Build a safe cart item response.
+ */
+const buildCartItemView = (
+  cartItem
+) => {
+  const product = cartItem.product;
+  const variant = cartItem.variant;
+
+  const expectsVariant =
+  Boolean(variant) ||
+  (
+    Array.isArray(
+      cartItem.selectedAttributes
+    ) &&
+    cartItem.selectedAttributes.length > 0
+  );
+
+  let isAvailable = true;
+  let canCheckout = true;
+  let unavailableReason = null;
+  let availableStock = null;
+  let isUnlimitedStock = false;
+
+  if (!product) {
+    isAvailable = false;
+    canCheckout = false;
+    unavailableReason =
+      "Product no longer exists";
+  } else if (
+    product.isDeleted ||
+    product.status !== "published" ||
+    product.visibility !== "public"
+  ) {
+    isAvailable = false;
+    canCheckout = false;
+    unavailableReason =
+      "Product is currently unavailable";
+  } else if (
+    expectsVariant &&
+    !variant
+  ) {
+    isAvailable = false;
+    canCheckout = false;
+    unavailableReason =
+      "Product variant no longer exists";
+  } else if (
+    variant &&
+    (variant.isDeleted ||
+      variant.status !== "active")
+  ) {
+    isAvailable = false;
+    canCheckout = false;
+    unavailableReason =
+      "Product variant is currently unavailable";
+  }
+
+  let currentPriceSnapshot = null;
+
+  /*
+   * Calculate stock and price only when
+   * product and variant references are valid.
+   */
+  if (isAvailable) {
+    const inventorySource =
+      variant ?? product;
+
+    try {
+      const stock =
+        getAvailableStock(
+          inventorySource
+        );
+
+      isUnlimitedStock =
+        stock === Infinity;
+
+      availableStock =
+        isUnlimitedStock
+          ? null
+          : stock;
+
+      if (
+        !isUnlimitedStock &&
+        stock <= 0
+      ) {
+        isAvailable = false;
+        canCheckout = false;
+        unavailableReason =
+          "Item is out of stock";
+      } else if (
+        !isUnlimitedStock &&
+        cartItem.quantity > stock
+      ) {
+        canCheckout = false;
+        unavailableReason =
+          `Only ${stock} unit(s) are currently available`;
+      }
+
+      currentPriceSnapshot =
+        getPriceSnapshot(
+          product,
+          variant
+        );
+    } catch (error) {
+      isAvailable = false;
+      canCheckout = false;
+      unavailableReason =
+        "Product information is not configured correctly";
+    }
+  }
+
+  const storedFinalPrice = Number(
+    cartItem.finalPrice
+  );
+
+  const currentFinalPrice =
+    currentPriceSnapshot?.finalPrice ??
+    storedFinalPrice;
+
+  const priceChanged =
+    Boolean(currentPriceSnapshot) &&
+    roundMoney(storedFinalPrice) !==
+      roundMoney(currentFinalPrice);
+
+  const itemTotal = roundMoney(
+    currentFinalPrice *
+      cartItem.quantity
+  );
+
+  return {
+    cartItemId:
+      cartItem._id.toString(),
+
+    product: product
+      ? {
+          _id:
+            product._id.toString(),
+          name: product.name,
+          slug: product.slug,
+          status: product.status,
+          visibility:
+            product.visibility,
+        }
+      : null,
+
+    variant: variant
+      ? {
+          _id:
+            variant._id.toString(),
+          title: variant.title,
+          sku: variant.sku,
+          status: variant.status,
+        }
+      : null,
+
+    name: cartItem.name,
+    slug: cartItem.slug,
+    sku: cartItem.sku,
+    image: cartItem.image,
+
+    selectedAttributes:
+      cartItem.selectedAttributes,
+
+    quantity: cartItem.quantity,
+
+    pricing: {
+      stored: {
+        price: cartItem.price,
+        discountPrice:
+          cartItem.discountPrice,
+        finalPrice:
+          cartItem.finalPrice,
+        currency:
+          cartItem.currency,
+      },
+
+      current: currentPriceSnapshot
+        ? {
+            price:
+              currentPriceSnapshot.price,
+
+            discountPrice:
+              currentPriceSnapshot.discountPrice,
+
+            finalPrice:
+              currentPriceSnapshot.finalPrice,
+
+            currency:
+              currentPriceSnapshot.currency,
+          }
+        : null,
+
+      priceChanged,
+    },
+
+    availability: {
+      isAvailable,
+      canCheckout,
+      availableStock,
+      isUnlimitedStock,
+      reason: unavailableReason,
+    },
+
+    itemTotal,
+    addedAt: cartItem.createdAt,
+    updatedAt: cartItem.updatedAt,
+  };
+};
+
+/**
+ * Get authenticated user's complete cart.
+ */
+export const getCartService = async ({
+  userId,
+}) => {
+  const {
+    userId: validUserId,
+  } = validateGetCartInput({
+    userId,
+  });
+
+  const cart =
+    await findCartForDisplay({
+      userId: validUserId,
+    });
+
+  /*
+   * A user who has never added an item
+   * should receive an empty cart, not 404.
+   */
+  if (!cart) {
+    return {
+      cart: {
+        _id: null,
+        user: validUserId.toString(),
+        items: [],
+        totalItems: 0,
+        totalAmount: 0,
+      },
+
+      meta: {
+        cartExists: false,
+        distinctItems: 0,
+        unavailableItems: 0,
+        priceChangedItems: 0,
+        canCheckout: false,
+      },
+    };
+  }
+
+  const items = cart.items.map(
+    buildCartItemView
+  );
+
+  const totalItems = items.reduce(
+    (total, item) => {
+      return total + item.quantity;
+    },
+    0
+  );
+
+  const totalAmount = roundMoney(
+    items.reduce((total, item) => {
+      return total + item.itemTotal;
+    }, 0)
+  );
+
+  const unavailableItems =
+    items.filter((item) => {
+      return !item.availability
+        .canCheckout;
+    }).length;
+
+  const priceChangedItems =
+    items.filter((item) => {
+      return item.pricing.priceChanged;
+    }).length;
+
+  return {
+    cart: {
+      _id: cart._id.toString(),
+      user: validUserId.toString(),
+      items,
+      totalItems,
+      totalAmount,
+      createdAt: cart.createdAt,
+      updatedAt: cart.updatedAt,
+    },
+
+    meta: {
+      cartExists: true,
+      distinctItems: items.length,
+      unavailableItems,
+      priceChangedItems,
+
+      canCheckout:
+        items.length > 0 &&
+        unavailableItems === 0,
+    },
   };
 };

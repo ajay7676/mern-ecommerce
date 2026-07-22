@@ -190,3 +190,56 @@ export const findPopulatedCartByUser = async ({ userId, session = null }) => {
 
   return query.exec();
 };
+
+
+/**
+ * Find a cart with the latest product
+ * and variant information.
+ */
+export const findCartForDisplay = async ({
+  userId,
+}) => {
+  return Cart.findOne({
+    user: userId,
+  })
+    .populate({
+      path: "items.product",
+
+      select: [
+        "name",
+        "slug",
+        "sku",
+        "price",
+        "discountPrice",
+        "currency",
+        "images",
+        "stock",
+        "trackInventory",
+        "allowBackorder",
+        "status",
+        "visibility",
+        "isDeleted",
+        "+reservedStock",
+      ].join(" "),
+    })
+    .populate({
+      path: "items.variant",
+
+      select: [
+        "title",
+        "sku",
+        "price",
+        "discountPrice",
+        "currency",
+        "attributes",
+        "images",
+        "stock",
+        "trackInventory",
+        "allowBackorder",
+        "status",
+        "isDeleted",
+        "+reservedStock",
+      ].join(" "),
+    })
+    .exec();
+};

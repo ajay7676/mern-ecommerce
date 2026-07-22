@@ -3,6 +3,7 @@ import { CART_ACTIONS } from "../constants/cart.constants.js";
 
 import {
   addToCartService,
+  getCartService,
   clearCartService,
   removeCartItemService,
   updateCartItemQuantityService,
@@ -164,6 +165,37 @@ export const clearCart = async (req, res, next) => {
         clearedItemsCount,
         wasAlreadyEmpty,
         cart,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get all items from the authenticated
+ * user's cart.
+ *
+ * GET /api/v1/cart/items
+ */
+export const getCartItems = async (req, res, next) => {
+  try {
+    const userId = req.user?._id || req.user?.id;
+    if (!userId) {
+      throw new HandleError("Authentication is required", 401);
+    }
+
+    const { cart, meta } = await getCartService({userId});
+
+    res.setHeader("Cache-Control", "no-store");
+
+    return res.status(200).json({
+      success: true,
+      message: "Cart fetched successfully",
+
+      data: {
+        cart,
+        meta,
       },
     });
   } catch (error) {
