@@ -4,6 +4,7 @@ import { CART_ACTIONS } from "../constants/cart.constants.js";
 import {
   addToCartService,
   removeCartItemService,
+  updateCartItemQuantityService,
 } from "../services/cart.service.js";
 
 export const addToCart = async (req, res, next) => {
@@ -70,7 +71,7 @@ export const removeCartItem = async (req, res, next) => {
       userId,
       cartItemId,
     });
-    
+
     res.setHeader("Cache-Control", "no-store");
     return res.status(200).json({
       success: true,
@@ -78,6 +79,50 @@ export const removeCartItem = async (req, res, next) => {
 
       data: {
         removedItem,
+        cart,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update cart-item quantity.
+ *
+ * PATCH /api/v1/cart/items/:cartItemId
+ */
+export const updateCartItemQuantity = async (req, res, next) => {
+  try {
+    const userId = req.user?._id || req.user?.id;
+
+    if (!userId) {
+      throw new HandleError("Authentication is required", 401);
+    }
+
+    if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+      throw new HandleError("A valid request body is required", 400);
+    }
+
+    const { cartItemId } = req.params;
+
+    const { quantity } = req.body;
+
+    const { cart, updatedItem } = await updateCartItemQuantityService({
+      userId,
+      cartItemId,
+      quantity,
+    });
+
+    res.setHeader("Cache-Control", "no-store");
+
+    return res.status(200).json({
+      success: true,
+
+      message: "Cart item quantity updated successfully",
+
+      data: {
+        updatedItem,
         cart,
       },
     });

@@ -7,9 +7,10 @@ import {
   MAX_CART_ITEM_QUANTITY,
 } from "../constants/cart.constants.js";
 
-import { 
-    validateAddToCartInput,
-    validateRemoveCartItemInput
+import {
+  validateAddToCartInput,
+  validateRemoveCartItemInput,
+  validateUpdateCartItemInput,
 } from "../validation/cart.validators.js";
 
 import {
@@ -395,41 +396,29 @@ export const addToCartService = async ({
  * Remove one item from the authenticated
  * user's cart.
  */
-export const removeCartItemService = async ({
-  userId,
-  cartItemId,
-}) => {
-  const {
-    userId: validUserId,
-    cartItemId: validCartItemId,
-  } = validateRemoveCartItemInput({
-    userId,
-    cartItemId,
-  });
+export const removeCartItemService = async ({ userId, cartItemId }) => {
+  const { userId: validUserId, cartItemId: validCartItemId } =
+    validateRemoveCartItemInput({
+      userId,
+      cartItemId,
+    });
 
   const cart = await findCartByUser({
     userId: validUserId,
   });
 
   if (!cart) {
-    throw new HandleError(
-      "Cart not found",
-      404
-    );
+    throw new HandleError("Cart not found", 404);
   }
 
-  const cartItem =
-    cart.items.id(validCartItemId);
+  const cartItem = cart.items.id(validCartItemId);
 
   /*
    * Return 404 instead of revealing whether the item
    * belongs to another user's cart.
    */
   if (!cartItem) {
-    throw new HandleError(
-      "Cart item not found",
-      404
-    );
+    throw new HandleError("Cart item not found", 404);
   }
 
   /*
@@ -437,16 +426,11 @@ export const removeCartItemService = async ({
    * removing the subdocument.
    */
   const removedItem = {
-    cartItemId:
-      cartItem._id.toString(),
+    cartItemId: cartItem._id.toString(),
 
-    productId:
-      cartItem.product?.toString() ??
-      null,
+    productId: cartItem.product?.toString() ?? null,
 
-    variantId:
-      cartItem.variant?.toString() ??
-      null,
+    variantId: cartItem.variant?.toString() ?? null,
 
     name: cartItem.name,
     sku: cartItem.sku,
@@ -471,32 +455,199 @@ export const removeCartItemService = async ({
       cart,
     });
   } catch (error) {
-    if (
-      error?.name === "VersionError"
-    ) {
+    if (error?.name === "VersionError") {
       throw new HandleError(
         "Your cart was updated by another request. Please try again.",
-        409
+        409,
       );
     }
 
     throw error;
   }
 
-  const updatedCart =
-    await findPopulatedCartByUser({
-      userId: validUserId,
-    });
+  const updatedCart = await findPopulatedCartByUser({
+    userId: validUserId,
+  });
 
   if (!updatedCart) {
-    throw new HandleError(
-      "Unable to load the updated cart",
-      500
-    );
+    throw new HandleError("Unable to load the updated cart", 500);
   }
 
   return {
     cart: updatedCart,
     removedItem,
+  };
+};
+
+/**
+ * Update a cart item's quantity.
+ *
+ * The provided quantity replaces the old quantity.
+ */
+export const updateCartItemQuantityService = async ({
+  userId,
+  cartItemId,
+  quantity,
+}) => {
+  const {
+    userId: validUserId,
+    cartItemId: validCartItemId,
+    quantity: validQuantity,
+  } = validateUpdateCartItemInput({
+    userId,
+    cartItemId,
+    quantity,
+  });
+
+  const cart = await findCartByUser({
+    userId: validUserId,
+  });
+
+  if (!cart) {
+    throw new HandleError("Cart not found", 404);
+  }
+
+  const cartItem = cart.items.id(validCartItemId);
+
+  /*
+   * This also prevents a user from updating
+   * an item from another user's cart.
+   */
+  if (!cartItem) {
+    throw new HandleError("Cart item not found", 404);
+  }
+
+  if (!cartItem.product) {
+    throw new HandleError(
+      "The product linked to this cart item is unavailable",
+      409,
+    );
+  }
+
+  /*
+   * Load the current product data.
+   * Old cart snapshot data is not trusted for
+   * current stock or price validation.
+   */
+  const product = await findPurchasableProduct({
+    productId: cartItem.product,
+  });
+
+  if (!product) {
+    throw new HandleError("This product is no longer available", 409);
+  }
+
+  let variant = null;
+
+  if (cartItem.variant) {
+    variant = await findPurchasableVariant({
+      productId: product._id,
+      variantId: cartItem.variant,
+    });
+
+    if (!variant) {
+      throw new HandleError("This product variant is no longer available", 409);
+    }
+  } else {
+    /*
+     * This handles a rare case where the product
+     * did not have variants when added, but now
+     * variants have been created for it.
+     */
+    const hasVariants = await productHasVariants({
+      productId: product._id,
+    });
+
+    if (hasVariants) {
+      throw new HandleError(
+        "This product now requires variant selection. Please remove it and add the required variant.",
+        409,
+      );
+    }
+  }
+
+  const inventorySource = variant ?? product;
+
+  const availableStock = getAvailableStock(inventorySource);
+
+  if (Number.isFinite(availableStock) && availableStock <= 0) {
+    throw new HandleError("This item is out of stock", 409);
+  }
+
+  if (Number.isFinite(availableStock) && validQuantity > availableStock) {
+    throw new HandleError(`Only ${availableStock} unit(s) are available`, 409);
+  }
+
+  /*
+   * Refresh the current trusted price.
+   *
+   * If the admin changed the product price,
+   * the cart will now contain the new price.
+   */
+  const priceSnapshot = getPriceSnapshot(product, variant);
+
+  const itemSnapshot = buildCartItemSnapshot({
+    product,
+    variant,
+    priceSnapshot,
+  });
+
+  const previousQuantity = cartItem.quantity;
+
+  /*
+   * Reuse the helper already defined inside
+   * cart.service.js.
+   */
+  updateExistingCartItem({
+    existingItem: cartItem,
+    finalQuantity: validQuantity,
+    itemSnapshot,
+  });
+
+  try {
+    /*
+     * Cart pre-save middleware recalculates:
+     *
+     * itemTotal
+     * totalItems
+     * totalAmount
+     */
+    await saveCart({
+      cart,
+    });
+  } catch (error) {
+    if (error?.name === "VersionError") {
+      throw new HandleError(
+        "Your cart was updated by another request. Please try again.",
+        409,
+      );
+    }
+
+    throw error;
+  }
+
+  const updatedCart = await findPopulatedCartByUser({
+    userId: validUserId,
+  });
+
+  if (!updatedCart) {
+    throw new HandleError("Unable to load the updated cart", 500);
+  }
+
+  return {
+    cart: updatedCart,
+
+    updatedItem: {
+      cartItemId: cartItem._id.toString(),
+
+      productId: product._id.toString(),
+
+      variantId: variant?._id?.toString() ?? null,
+
+      previousQuantity,
+      quantity: validQuantity,
+
+      itemTotal: itemSnapshot.finalPrice * validQuantity,
+    },
   };
 };

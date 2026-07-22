@@ -5,7 +5,6 @@ import {
   MAX_CART_ITEM_QUANTITY,
 } from "../constants/cart.constants.js";
 
-
 /**
  * Validate a required MongoDB ObjectId.
  */
@@ -133,24 +132,54 @@ export const validateAddToCartInput = ({
 /**
  * Validate Remove Cart Item input.
  */
-export const validateRemoveCartItemInput = ({
-  userId,
-  cartItemId,
-}) => {
-  const normalizedUserId =
-    validateObjectId({
-      id: userId,
-      fieldName: "User ID",
-    });
+export const validateRemoveCartItemInput = ({ userId, cartItemId }) => {
+  const normalizedUserId = validateObjectId({
+    id: userId,
+    fieldName: "User ID",
+  });
 
-  const normalizedCartItemId =
-    validateObjectId({
-      id: cartItemId,
-      fieldName: "Cart item ID",
-    });
+  const normalizedCartItemId = validateObjectId({
+    id: cartItemId,
+    fieldName: "Cart item ID",
+  });
 
   return {
     userId: normalizedUserId,
     cartItemId: normalizedCartItemId,
+  };
+};
+
+/**
+ * Validate Update Cart Item input.
+ */
+export const validateUpdateCartItemInput = ({
+  userId,
+  cartItemId,
+  quantity,
+}) => {
+  const normalizedUserId = validateObjectId({
+    id: userId,
+    fieldName: "User ID",
+  });
+
+  const normalizedCartItemId = validateObjectId({
+    id: cartItemId,
+    fieldName: "Cart item ID",
+  });
+
+  /*
+   * Unlike Add to Cart, quantity must be
+   * explicitly provided for an update.
+   */
+  if (quantity === undefined || quantity === null || quantity === "") {
+    throw new HandleError("Quantity is required", 400);
+  }
+
+  const normalizedQuantity = normalizeQuantity(quantity);
+
+  return {
+    userId: normalizedUserId,
+    cartItemId: normalizedCartItemId,
+    quantity: normalizedQuantity,
   };
 };
