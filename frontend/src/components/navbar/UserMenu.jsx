@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { FiHeart, FiShoppingBag, FiUser } from "react-icons/fi";
+import { FiHeart, FiUser } from "react-icons/fi";
 import ProfileDropdown from "./ProfileDropdown";
 import { useSelector } from "react-redux";
+import NavbarCartIcon from "./NavbarCartIcon";
 
 const UserMenu = () => {
   const [showProfile, setShowProfile] = useState(false);
@@ -94,18 +95,7 @@ const UserMenu = () => {
         <FiHeart className="text-2xl" />
         <span>Wishlist</span>
       </button>
-
-      <button
-        type="button"
-        className="relative flex flex-col items-center text-xs font-semibold text-slate-800 hover:text-red-500 transition"
-      >
-        <FiShoppingBag className="text-2xl" />
-        <span>Bag</span>
-
-        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
-          2
-        </span>
-      </button>
+      <NavbarCartIcon />
     </div>
   );
 };
