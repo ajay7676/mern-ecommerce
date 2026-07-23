@@ -18,7 +18,7 @@ router.get(
 );
 
 router.post(
-  "/cart/items",
+  "/cart/items",                 
   userAuth,
   addToCart
 );

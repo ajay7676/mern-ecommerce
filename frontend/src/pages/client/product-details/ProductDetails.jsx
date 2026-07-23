@@ -1,39 +1,63 @@
+import {useParams } from "react-router";
 import Breadcrumbs from "../../../components/productDetails/Breadcrumbs";
 import ProductGallery from "../../../components/productDetails/ProductGallery";
 import ProductInfo from "../../../components/productDetails/ProductInfo";
 import DeliveryInfo from "../../../components/productDetails/DeliveryInfo";
-import useProduct from '../../../hooks/queries/useProduct'
-import { useParams } from "react-router";
+import useProductDetails from "../../../hooks/queries/useProductDetails";
+import useProductVariants from "../../../hooks/queries/products/useProductVariants";
 
 const ProductDetails = () => {
-    const  {slug}  = useParams(); 
-    const {data, isPending,isError, error} = useProduct(slug);
+  const { slug: productId } = useParams();
 
-    if (isPending) return <p className="p-6">Loading product...</p>
+  const {
+    data: productData,
+    isPending: isProductLoading,
+    isError: isProductError,
+    error,
+  } = useProductDetails(productId);
 
-    if (isError) {
+  const product = productData?.product;
+  const {
+    data: variantData,
+    isLoading: areVariantsLoading,
+    isError: variantsError,
+  } = useProductVariants(productId);
+
+
+   if (
+    isProductLoading ||
+    areVariantsLoading
+  ) {
     return (
-      <p className="p-6 text-red-500">
-        {error?.response?.data?.message || "Failed to load product"}
-      </p>
+      <div className="p-6">
+        <div className="skeleton h-10 w-64" />
+      </div>
     );
   }
-  const product = data?.product;
-   console.log(product)
+  if (
+    isProductError ||
+    variantsError
+  ) {
+    return (
+      <div className="alert alert-error">
+        {error?.response?.data?.message || "Failed to load product"}
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white">
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <Breadcrumbs 
-           category={product.category}
-           brand={product.brand}
-           name={product.name}
-        
+        <Breadcrumbs
+          category={product.category}
+          brand={product.brand}
+          name={product.name}
         />
         <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr_0.8fr] gap-8 mt-5">
-          <ProductGallery key={product._id}  product={product}/>
-           <ProductInfo  product={product} />
-           
-          <DeliveryInfo  product={product} />
+          <ProductGallery key={product._id} product={product} />
+          <ProductInfo product={product} variantData={variantData} />
+
+          <DeliveryInfo product={product} />
         </div>
       </div>
     </div>
