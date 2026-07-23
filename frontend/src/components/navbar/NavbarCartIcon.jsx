@@ -9,7 +9,7 @@ const NavbarCartIcon = () => {
 
   const { data, isLoading } = useCart({ enabled: isAuthenticated });
 
-  const totalItems = isAuthenticated ? (data?.cart?.totalItems ?? 0) : 0;
+  const totalItems = isAuthenticated ? (data?.cart?.items.length ?? 0) : 0;
   const displayCount = totalItems > 99 ? "99+" : totalItems;
   const destination = isAuthenticated ? "/cart" : "/login";
 

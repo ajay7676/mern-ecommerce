@@ -1,26 +1,53 @@
 import { FiHeart, FiMinus, FiPlus, FiTrash2 } from "react-icons/fi";
 import { FaRegCheckCircle } from "react-icons/fa";
+import { calculateDiscount } from "../../utils/calculateDiscount";
 
 const CartItem = ({ item }) => {
+  const discountPercentage = calculateDiscount(
+     item.pricing?.current?.price,
+      item.pricing?.current?.discountPrice,
+    );
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm">
       <div className="grid grid-cols-[110px_1fr] md:grid-cols-[160px_1fr_auto] gap-4 md:gap-6">
         <div className="w-full h-36 md:h-40 rounded-xl overflow-hidden bg-slate-100">
-          <img
-            src={item.image}
-            alt={item.name}
-            className="w-full h-full object-cover"
-          />
+           {item.image?.url ? (
+            <img
+              src={item.image.url}
+              alt={item.image.alt || item.name}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="h-full flex items-center justify-center text-xs text-slate-400">
+              No image
+            </div>
+          )}
         </div>
-
         <div>
-          <h3 className="text-lg font-bold text-slate-900">{item.brand}</h3>
-          <p className="text-sm text-slate-600 mt-1">{item.name}</p>
-
+          <h3 className="text-lg font-bold text-slate-900">{item?.brand?.name}</h3>
+          <p className="text-sm text-slate-600 mt-1">{item?.name}</p>
+            {item.sku && (
           <p className="text-sm text-slate-600 mt-2">
-            {item.variant} <span className="mx-2">•</span> Size: {item.size}
+            SKU: {item.sku} <span className="mx-2"></span>  
           </p>
+           )}
 
+            {item.selectedAttributes?.length > 0 && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+              {item.selectedAttributes.map((attribute) => (
+                <span
+                  key={`${attribute.attributeSlug}-${attribute.optionValue}`}
+                  className="text-sm text-slate-600"
+                >
+                  {attribute.attributeName}:{" "}
+                  <strong className="font-semibold">
+                    {attribute.optionLabel}
+                  </strong>
+                </span>
+              ))}
+            </div>
+          )}
           <p className="flex items-center gap-2 text-sm text-green-600 font-semibold mt-4">
             <FaRegCheckCircle />
             In Stock
@@ -29,7 +56,7 @@ const CartItem = ({ item }) => {
           <p className="text-sm text-slate-600 mt-2">
             Delivery by{" "}
             <span className="font-semibold text-slate-900">
-              {item.delivery}
+              {/* {item.delivery} */}
             </span>
           </p>
         </div>
@@ -38,13 +65,13 @@ const CartItem = ({ item }) => {
           <div className="md:text-right">
             <div className="flex items-center md:justify-end gap-3">
               <span className="text-xl font-black text-slate-900">
-                ₹{item.price}
+                ₹{item.pricing?.current?.discountPrice || item.pricing?.current?.price} 
               </span>
               <span className="text-sm text-slate-400 line-through">
-                ₹{item.mrp}
+                ₹{item.pricing?.current?.price }
               </span>
               <span className="text-xs font-bold text-red-500 border border-red-200 rounded-md px-2 py-1">
-                {item.discount}% OFF
+                {discountPercentage}% OFF
               </span>
             </div>
 
