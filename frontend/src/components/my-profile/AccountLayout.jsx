@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FiX } from "react-icons/fi";
-import AccountSidebar from "./AccountSidebar";
-import MobileAccountNavigation from "./MobileAccountNavigation";
+import AccountSidebar from "../sidebar/AccountSidebar";
+import MobileAccountNavigation from "../sidebar/MobileAccountNavigation";
 
 const AccountLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

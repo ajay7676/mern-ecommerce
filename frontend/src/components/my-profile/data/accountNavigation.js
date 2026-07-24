@@ -10,18 +10,19 @@ import {
 
 
 import {CUSTOMER_ROUTES} from '../../../constants/routes/customer.routes'
+  console.log(CUSTOMER_ROUTES)
 
 export const accountNavigation = [
   {
     id: "profile",
     label: "My Profile",
-    path: CUSTOMER_ROUTES.PROFILE,
+    path: CUSTOMER_ROUTES.PROFILE.ROOT,
     icon: FiUser,
   },
   {
     id: "orders",
     label: "My Orders",
-    path: CUSTOMER_ROUTES.ORDERS,
+    path: CUSTOMER_ROUTES.ORDERS.ROOT,
     icon: FiFileText,
   },
   {
@@ -33,19 +34,19 @@ export const accountNavigation = [
   {
     id: "addresses",
     label: "Addresses",
-    path: CUSTOMER_ROUTES.ADDRESSES,
+    path: CUSTOMER_ROUTES.ADDRESSES.ROOT,
     icon: FiMapPin,
   },
   {
     id: "payments",
     label: "Payment Methods",
-    path: CUSTOMER_ROUTES.PAYMENT_METHODS,
+    path: CUSTOMER_ROUTES.PAYMENT.ROOT,
     icon: FiCreditCard,
   },
   {
     id: "settings",
     label: "Account Settings",
-    path: CUSTOMER_ROUTES.ACCOUNT_SETTINGS,
+    path: CUSTOMER_ROUTES.SETTINGS,
     icon: FiSettings,
   },
 ];

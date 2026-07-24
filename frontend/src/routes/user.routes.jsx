@@ -5,7 +5,7 @@ import ProtectedRoute from '../guards/ProtectedRoute'
 
 import Profile from '../pages/client/profile/Profile'
 import EditProfile from '../pages/client/profile/EditProfile'
-import AddressList from '../pages/client/profile/AddressList'
+import AddressPage from '../pages/client/address/AddressPage'
 
 import Orders from '../pages/client/orders/Orders'
 import OrderDetails from '../pages/client/orders/OrderDetails'
@@ -14,6 +14,8 @@ import OrderDetails from '../pages/client/orders/OrderDetails'
 import Checkout from '../pages/client/checkout/Checkout'
 import Payment from '../pages/client/payment/Payment'
 import WishList from '../pages/client/wishlist/WishList'
+
+import AccountSettings from '../pages/client/acc-settings/AccountSettings'
 
 
 import { ROUTES } from "../constants/routes";
@@ -35,7 +37,7 @@ export const userRoutes = [
           },
           {
             path: ROUTES.CUSTOMER.ADDRESSES.ROOT,
-            element: <AddressList />,
+            element: <AddressPage />,
           },
           {
             path: ROUTES.CUSTOMER.ORDERS.ROOT,
@@ -59,7 +61,7 @@ export const userRoutes = [
           },
           {
             path: ROUTES.CUSTOMER.SETTINGS,
-            element: <WishList />,
+            element: <AccountSettings />,
           },
         ],
       },

@@ -1,4 +1,4 @@
-import { accountNavigation, logoutNavigation } from "./data/accountNavigation";
+import { accountNavigation, logoutNavigation } from "../my-profile/data/accountNavigation";
 import PromoCard from "./PromoCard";
 import SidebarNavItem from "./SidebarNavItem";
 

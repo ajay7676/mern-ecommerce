@@ -1,7 +1,6 @@
 import AccountLayout from '../../../components/my-profile/AccountLayout'
-import OrdersContent from '../../../components/orders/OrdersContent';
 
-const Orders = () => {
+const AddressPage = () => {
  
 
   return (
@@ -14,15 +13,19 @@ const Orders = () => {
         "
       >
         <h1 className="hidden text-xl font-bold text-slate-950 lg:block">
-          My Orders
+          Addressess
         </h1>
 
         <div className="mt-0 space-y-5 lg:mt-5">
-           <OrdersContent />
+          {/* <ProfileHeaderCard
+            profile={profile}
+            onEdit={handleEditProfile}
+            onChangeImage={handleChangeImage}
+          /> */}
         </div>
       </div>
     </AccountLayout>
   );
 };
 
-export default Orders;
+export default AddressPage;
