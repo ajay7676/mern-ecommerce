@@ -1,4 +1,5 @@
 import AccountLayout from '../../../components/my-profile/AccountLayout'
+import WishlistCom from '../../../components/wishlist/WishlistCom';
 
 const WishList = () => {
  
@@ -12,17 +13,7 @@ const WishList = () => {
           sm:p-4
         "
       >
-        <h1 className="hidden text-xl font-bold text-slate-950 lg:block">
-          WishList
-        </h1>
-
-        <div className="mt-0 space-y-5 lg:mt-5">
-          {/* <ProfileHeaderCard
-            profile={profile}
-            onEdit={handleEditProfile}
-            onChangeImage={handleChangeImage}
-          /> */}
-        </div>
+       <WishlistCom />
       </div>
     </AccountLayout>
   );

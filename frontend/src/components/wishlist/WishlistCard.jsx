@@ -1,6 +1,6 @@
 import { FiHeart, FiShoppingCart } from "react-icons/fi";
-import StockBadge from "../../../components/ui/StockBadge";
-import { formatCurrency } from "../utils/formatCurrency";
+import StockBadge from "../ui/StockBadge";
+import { formatCurrency } from '../../utils/formatCurrency'
 
 const WishlistCard = ({
   item,
