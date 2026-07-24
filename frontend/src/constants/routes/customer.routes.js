@@ -1,16 +1,27 @@
+
 export const CUSTOMER_ROUTES = {
-    PROFILE: "/profile",
-    PROFILE_EDIT: "/profile/edit",
+  PROFILE: {
+    ROOT: "/profile",
+    EDIT: "/profile/edit",
+  },
 
-    ADDRESSES: "/addresses",
+  ADDRESSES: {
+    ROOT: "/addresses",
+  },
 
-    ORDERS: "/orders",
-    ORDER_DETAILS: "/orders/:id",
+  ORDERS: {
+    ROOT: "/orders",
+    DETAILS: "/orders/:id",
+  },
 
-    CHECKOUT: "/checkout",
+  CHECKOUT: "/checkout",
 
-    PAYMENT: "/payment",
+  PAYMENT: {
+    ROOT: "/payment",
+    METHODS: "/payment-methods",
+  },
 
-    WISHLIST: "/wishlist",
-    
-}
+  WISHLIST: "/wishlist",
+
+  SETTINGS: "/account-settings",
+};

@@ -18,9 +18,6 @@ import WishList from '../pages/client/wishlist/WishList'
 
 import { ROUTES } from "../constants/routes";
 
-
-// src/routes/customer.routes.jsx
-
 export const userRoutes = [
   {
     element: <ProtectedRoute />,
@@ -29,23 +26,23 @@ export const userRoutes = [
         element: <MainLayout />,
         children: [
           {
-            path: ROUTES.CUSTOMER.PROFILE,
+            path: ROUTES.CUSTOMER.PROFILE.ROOT,
             element: <Profile />,
           },
           {
-            path: ROUTES.CUSTOMER.PROFILE_EDIT,
+            path: ROUTES.CUSTOMER.PROFILE.EDIT,
             element: <EditProfile />,
           },
           {
-            path: ROUTES.CUSTOMER.ADDRESSES,
+            path: ROUTES.CUSTOMER.ADDRESSES.ROOT,
             element: <AddressList />,
           },
           {
-            path: ROUTES.CUSTOMER.ORDERS,
+            path: ROUTES.CUSTOMER.ORDERS.ROOT,
             element: <Orders />,
           },
           {
-            path: ROUTES.CUSTOMER.ORDER_DETAILS,
+            path: ROUTES.CUSTOMER.ORDERS.DETAILS,
             element: <OrderDetails />,
           },
           {
@@ -53,11 +50,15 @@ export const userRoutes = [
             element: <Checkout />,
           },
           {
-            path: ROUTES.CUSTOMER.PAYMENT,
+            path: ROUTES.CUSTOMER.PAYMENT.ROOT,
             element: <Payment />,
           },
           {
             path: ROUTES.CUSTOMER.WISHLIST,
+            element: <WishList />,
+          },
+          {
+            path: ROUTES.CUSTOMER.SETTINGS,
             element: <WishList />,
           },
         ],

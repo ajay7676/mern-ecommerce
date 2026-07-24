@@ -115,164 +115,159 @@ const CartItem = ({ item }) => {
     );
   };
   return (
-    <article
-      className="rounded-2xl border border-slate-200
-                 bg-white p-4 shadow-sm md:p-5"
-      aria-busy={isBusy}
-    >
-      {actionError && (
-        <div
-          role="alert"
-          className="mb-4 rounded-lg border border-red-200
+    <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm">
+      <div
+        className="grid grid-cols-[110px_1fr] md:grid-cols-[160px_1fr_auto] gap-4 md:gap-6"
+        aria-busy={isBusy}
+      >
+        {actionError && (
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border border-red-200
                      bg-red-50 px-4 py-3 text-sm text-red-600"
-        >
-          {actionError}
+          >
+            {actionError}
+          </div>
+        )}
+        <div className="w-full h-36 md:h-40 rounded-xl overflow-hidden bg-slate-100">
+          {item.image?.url ? (
+            <img
+              src={item.image.url}
+              alt={item.image.alt || item.name}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="h-full flex items-center justify-center text-xs text-slate-400">
+              No image
+            </div>
+          )}
         </div>
-      )}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm">
-        <div className="grid grid-cols-[110px_1fr] md:grid-cols-[160px_1fr_auto] gap-4 md:gap-6">
-          <div className="w-full h-36 md:h-40 rounded-xl overflow-hidden bg-slate-100">
-            {item.image?.url ? (
-              <img
-                src={item.image.url}
-                alt={item.image.alt || item.name}
-                className="h-full w-full object-cover"
-                loading="lazy"
-              />
-            ) : (
-              <div className="h-full flex items-center justify-center text-xs text-slate-400">
-                No image
-              </div>
-            )}
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">
-              {item?.brand?.name}
-            </h3>
-            <p className="text-sm text-slate-600 mt-1">{item?.name}</p>
-            {item.sku && (
-              <p className="text-sm text-slate-600 mt-2">
-                SKU: {item.sku} <span className="mx-2"></span>
-              </p>
-            )}
-
-            {item.selectedAttributes?.length > 0 && (
-              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-                {item.selectedAttributes.map((attribute) => (
-                  <span
-                    key={`${attribute.attributeSlug}-${attribute.optionValue}`}
-                    className="text-sm text-slate-600"
-                  >
-                    {attribute.attributeName}:{" "}
-                    <strong className="font-semibold">
-                      {attribute.optionLabel}
-                    </strong>
-                  </span>
-                ))}
-              </div>
-            )}
-            <p className="flex items-center gap-2 text-sm text-green-600 font-semibold mt-4">
-              <FaRegCheckCircle />
-              In Stock
-            </p>
-
+        <div>
+          <h3 className="text-lg font-bold text-slate-900">
+            {item?.brand?.name}
+          </h3>
+          <p className="text-sm text-slate-600 mt-1">{item?.name}</p>
+          {item.sku && (
             <p className="text-sm text-slate-600 mt-2">
-              Delivery by{" "}
-              <span className="font-semibold text-slate-900">
-                {/* {item.delivery} */}
-              </span>
+              SKU: {item.sku} <span className="mx-2"></span>
             </p>
-          </div>
+          )}
 
-          <div className="col-span-2 md:col-span-1 flex md:flex-col justify-between md:items-end gap-4">
-            <div className="md:text-right">
-              <div className="flex items-center md:justify-end gap-3">
-                <span className="text-xl font-black text-slate-900">
-                  {formatPrice(finalPrice)}
+          {item.selectedAttributes?.length > 0 && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+              {item.selectedAttributes.map((attribute) => (
+                <span
+                  key={`${attribute.attributeSlug}-${attribute.optionValue}`}
+                  className="text-sm text-slate-600"
+                >
+                  {attribute.attributeName}:{" "}
+                  <strong className="font-semibold">
+                    {attribute.optionLabel}
+                  </strong>
                 </span>
-                {hasDiscount && (
-                  <>
-                    <span className="text-sm text-slate-400 line-through">
-                      {formatPrice(originalPrice)}
-                    </span>
+              ))}
+            </div>
+          )}
+          <p className="flex items-center gap-2 text-sm text-green-600 font-semibold mt-4">
+            <FaRegCheckCircle />
+            In Stock
+          </p>
 
-                    <span className="rounded-md border border-red-200 px-2 py-1 text-xs font-bold text-red-500">
-                      {discountPercentage}% OFF
-                    </span>
-                  </>
-                )}
-              </div>
-              <div className="inline-flex items-center border border-slate-200 rounded-lg mt-5 overflow-hidden">
-                <button
-                  type="button"
-                  disabled={isBusy || quantity <= 1}
-                  onClick={(event) =>
-                    handleQuantityChange(event, cartItemId, item.quantity - 1)
-                  }
-                  className="w-9 cur h-9 flex items-center justify-center
+          <p className="text-sm text-slate-600 mt-2">
+            Delivery by{" "}
+            <span className="font-semibold text-slate-900">
+              {/* {item.delivery} */}
+            </span>
+          </p>
+        </div>
+
+        <div className="col-span-2 md:col-span-1 flex md:flex-col justify-between md:items-end gap-4">
+          <div className="md:text-right">
+            <div className="flex items-center md:justify-end gap-3">
+              <span className="text-xl font-black text-slate-900">
+                {formatPrice(finalPrice)}
+              </span>
+              {hasDiscount && (
+                <>
+                  <span className="text-sm text-slate-400 line-through">
+                    {formatPrice(originalPrice)}
+                  </span>
+
+                  <span className="rounded-md border border-red-200 px-2 py-1 text-xs font-bold text-red-500">
+                    {discountPercentage}% OFF
+                  </span>
+                </>
+              )}
+            </div>
+            <div className="inline-flex items-center border border-slate-200 rounded-lg mt-5 overflow-hidden">
+              <button
+                type="button"
+                disabled={isBusy || quantity <= 1}
+                onClick={(event) =>
+                  handleQuantityChange(event, cartItemId, item.quantity - 1)
+                }
+                className="w-9 cur h-9 flex items-center justify-center
                  hover:bg-slate-50 cursor-pointer
                   disabled:cursor-not-allowed 
                   disabled:opacity-40 "
-                >
-                  <FiMinus />
-                </button>
-                <span className="w-10 text-center font-semibold">
-                  {quantity}
-                </span>
-                <button
-                  type="button"
-                  onClick={(event) =>
-                    handleQuantityChange(event, cartItemId, item.quantity + 1)
-                  }
-                  disabled={isBusy || hasReachedMaximumStock}
-                  title={
-                    hasReachedMaximumStock
-                      ? `Only ${availableQuantity} item(s) available`
-                      : "Increase quantity"
-                  }
-                  className="w-9 h-9 flex items-center justify-center
+              >
+                <FiMinus />
+              </button>
+              <span className="w-10 text-center font-semibold">{quantity}</span>
+              <button
+                type="button"
+                onClick={(event) =>
+                  handleQuantityChange(event, cartItemId, item.quantity + 1)
+                }
+                disabled={isBusy || hasReachedMaximumStock}
+                title={
+                  hasReachedMaximumStock
+                    ? `Only ${availableQuantity} item(s) available`
+                    : "Increase quantity"
+                }
+                className="w-9 h-9 flex items-center justify-center
                  hover:bg-slate-50 cursor-pointer
                   disabled:cursor-not-allowed
                   disabled:opacity-40
                  "
-                >
-                  <FiPlus />
-                </button>
-              </div>
-              {hasReachedMaximumStock && (
-                <p
-                  role="status"
-                  className="mt-2 text-xs font-medium text-orange-600"
-                >
-                  Maximum available quantity reached
-                </p>
-              )}
+              >
+                <FiPlus />
+              </button>
             </div>
+            {hasReachedMaximumStock && (
+              <p
+                role="status"
+                className="mt-2 text-xs font-medium text-orange-600"
+              >
+                Maximum available quantity reached
+              </p>
+            )}
+          </div>
 
-            <div className="flex md:flex-col items-center md:items-end gap-4">
-              <button
-                type="button"
-                aria-label={`Remove ${item.name} from cart`}
-                onClick={handleRemoveItem}
-                disabled={isBusy}
-                className="text-slate-500 hover:text-red-500
+          <div className="flex md:flex-col items-center md:items-end gap-4">
+            <button
+              type="button"
+              aria-label={`Remove ${item.name} from cart`}
+              onClick={handleRemoveItem}
+              disabled={isBusy}
+              className="text-slate-500 hover:text-red-500
                          disabled:cursor-not-allowed
                          disabled:opacity-40"
-              >
-                <FiTrash2
-                  className={`text-xl  ${isRemoving ? "animate-pulse disabled:cursor-not-allowed" : "cursor-pointer"}`}
-                />
-              </button>
+            >
+              <FiTrash2
+                className={`text-xl  ${isRemoving ? "animate-pulse disabled:cursor-not-allowed" : "cursor-pointer"}`}
+              />
+            </button>
 
-              <button className="flex items-center gap-2 text-sm text-slate-600 hover:text-red-500">
-                <FiHeart />
-                Save for later
-              </button>
-            </div>
+            <button className="flex items-center gap-2 text-sm text-slate-600 hover:text-red-500">
+              <FiHeart />
+              Save for later
+            </button>
           </div>
         </div>
       </div>
-    </article>
+    </div>
   );
 };
 
