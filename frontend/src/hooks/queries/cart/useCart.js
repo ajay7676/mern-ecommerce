@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCartApi } from "../../../api/cartApi";
+import {cartQueryKeys } from '../../../constants/cartQueryKeys'
 
 const useCart = (options = {}) => {
   const { enabled = true } = options;
 
   return useQuery({
-    queryKey: ["cart"],
+    queryKey: cartQueryKeys.current(),
     queryFn: getCartApi,
     enabled,
     staleTime: 30 * 1000,

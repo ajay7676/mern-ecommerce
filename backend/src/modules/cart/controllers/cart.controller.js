@@ -185,7 +185,7 @@ export const getCartItems = async (req, res, next) => {
       throw new HandleError("Authentication is required", 401);
     }
 
-    const { cart, meta } = await getCartService({userId});
+    const { cart, meta } = await getCartService({ userId });
 
     res.setHeader("Cache-Control", "no-store");
 

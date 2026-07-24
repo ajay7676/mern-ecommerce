@@ -509,9 +509,7 @@ export const updateCartItemQuantityService = async ({
   if (!cart) {
     throw new HandleError("Cart not found", 404);
   }
-
   const cartItem = cart.items.id(validCartItemId);
-
   /*
    * This also prevents a user from updating
    * an item from another user's cart.
