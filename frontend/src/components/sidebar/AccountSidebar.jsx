@@ -1,9 +1,13 @@
 import { accountNavigation, logoutNavigation } from "../my-profile/data/accountNavigation";
 import PromoCard from "./PromoCard";
 import SidebarNavItem from "./SidebarNavItem";
+import useLogout from "../../hooks/mutations/useLogout";
 
-const AccountSidebar = ({ onNavigate, onLogout }) => {
+
+const AccountSidebar = ({ onNavigate }) => {
   const LogoutIcon = logoutNavigation.icon;
+  const logoutMutation = useLogout();
+
 
   return (
     <aside
@@ -25,11 +29,13 @@ const AccountSidebar = ({ onNavigate, onLogout }) => {
 
       <button
         type="button"
-        onClick={onLogout}
+        onClick={() => logoutMutation.mutate()}
+        disabled={logoutMutation.isPending}
         className="
           mt-1 flex min-h-11 items-center gap-3 rounded-lg
           px-3 py-2.5 text-left text-sm font-medium
           text-red-500 transition-colors hover:bg-red-50
+          disabled:cursor-not-allowed disabled:opacity-60
         "
       >
         <LogoutIcon className="h-4.75 w-4.75" />

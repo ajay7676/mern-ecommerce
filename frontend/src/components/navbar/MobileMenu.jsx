@@ -4,7 +4,6 @@ import {
   FiChevronDown,
   FiHeart,
   FiLogOut,
-  FiShoppingBag,
   FiShoppingCart,
   FiUser,
   FiX,
@@ -14,7 +13,7 @@ import { navLinks } from "../../constants/navigation";
 import { useSelector } from "react-redux";
 import useLogout from "../../hooks/mutations/useLogout";
 
-import useAuth from "../../hooks/queries/useAuth";
+// import useAuth from "../../hooks/queries/useAuth";
 import useCart from "../../hooks/queries/cart/useCart";
 
 const MobileMenu = ({ isOpen, onClose, isLoggingOut = false }) => {
@@ -27,7 +26,7 @@ const MobileMenu = ({ isOpen, onClose, isLoggingOut = false }) => {
   const { data, isLoading } = useCart({ enabled: isAuthenticated });
   const totalItems = isAuthenticated ? (data?.cart?.items.length ?? 0) : 0;
   const displayCount = totalItems > 99 ? "99+" : totalItems;
-  const destination = isAuthenticated ? "/cart" : "/login";
+  // const destination = isAuthenticated ? "/cart" : "/login";
 
   const toggleMenu = (menuName) => {
     setOpenMenu((prev) => (prev === menuName ? null : menuName));
