@@ -1,4 +1,5 @@
 
+
 const PaymentProviderLogo = ({ type }) => {
   if (type === "visa") {
     return (
