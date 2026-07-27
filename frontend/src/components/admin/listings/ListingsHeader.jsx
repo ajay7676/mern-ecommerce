@@ -1,8 +1,9 @@
-import MarketplaceTabs from "./MarketplaceTabs";
+// import MarketplaceTabs from "./MarketplaceTabs";
 import {
-  HiOutlineChevronDown,
+  // HiOutlineChevronDown,
   HiOutlineMagnifyingGlass,
 } from "react-icons/hi2";
+import AddNewProduct from "./modal/add/AddNewProduct";
 
 const ListingsHeader = () => {
   return (
@@ -15,7 +16,7 @@ const ListingsHeader = () => {
             All Listings
           </h1>
 
-          <MarketplaceTabs />
+          {/* <MarketplaceTabs /> */}
         </div>
 
         {/* Right Section */}
@@ -30,14 +31,7 @@ const ListingsHeader = () => {
           </button>
 
           {/* Add Listing */}
-          <button
-            type="button"
-            className="btn btn-primary gap-2 normal-case"
-          >
-            Add Listing
-
-            <HiOutlineChevronDown className="h-5 w-5" />
-          </button>
+          <AddNewProduct />
         </div>
       </div>
     </header>
