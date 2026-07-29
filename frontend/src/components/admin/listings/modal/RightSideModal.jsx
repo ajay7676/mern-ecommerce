@@ -48,30 +48,13 @@ const RightSideModal = ({
         aria-labelledby="drawer-title"
         className={`
           absolute right-0 top-0 h-full
-          w-full max-w-[90%] bg-white shadow-2xl
+          w-full max-w-full sm:max-w-[90%] bg-white shadow-2xl
           transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "translate-x-full"}
         `}
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          {/* <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-            <h2
-              id="drawer-title"
-              className="text-lg font-semibold text-slate-950"
-            >
-              {title}
-            </h2>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn btn-circle btn-ghost btn-sm"
-              aria-label="Close popup"
-            >
-              <FiX className="h-5 w-5" />
-            </button>
-          </div> */}
           <AddProductHeader title={title} onCancel={onClose}/>
 
           {/* Content */}
@@ -80,7 +63,7 @@ const RightSideModal = ({
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 border-t border-slate-200 px-5 py-4">
+          {/* <div className="flex justify-end gap-3 border-t border-slate-200 px-5 py-4">
             <button
               type="button"
               onClick={onClose}
@@ -95,7 +78,7 @@ const RightSideModal = ({
             >
               Save Product
             </button>
-          </div>
+          </div> */}
         </div>
       </section>
     </div>

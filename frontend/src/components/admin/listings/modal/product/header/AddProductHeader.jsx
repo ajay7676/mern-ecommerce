@@ -1,10 +1,12 @@
+import PropTypes from "prop-types";
+
 import { FiArrowLeft, FiChevronRight } from "react-icons/fi";
 import HeaderActions from "./HeaderActions";
 
 const AddProductHeader = ({
-  isSavingDraft = false,
-  isPublishing = false,
-  isSubmitting = false,
+  isSavingDraft,
+  isPublishing ,
+  isSubmitting,
   onBack,
   onCancel,
   onSaveDraft,
@@ -110,5 +112,20 @@ const AddProductHeader = ({
     </header>
   )
 };
+AddProductHeader.propTypes = {
+  isSavingDraft: PropTypes.bool,
+  isPublishing: PropTypes.bool,
+  isSubmitting: PropTypes.bool,
+  onBack: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+  onSaveDraft: PropTypes.func.isRequired,
+  onPublish: PropTypes.func.isRequired,
+  onPublishOption: PropTypes.func.isRequired,
+};
 
+AddProductHeader.defaultProps = {
+  isSavingDraft: false,
+  isPublishing: false,
+  isSubmitting: false,
+};
 export default AddProductHeader;
