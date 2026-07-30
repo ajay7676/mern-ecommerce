@@ -19,7 +19,6 @@ const ListingsHeader = () => {
   const hideAddNewPrdouct = () => {
      setIsOpen(false)
   }
-  console.log(isOpen)
   return (
     <>
      

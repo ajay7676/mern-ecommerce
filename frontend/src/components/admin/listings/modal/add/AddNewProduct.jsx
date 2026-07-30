@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import BasicInformationCard from "../product/basic-information/BasicInformationCard";
 import ProductEditorLayout from "../product/layout/ProductEditorLayout";
 import { brandOptions, categoryOptions, initialBasicInformation } from "../product/data/product.data";
+import PricingInventoryCard from "../product/pricing-inventory/PricingInventoryCard";
 
 const AddNewProduct = (
   {
@@ -44,12 +45,12 @@ const AddNewProduct = (
                 disabled={isSubmitting}
                 onChange={handleBasicInformationChange}
               />
-
-              <PhasePlaceholder
+              <PricingInventoryCard  />
+              {/* <PhasePlaceholder
                 title="Pricing & Inventory"
                 description="Pricing, currency, stock and inventory controls will be added in Phase 3."
                 minHeight="min-h-[205px]"
-              />
+              /> */}
 
               <PhasePlaceholder
                 title="Product Images"

@@ -10,7 +10,6 @@ import {
 
 
 import {CUSTOMER_ROUTES} from '../../../constants/routes/customer.routes'
-  console.log(CUSTOMER_ROUTES)
 
 export const accountNavigation = [
   {
