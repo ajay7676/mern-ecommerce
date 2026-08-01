@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import Card from "../card/Card";
-import { ALLOWED_IMAGE_TYPES, DEFAULT_MAX_IMAGES, MAX_IMAGE_SIZE } from "../../../../../../constants/admin/products/product.constants";
+import {
+  ALLOWED_IMAGE_TYPES,
+  DEFAULT_MAX_IMAGES,
+  MAX_IMAGE_SIZE,
+} from "../../../../../../constants/admin/products/product.constants";
 import ImageUploader from "./ImageUploader";
 import ImageThumbnail from "./ImageThumbnail";
 import ImageDropzone from "./ImageDropzone";
@@ -206,9 +210,12 @@ const ProductImagesCard = ({
 
     onChange(nextImages);
   };
+  const externalError =
+    typeof error === "string" ? error : error?.message || "";
 
-  const finalError = error || uploadError;
+  const finalError = externalError || uploadError;
   const uploadDisabled = disabled || images.length >= maxImages;
+  console.log(finalError);
   return (
     <Card
       title="Product Images"
@@ -232,7 +239,7 @@ const ProductImagesCard = ({
       <div className="mt-4 flex flex-wrap items-start gap-4">
         {images.map((image) => (
           <ImageThumbnail
-            key={image.id}
+            key={image.public_id}
             image={image}
             disabled={disabled}
             onSetPrimary={handleSetPrimary}
@@ -247,10 +254,7 @@ const ProductImagesCard = ({
       </div>
 
       {finalError && (
-        <p
-          role="alert"
-          className="mt-3 text-xs font-medium text-red-500"
-        >
+        <p role="alert" className="mt-3 text-xs font-medium text-red-500">
           {finalError}
         </p>
       )}

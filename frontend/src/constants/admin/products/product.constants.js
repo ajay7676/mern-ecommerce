@@ -13,3 +13,4 @@ export const ACCEPTED_IMAGE_TYPES =
 export const WEIGHT_UNITS = ["g", "kg"];
 
 export const DIMENSION_UNITS = ["cm", "in"];
+

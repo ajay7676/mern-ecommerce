@@ -9,6 +9,7 @@ import {
 import PricingInventoryCard from "../product/pricing-inventory/PricingInventoryCard";
 import ProductImagesCard from "../product/product-media/ProductImagesCard";
 import AdditionalInformationCard from "../product/additional-information/AdditionalInformationCard";
+import ProductPreviewCard from "../product/product-preview/ProductPreviewCard";
 // import AdditionalInformationCard from "../product/product-media/AdditionalInformationCard";
 
 const AddNewProduct = ({
@@ -31,8 +32,6 @@ const AddNewProduct = ({
       [fieldName]: "",
     }));
   }, []);
-
-  console.log(productData);
   return (
     <main className="px-3 py-4 sm:px-5 sm:py-5 lg:px-6">
       <div className="mx-auto w-full max-w-[1600px]">
@@ -55,7 +54,7 @@ const AddNewProduct = ({
 
               <ProductImagesCard
                 images={productData.images}
-                error={errors.images}
+                error={errors.images || errors.images?.message || " "}
                 disabled={disabled}
                 onChange={(images) => handleFieldChange("images", images)}
               />
@@ -65,19 +64,21 @@ const AddNewProduct = ({
                 disabled={isSavingDraft || isPublishing}
                 onChange={handleFieldChange}
               />
-              {/* <PhasePlaceholder
-                title="Product Images"
-                description="Image upload and image management will be added in Phase 4."
-                minHeight="min-h-[220px]"
-              /> */}
             </>
           }
           sidebarContent={
             <>
-              <PhasePlaceholder
+              {/* <PhasePlaceholder
                 title="Product Preview"
                 description="The live product preview will be added in Phase 6."
                 minHeight="min-h-[405px]"
+              /> */}
+              <ProductPreviewCard
+                product={productData}
+                disabled={isSavingDraft || isPublishing}
+                onViewFullPage={(product) => {
+                  console.log("Preview full product:", product);
+                }}
               />
 
               <PhasePlaceholder

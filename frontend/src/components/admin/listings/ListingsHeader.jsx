@@ -13,7 +13,6 @@ const ListingsHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleAddNewPrdouct = () => {
-      console.log("Clicked Plus button")
      setIsOpen(true)
   }
   const hideAddNewPrdouct = () => {

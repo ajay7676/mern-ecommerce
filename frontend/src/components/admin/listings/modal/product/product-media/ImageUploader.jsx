@@ -77,9 +77,6 @@ const ImageUploader = ({
     }
   };
 
-  //  console.log(disabled);
-   console.log(imageUrl)
-
   return (
     <>
       <div className="flex flex-wrap items-center gap-3">
