@@ -1,7 +1,6 @@
-
 const AdsPage = () => {
   return (
-    <div>AdsPage</div>
+    <div> Ads Page</div>
   )
 }
 

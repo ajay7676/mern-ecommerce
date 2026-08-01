@@ -78,6 +78,10 @@ ImageUploader.jsx
 ImageThumbnail.jsx
 ImageDropzone.jsx
 
+AdditionalInformationCard.jsx
+WeightField.jsx
+DimensionFields.jsx
+
 Phase 5 
 
 AdditionalInformationCard.jsx

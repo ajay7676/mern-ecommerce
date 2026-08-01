@@ -1,62 +1,75 @@
 import { useCallback, useState } from "react";
 import BasicInformationCard from "../product/basic-information/BasicInformationCard";
 import ProductEditorLayout from "../product/layout/ProductEditorLayout";
-import { brandOptions, categoryOptions, initialBasicInformation } from "../product/data/product.data";
+import {
+  brandOptions,
+  categoryOptions,
+  initialProductData,
+} from "../product/data/product.data";
 import PricingInventoryCard from "../product/pricing-inventory/PricingInventoryCard";
+import ProductImagesCard from "../product/product-media/ProductImagesCard";
+import AdditionalInformationCard from "../product/additional-information/AdditionalInformationCard";
+// import AdditionalInformationCard from "../product/product-media/AdditionalInformationCard";
 
-const AddNewProduct = (
-  {
-    isSubmitting= false
-  }
-) => {
-  const [basicInformation, setBasicInformation] = useState(
-    initialBasicInformation,
-  );
+const AddNewProduct = ({
+  disabled,
+  isSubmitting = false,
+  isSavingDraft,
+  isPublishing,
+}) => {
+  const [productData, setProductData] = useState(initialProductData);
+  const [errors, setErrors] = useState({});
 
-  const [basicInformationErrors, setBasicInformationErrors] = useState({});
-
-  const handleBasicInformationChange = useCallback((fieldName, value) => {
-    setBasicInformation((currentValues) => ({
-      ...currentValues,
+  const handleFieldChange = useCallback((fieldName, value) => {
+    setProductData((previousData) => ({
+      ...previousData,
       [fieldName]: value,
     }));
 
-    setBasicInformationErrors((currentErrors) => ({
-      ...currentErrors,
+    setErrors((previousErrors) => ({
+      ...previousErrors,
       [fieldName]: "",
     }));
   }, []);
+
+  console.log(productData);
   return (
     <main className="px-3 py-4 sm:px-5 sm:py-5 lg:px-6">
       <div className="mx-auto w-full max-w-[1600px]">
         <ProductEditorLayout
           mainContent={
             <>
-              {/* <PhasePlaceholder
-                  title="Basic Information"
-                  description="Product name, category, description, brand, SKU and barcode will be added in Phase 2."
-                  minHeight="min-h-[405px]"
-                /> */}
               <BasicInformationCard
-                values={basicInformation}
-                errors={basicInformationErrors}
+                values={productData}
+                errors={errors}
                 categories={categoryOptions}
                 brands={brandOptions}
                 disabled={isSubmitting}
-                onChange={handleBasicInformationChange}
+                onChange={handleFieldChange}
               />
-              <PricingInventoryCard  />
-              {/* <PhasePlaceholder
-                title="Pricing & Inventory"
-                description="Pricing, currency, stock and inventory controls will be added in Phase 3."
-                minHeight="min-h-[205px]"
-              /> */}
+              <PricingInventoryCard
+                values={productData}
+                errors={errors}
+                onChange={handleFieldChange}
+              />
 
-              <PhasePlaceholder
+              <ProductImagesCard
+                images={productData.images}
+                error={errors.images}
+                disabled={disabled}
+                onChange={(images) => handleFieldChange("images", images)}
+              />
+              <AdditionalInformationCard
+                values={productData}
+                errors={errors}
+                disabled={isSavingDraft || isPublishing}
+                onChange={handleFieldChange}
+              />
+              {/* <PhasePlaceholder
                 title="Product Images"
                 description="Image upload and image management will be added in Phase 4."
                 minHeight="min-h-[220px]"
-              />
+              /> */}
             </>
           }
           sidebarContent={

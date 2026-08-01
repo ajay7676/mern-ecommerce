@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+// import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -8,16 +8,17 @@ import App from "./App.jsx";
 import { queryClient } from "./app/queryClient.js";
 import { store } from "./app/store.js";
 import { Toaster } from "react-hot-toast";
+// import ContextProvider from "./pages/admin/growth/hooks/useContext/ContextProvider.jsx";
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
+  // <StrictMode>
+  <Provider store={store}>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
           <App />
-        </AuthProvider>
-        <Toaster position="top-right" />
-      </QueryClientProvider>
-    </Provider>
-  </StrictMode>,
+      </AuthProvider>
+      <Toaster position="top-right" />
+    </QueryClientProvider>
+  </Provider>,
+  // </StrictMode>,
 );

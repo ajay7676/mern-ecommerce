@@ -1,13 +1,13 @@
-export const initialBasicInformation = {
-  name: "Adidas Men Essential Cotton T-Shirt",
-  shortDescription: "Comfortable cotton T-shirt for men.",
-  description:
-    "Adidas men's casual T-shirt made with soft and breathable cotton fabric. Suitable for daily wear, gym and outdoor activities.",
-  category: "6a47bf6a0f7d0e36f53eb31",
-  brand: "6a4725cbdc5bd8607c8c72b9",
-  sku: "ADIDAS-MEN-TSHIRT-001",
-  barcode: "",
-};
+// export const initialBasicInformation = {
+//   name: "Adidas Men Essential Cotton T-Shirt",
+//   shortDescription: "Comfortable cotton T-shirt for men.",
+//   description:
+//     "Adidas men's casual T-shirt made with soft and breathable cotton fabric. Suitable for daily wear, gym and outdoor activities.",
+//   category: "6a47bf6a0f7d0e36f53eb31",
+//   brand: "6a4725cbdc5bd8607c8c72b9",
+//   sku: "ADIDAS-MEN-TSHIRT-001",
+//   barcode: "",
+// };
 
 export const categoryOptions = [
   {
@@ -39,3 +39,33 @@ export const brandOptions = [
     secondaryText: "puma",
   },
 ];
+
+export const initialProductData = {
+  name: "Adidas Men Essential Cotton T-Shirt",
+  shortDescription: "Comfortable cotton T-shirt for men.",
+  description:
+    "Adidas men's casual T-shirt made with soft and breathable cotton fabric. Suitable for daily wear, gym and outdoor activities.",
+  category: "6a47bf6a0f7d0e36f53eb31",
+  brand: "6a4725cbdc5bd8607c8c72b9",
+  sku: "ADIDAS-MEN-TSHIRT-001",
+  barcode: "",
+  price: "2345",
+  discountPrice: "",
+  costPrice: "",
+  currency: "INR",
+  stock: "",
+  lowStockThreshold: "5",
+  trackInventory: true,
+  allowBackorder: false,
+  images: [],
+  weight: {
+    value: "",
+    unit: "kg",
+  },
+  dimensions: {
+    length: "",
+    width: "",
+    height: "",
+    unit: "cm",
+  },
+};
