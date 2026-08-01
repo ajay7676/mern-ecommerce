@@ -95,4 +95,14 @@ export const initialProductData = {
   isFeatured: false,
   isNewArrival: false,
   isBestSeller: false,
+   seoTitle: "",
+  seoDescription: "",
+  seoKeywords: [
+    "tshirt",
+    "cotton",
+    "mens fashion",
+    "casual wear",
+    "sportswear",
+    "adidas",
+  ],
 };

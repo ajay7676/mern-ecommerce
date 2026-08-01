@@ -11,6 +11,7 @@ import ProductImagesCard from "../product/product-media/ProductImagesCard";
 import AdditionalInformationCard from "../product/additional-information/AdditionalInformationCard";
 import ProductPreviewCard from "../product/product-preview/ProductPreviewCard";
 import ProductStatusCard from "../product/product-status/ProductStatusCard";
+import SeoCard from "../product/seo/SeoCard";
 // import AdditionalInformationCard from "../product/product-media/AdditionalInformationCard";
 
 const AddNewProduct = ({
@@ -89,10 +90,12 @@ const AddNewProduct = ({
                 onChange={handleFieldChange}
               />
 
-              <PhasePlaceholder
-                title="SEO Information"
-                description="SEO title, description and keywords will be added in Phase 8."
-                minHeight="min-h-[240px]"
+              <SeoCard
+                values={productData}
+                errors={errors}
+                onChange={handleFieldChange}
+                disabled={isSavingDraft || isPublishing}
+                keywordSuggestions={productData?.seoKeywords}
               />
             </>
           }
@@ -102,31 +105,31 @@ const AddNewProduct = ({
   );
 };
 
-const PhasePlaceholder = ({ title, description, minHeight = "min-h-48" }) => {
-  return (
-    <section
-      className={`
-        ${minHeight}
-        rounded-xl border border-slate-200 bg-white
-        p-5 shadow-[0_2px_8px_rgba(15,23,42,0.035)]
-        sm:p-6
-      `}
-    >
-      <h2 className="text-base font-semibold text-slate-950">{title}</h2>
+// const PhasePlaceholder = ({ title, description, minHeight = "min-h-48" }) => {
+//   return (
+//     <section
+//       className={`
+//         ${minHeight}
+//         rounded-xl border border-slate-200 bg-white
+//         p-5 shadow-[0_2px_8px_rgba(15,23,42,0.035)]
+//         sm:p-6
+//       `}
+//     >
+//       <h2 className="text-base font-semibold text-slate-950">{title}</h2>
 
-      <div
-        className="
-          mt-5 flex min-h-28 items-center justify-center
-          rounded-lg border border-dashed border-slate-200
-          bg-slate-50/70 px-5 text-center
-        "
-      >
-        <p className="max-w-md text-sm leading-6 text-slate-500">
-          {description}
-        </p>
-      </div>
-    </section>
-  );
-};
+//       <div
+//         className="
+//           mt-5 flex min-h-28 items-center justify-center
+//           rounded-lg border border-dashed border-slate-200
+//           bg-slate-50/70 px-5 text-center
+//         "
+//       >
+//         <p className="max-w-md text-sm leading-6 text-slate-500">
+//           {description}
+//         </p>
+//       </div>
+//     </section>
+//   );
+// };
 
 export default AddNewProduct;

@@ -14,3 +14,5 @@ export const WEIGHT_UNITS = ["g", "kg"];
 
 export const DIMENSION_UNITS = ["cm", "in"];
 
+export const SEO_TITLE_MAX_LENGTH = 60;
+export const SEO_DESCRIPTION_MAX_LENGTH = 160;
