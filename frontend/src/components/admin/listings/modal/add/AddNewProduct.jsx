@@ -10,6 +10,7 @@ import PricingInventoryCard from "../product/pricing-inventory/PricingInventoryC
 import ProductImagesCard from "../product/product-media/ProductImagesCard";
 import AdditionalInformationCard from "../product/additional-information/AdditionalInformationCard";
 import ProductPreviewCard from "../product/product-preview/ProductPreviewCard";
+import ProductStatusCard from "../product/product-status/ProductStatusCard";
 // import AdditionalInformationCard from "../product/product-media/AdditionalInformationCard";
 
 const AddNewProduct = ({
@@ -81,10 +82,11 @@ const AddNewProduct = ({
                 }}
               />
 
-              <PhasePlaceholder
-                title="Product Status"
-                description="Status, visibility and featured controls will be added in Phase 7."
-                minHeight="min-h-[220px]"
+              <ProductStatusCard
+                values={productData}
+                errors={errors}
+                disabled={isSavingDraft || isPublishing}
+                onChange={handleFieldChange}
               />
 
               <PhasePlaceholder

@@ -90,4 +90,9 @@ export const initialProductData = {
     height: "",
     unit: "cm",
   },
+  status: "draft",
+  visibility: "public", 
+  isFeatured: false,
+  isNewArrival: false,
+  isBestSeller: false,
 };
