@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const PRODUCT_STATUS = ["draft", "published", "archived"];
-const PRODUCT_VISIBILITY = ["public", "private"];
+const PRODUCT_VISIBILITY = ["public", "private", "hidden"];
 const PRODUCT_CURRENCY = ["INR", "USD"];
 
 const productImageSchema = new mongoose.Schema(
@@ -35,7 +35,7 @@ const productImageSchema = new mongoose.Schema(
   },
   {
     _id: false,
-  }
+  },
 );
 
 const seoSchema = new mongoose.Schema(
@@ -62,7 +62,7 @@ const seoSchema = new mongoose.Schema(
   },
   {
     _id: false,
-  }
+  },
 );
 
 const productSchema = new mongoose.Schema(
@@ -215,8 +215,15 @@ const productSchema = new mongoose.Schema(
       default: false,
       index: true,
     },
+    isNewArrival: {
+      type: Boolean,
+      default: false,
+    },
 
-    // 8. Ratings and Analytics
+    isBestSeller: {
+      type: Boolean,
+      default: false,
+    },
     ratings: {
       type: Number,
       default: 0,
@@ -280,7 +287,7 @@ const productSchema = new mongoose.Schema(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 /**
@@ -346,7 +353,7 @@ productSchema.index({ sold: -1 });
  */
 productSchema.pre("validate", function () {
   if (!this.images || this.images.length === 0) {
-    return ;
+    return;
   }
 
   const primaryImages = this.images.filter((image) => image.isPrimary);
@@ -370,7 +377,6 @@ productSchema.pre("validate", function () {
       image.alt = this.name;
     }
   });
-
 });
 
 /**
