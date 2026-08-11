@@ -13,7 +13,7 @@ export const userDropdownMenu = [
     id: "profile",
     label: "My Profile",
     icon: User,
-    path: ROUTES.CUSTOMER.PROFILE,
+    path: ROUTES.ADMIN.PROFILE,
   },
 
   {

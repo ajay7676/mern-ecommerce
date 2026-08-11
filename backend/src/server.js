@@ -7,12 +7,15 @@ process.on("uncaughtException", (err) => {
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+dotenv.config();
+
 // import productRoutes from './routes/productRoutes.js'
 import productRoutes from "./modules/product/routes/product.routes.js";
 import productVariantRoutes from "./modules/catalog/routes/productVariant.routes.js";
 import userRoutes from "./routes/userRoutes.js";
 import categoryRoutes from "./modules/catalog/routes/category.routes.js";
 import categoryAttributeRoutes from "./modules/catalog/routes/categoryAttribute.routes.js";
+import productImageUploadRoutes from "./modules/product/routes/productImageUpload.routes.js";
 // import cartRoutes from './routes/cartRoutes.js'
 import cartRoutes from "./modules/cart/routes/cart.routes.js";
 // import orderRoutes from './routes/orderRoutes.js'
@@ -21,7 +24,6 @@ import errorHandler from "./middleware/errorMiddleware.js";
 import cookieParser from "cookie-parser";
 import path from "path";
 
-dotenv.config();
 
 const app = express();
 
@@ -59,6 +61,7 @@ app.use("/api/v1", categoryAttributeRoutes);
 app.use("/api/v1", userRoutes);
 app.use("/api/v1", cartRoutes);
 // app.use("/api/v1" ,orderRoutes);
+app.use("/api/v1", productImageUploadRoutes);
 
 app.use(express.static(path.join(__dirname, "/frontend/dist")));
 app.use((req, res) => {
