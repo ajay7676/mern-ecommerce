@@ -8,6 +8,7 @@ import {
   MessageSquare,
   Settings,
   BarChart3,
+  User2Icon,
 } from "lucide-react";
 
 import  { ROUTES } from '../../../constants/routes';
@@ -63,6 +64,12 @@ export  const sidebarMenu  = [
     label: "Reports",
     icon: BarChart3,
     path: ROUTES.ADMIN.REPORTS,
+  },
+  {
+    id: "users",
+    label: "Users",
+    icon: User2Icon,
+    path: ROUTES.ADMIN.USERS,
   },
 
   {
