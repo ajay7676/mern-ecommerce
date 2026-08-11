@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect , useState } from "react";
 import {
   FiDownload,
   FiPlus,
@@ -9,73 +9,86 @@ import UserFilters from "../../../components/admin/users/UserFilters";
 import UserTable from "../../../components/admin/users/UserTable";
 import UserPagination from "../../../components/admin/users/UserPagination";
 
+import useUsers  from '../../../hooks/admin/queries/useUsers';
 import {
-  users,
   userStats,
 } from '../../../data/admin/users/users.data';
 
 const UserManagementPage = () => {
+   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("");
   const [status, setStatus] = useState("");
+
   const [selectedUsers, setSelectedUsers] = useState([]);
 
-  const filteredUsers = useMemo(() => {
-    const query = search.toLowerCase().trim();
+   const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+  } = useUsers({
+    page,
+    limit,
+    search,
+    role,
+    status,
+  });
 
-    return users.filter((user) => {
-      const matchesSearch =
-        !query ||
-        user.name.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query) ||
-        user.phone.toLowerCase().includes(query);
+  const users = data?.data ?? [];
 
-      const matchesRole =
-        !role || user.role === role;
+  const pagination = data?.pagination;
 
-      const matchesStatus =
-        !status || user.status === status;
-
-      return (
-        matchesSearch &&
-        matchesRole &&
-        matchesStatus
-      );
-    });
+  useEffect(() => {
+    setPage(1);
   }, [search, role, status]);
 
   const handleSelectUser = (userId) => {
-    setSelectedUsers((current) =>
-      current.includes(userId)
-        ? current.filter((id) => id !== userId)
-        : [...current, userId]
-    );
+    setSelectedUsers((currentUsers) => {
+      const alreadySelected =
+        currentUsers.includes(userId);
+
+      if (alreadySelected) {
+        return currentUsers.filter(
+          (id) => id !== userId
+        );
+      }
+
+      return [
+        ...currentUsers,
+        userId,
+      ];
+    });
   };
 
   const handleSelectAll = () => {
+    const currentPageIds = users.map(
+      (user) => user.id
+    );
+
     const allSelected =
-      filteredUsers.length > 0 &&
-      filteredUsers.every((user) =>
-        selectedUsers.includes(user.id)
+      currentPageIds.length > 0 &&
+      currentPageIds.every((id) =>
+        selectedUsers.includes(id)
       );
 
     if (allSelected) {
-      setSelectedUsers((current) =>
-        current.filter(
-          (id) =>
-            !filteredUsers.some(
-              (user) => user.id === id
-            )
+      setSelectedUsers((currentUsers) =>
+        currentUsers.filter(
+          (id) => !currentPageIds.includes(id)
         )
       );
 
       return;
     }
 
-    setSelectedUsers((current) => [
+    setSelectedUsers((currentUsers) => [
       ...new Set([
-        ...current,
-        ...filteredUsers.map((user) => user.id),
+        ...currentUsers,
+        ...currentPageIds,
       ]),
     ]);
   };
@@ -84,6 +97,7 @@ const UserManagementPage = () => {
     setSearch("");
     setRole("");
     setStatus("");
+    setPage(1);
   };
 
   return (
@@ -98,6 +112,9 @@ const UserManagementPage = () => {
       "
     >
       <div className="mx-auto max-w-375">
+
+        {/* Header */}
+
         <div
           className="
             mb-7
@@ -122,11 +139,12 @@ const UserManagementPage = () => {
             </h1>
 
             <p className="mt-1 text-sm text-slate-500">
-              View, search and manage all users in your system.
+              View, search and manage all users in
+              your system.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-3">
             <button
               type="button"
               className="
@@ -142,12 +160,9 @@ const UserManagementPage = () => {
                 text-sm
                 font-semibold
                 text-slate-700
-                shadow-sm
-                transition
-                hover:bg-slate-50
               "
             >
-              <FiDownload size={17} />
+              <FiDownload />
               Export
             </button>
 
@@ -164,16 +179,16 @@ const UserManagementPage = () => {
                 text-sm
                 font-semibold
                 text-white
-                shadow-sm
-                transition
                 hover:bg-violet-700
               "
             >
-              <FiPlus size={19} />
+              <FiPlus size={18} />
               Add New User
             </button>
           </div>
         </div>
+
+        {/* Stats */}
 
         <section
           className="
@@ -192,6 +207,8 @@ const UserManagementPage = () => {
           ))}
         </section>
 
+        {/* Users */}
+
         <section
           className="
             mt-6
@@ -200,7 +217,6 @@ const UserManagementPage = () => {
             border
             border-slate-200
             bg-white
-            shadow-[0_2px_12px_rgba(15,23,42,0.03)]
           "
         >
           <UserFilters
@@ -213,14 +229,80 @@ const UserManagementPage = () => {
             onClear={handleClearFilters}
           />
 
-          <UserTable
-            users={filteredUsers}
-            selectedUsers={selectedUsers}
-            onSelectUser={handleSelectUser}
-            onSelectAll={handleSelectAll}
-          />
+          {isLoading ? (
+            <div
+              className="
+                flex
+                min-h-100
+                items-center
+                justify-center
+              "
+            >
+              <p className="text-sm text-slate-500">
+                Loading users...
+              </p>
+            </div>
+          ) : isError ? (
+            <div
+              className="
+                flex
+                min-h-100
+                items-center
+                justify-center
+              "
+            >
+              <p className="text-sm text-red-500">
+                {error?.message ??
+                  "Failed to load users"}
+              </p>
+            </div>
+          ) : users.length === 0 ? (
+            <div
+              className="
+                flex
+                min-h-100
+                items-center
+                justify-center
+              "
+            >
+              <p className="text-sm text-slate-500">
+                No users found.
+              </p>
+            </div>
+          ) : (
+            <UserTable
+              users={users}
+              selectedUsers={selectedUsers}
+              onSelectUser={handleSelectUser}
+              onSelectAll={handleSelectAll}
+            />
+          )}
 
-          <UserPagination />
+          {isFetching && !isLoading && (
+            <div
+              className="
+                border-t
+                border-slate-100
+                py-2
+                text-center
+                text-xs
+                text-slate-400
+              "
+            >
+              Updating users...
+            </div>
+          )}
+
+          <UserPagination
+            page={page}
+            limit={limit}
+            pagination={pagination}
+            onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
+          />
         </section>
       </div>
     </main>
