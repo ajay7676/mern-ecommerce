@@ -4,11 +4,34 @@ import {
   FiChevronDown,
 } from "react-icons/fi";
 
-const pageButtonClass =
-  "flex h-9 min-w-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 hover:bg-slate-50";
+const UserPagination = ({
+  page,
+  limit,
+  pagination,
+  onPageChange,
+  onLimitChange,
+}) => {
 
-const UserPagination = () => {
-  return (
+   if (!pagination) {
+    return null;
+  }
+
+   const {
+    totalUsers,
+    totalPages,
+  } = pagination;
+
+  const start =
+    totalUsers === 0
+      ? 0
+      : (page - 1) * limit + 1;
+
+  const end = Math.min(
+    page * limit,
+    totalUsers
+  );
+
+ return (
     <div
       className="
         flex
@@ -18,98 +41,161 @@ const UserPagination = () => {
         border-slate-200
         px-5
         py-4
-        md:flex-row
-        md:items-center
-        md:justify-between
+        lg:flex-row
+        lg:items-center
+        lg:justify-between
       "
     >
       <p className="text-sm text-slate-500">
-        Showing <span className="font-medium">1 to 10</span> of{" "}
-        <span className="font-medium">128</span> users
+        Showing{" "}
+        <span className="font-medium text-slate-700">
+          {start} to {end}
+        </span>{" "}
+        of{" "}
+        <span className="font-medium text-slate-700">
+          {totalUsers}
+        </span>{" "}
+        users
       </p>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2">
           <button
             type="button"
-            disabled
-            className={`${pageButtonClass} disabled:cursor-not-allowed disabled:opacity-40`}
+            disabled={page === 1}
+            onClick={() =>
+              onPageChange(page - 1)
+            }
+            className="
+              flex
+              h-9
+              w-9
+              items-center
+              justify-center
+              rounded-lg
+              border
+              border-slate-200
+              bg-white
+              disabled:cursor-not-allowed
+              disabled:opacity-40
+            "
           >
             <FiChevronLeft />
           </button>
 
-          <button
-            type="button"
-            className="
-              flex
-              h-9
-              min-w-9
-              items-center
-              justify-center
-              rounded-lg
-              bg-violet-600
-              px-3
-              text-sm
-              font-medium
-              text-white
-              shadow-sm
-            "
-          >
-            1
-          </button>
-
-          {[2, 3, 4, 5].map((page) => (
+          {Array.from(
+            {
+              length: totalPages,
+            },
+            (_, index) => index + 1
+          ).map((pageNumber) => (
             <button
-              key={page}
+              key={pageNumber}
               type="button"
-              className={pageButtonClass}
+              onClick={() =>
+                onPageChange(pageNumber)
+              }
+              className={`
+                flex
+                h-9
+                min-w-9
+                items-center
+                justify-center
+                rounded-lg
+                border
+                px-3
+                text-sm
+                font-medium
+                ${
+                  page === pageNumber
+                    ? `
+                      border-violet-600
+                      bg-violet-600
+                      text-white
+                    `
+                    : `
+                      border-slate-200
+                      bg-white
+                      text-slate-600
+                      hover:bg-slate-50
+                    `
+                }
+              `}
             >
-              {page}
+              {pageNumber}
             </button>
           ))}
 
           <button
             type="button"
-            className={pageButtonClass}
-          >
-            ...
-          </button>
-
-          <button
-            type="button"
-            className={pageButtonClass}
-          >
-            13
-          </button>
-
-          <button
-            type="button"
-            className={pageButtonClass}
+            disabled={page === totalPages}
+            onClick={() =>
+              onPageChange(page + 1)
+            }
+            className="
+              flex
+              h-9
+              w-9
+              items-center
+              justify-center
+              rounded-lg
+              border
+              border-slate-200
+              bg-white
+              disabled:cursor-not-allowed
+              disabled:opacity-40
+            "
           >
             <FiChevronRight />
           </button>
         </div>
 
-        <button
-          type="button"
-          className="
-            flex
-            h-9
-            min-w-27.5
-            items-center
-            justify-between
-            rounded-lg
-            border
-            border-slate-200
-            bg-white
-            px-4
-            text-sm
-            text-slate-500
-          "
-        >
-          10 / page
-          <FiChevronDown />
-        </button>
+        <div className="relative">
+          <select
+            value={limit}
+            onChange={(event) =>
+              onLimitChange(
+                Number(event.target.value)
+              )
+            }
+            className="
+              h-9
+              appearance-none
+              rounded-lg
+              border
+              border-slate-200
+              bg-white
+              pl-3
+              pr-9
+              text-sm
+              text-slate-600
+              outline-none
+            "
+          >
+            <option value={5}>
+              5 / page
+            </option>
+
+            <option value={10}>
+              10 / page
+            </option>
+
+            <option value={20}>
+              20 / page
+            </option>
+          </select>
+
+          <FiChevronDown
+            className="
+              pointer-events-none
+              absolute
+              right-3
+              top-1/2
+              -translate-y-1/2
+              text-slate-400
+            "
+          />
+        </div>
       </div>
     </div>
   );

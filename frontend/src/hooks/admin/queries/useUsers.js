@@ -26,4 +26,4 @@ const useUsers = ({ page, limit, search, role, status }) => {
   });
 };
 
-export default useUsers;
+export default useUsers; 
