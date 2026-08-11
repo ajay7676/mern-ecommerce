@@ -13,6 +13,8 @@ import useUsers  from '../../../hooks/admin/queries/useUsers';
 import {
   userStats,
 } from '../../../data/admin/users/users.data';
+import useDebounce from "../../../utils/useDebounce";
+
 
 const UserManagementPage = () => {
    const [page, setPage] = useState(1);
@@ -23,7 +25,10 @@ const UserManagementPage = () => {
   const [status, setStatus] = useState("");
 
   const [selectedUsers, setSelectedUsers] = useState([]);
-
+  const debouncedSearch = useDebounce(
+  search,
+  400
+);
    const {
     data,
     isLoading,
@@ -33,7 +38,7 @@ const UserManagementPage = () => {
   } = useUsers({
     page,
     limit,
-    search,
+    search: debouncedSearch,
     role,
     status,
   });
