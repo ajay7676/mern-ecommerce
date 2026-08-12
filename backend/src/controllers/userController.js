@@ -37,11 +37,18 @@ const loginUser = async (req, res, next) => {
     if (!user) {
       return next(new HandleError("Invalid email or password", 401));
     }
+    if (user.status === "blocked") {
+      throw new HandleError("Your account has been blocked", 403);
+    }
 
     const isPasswordMatched = await user.comparePassword(password);
     if (!isPasswordMatched) {
       return next(new HandleError("Invalid email or password", 401));
     }
+    user.lastLoginAt = new Date();
+    await user.save({
+      validateBeforeSave: false,
+    });
     return sendToken(user, 200, res, "User Login successfully");
   } catch (error) {
     next(error);

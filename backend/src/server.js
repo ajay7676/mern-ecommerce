@@ -11,6 +11,7 @@ dotenv.config();
 
 // import productRoutes from './routes/productRoutes.js'
 import productRoutes from "./modules/product/routes/product.routes.js";
+import adminUserRoutes from "./modules/admin/users/adminUser.routes.js";
 import productVariantRoutes from "./modules/catalog/routes/productVariant.routes.js";
 import userRoutes from "./routes/userRoutes.js";
 import categoryRoutes from "./modules/catalog/routes/category.routes.js";
@@ -55,6 +56,7 @@ app.use(cors(corsOptions));
 const PORT = process.env.PORT || 5000;
 
 app.use("/api/v1", productRoutes);
+app.use("/api/v1", adminUserRoutes);
 app.use("/api/v1", productVariantRoutes);
 app.use("/api/v1", categoryRoutes);
 app.use("/api/v1", categoryAttributeRoutes);
