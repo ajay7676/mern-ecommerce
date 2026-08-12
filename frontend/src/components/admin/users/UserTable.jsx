@@ -92,13 +92,13 @@ const UserTable = ({
         </thead>
 
         <tbody>
-          {users.map((user) => {
+          { users.length > 0  && users.map((user) => {
             const isSelected =
-              selectedUsers.includes(user.id);
+              selectedUsers.includes(user._id);
 
             return (
               <tr
-                key={user.id}
+                key={user._id}
                 className="
                   h-16
                   border-b

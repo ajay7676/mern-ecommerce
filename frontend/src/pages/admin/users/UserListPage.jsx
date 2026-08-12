@@ -1,23 +1,24 @@
-import { useEffect , useState } from "react";
-import {
-  FiDownload,
-  FiPlus,
-} from "react-icons/fi";
+import { useEffect, useState } from "react";
+// import { FiDownload, FiPlus } from "react-icons/fi";
 
-import UserStatsCard from '../../../components/admin/users/UserStatsCard'
+// import UserStatsCard from "../../../components/admin/users/UserStatsCard";
 import UserFilters from "../../../components/admin/users/UserFilters";
 import UserTable from "../../../components/admin/users/UserTable";
 import UserPagination from "../../../components/admin/users/UserPagination";
 
-import useUsers  from '../../../hooks/admin/queries/useUsers';
-import {
-  userStats,
-} from '../../../data/admin/users/users.data';
+import useUsers from "../../../hooks/admin/queries/useUsers";
+// import { userStats } from "../../../data/admin/users/users.data";
 import useDebounce from "../../../utils/useDebounce";
-
+import useUserManagement from "../../../hooks/admin/mutations/users/useUserManagement";
+import UserManagementHeader from "../../../components/admin/users/UserManagementHeader";
+import UserStats from "../../../components/admin/users/UserStats";
+import UserStatusConfirmModal from "../../../components/admin/users/dialogs/UserStatusConfirmModal";
+import EditUserModal from "../../../components/admin/users/dialogs/edit-user/EditUserModal";
+import ViewUserModal from "../../../components/admin/users/dialogs/view-user/ViewUserModal";
+import AddNewUserModal from "../../../components/admin/users/dialogs/add-new/AddNewUserModal";
 
 const UserManagementPage = () => {
-   const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
   const [search, setSearch] = useState("");
@@ -25,17 +26,10 @@ const UserManagementPage = () => {
   const [status, setStatus] = useState("");
 
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const debouncedSearch = useDebounce(
-  search,
-  400
-);
-   const {
-    data,
-    isLoading,
-    isFetching,
-    isError,
-    error,
-  } = useUsers({
+  const debouncedSearch = useDebounce(search, 400);
+
+  const management = useUserManagement();
+  const { data, isLoading, isFetching, isError, error } = useUsers({
     page,
     limit,
     search: debouncedSearch,
@@ -43,9 +37,9 @@ const UserManagementPage = () => {
     status,
   });
 
-  const users = data?.data ?? [];
+  const users = data?.data?.users ?? [];
 
-  const pagination = data?.pagination;
+  const pagination = data?.data?.pagination;
 
   useEffect(() => {
     setPage(1);
@@ -53,48 +47,33 @@ const UserManagementPage = () => {
 
   const handleSelectUser = (userId) => {
     setSelectedUsers((currentUsers) => {
-      const alreadySelected =
-        currentUsers.includes(userId);
+      const alreadySelected = currentUsers.includes(userId);
 
       if (alreadySelected) {
-        return currentUsers.filter(
-          (id) => id !== userId
-        );
+        return currentUsers.filter((id) => id !== userId);
       }
 
-      return [
-        ...currentUsers,
-        userId,
-      ];
+      return [...currentUsers, userId];
     });
   };
 
   const handleSelectAll = () => {
-    const currentPageIds = users.map(
-      (user) => user.id
-    );
+    const currentPageIds = users.map((user) => user.id);
 
     const allSelected =
       currentPageIds.length > 0 &&
-      currentPageIds.every((id) =>
-        selectedUsers.includes(id)
-      );
+      currentPageIds.every((id) => selectedUsers.includes(id));
 
     if (allSelected) {
       setSelectedUsers((currentUsers) =>
-        currentUsers.filter(
-          (id) => !currentPageIds.includes(id)
-        )
+        currentUsers.filter((id) => !currentPageIds.includes(id)),
       );
 
       return;
     }
 
     setSelectedUsers((currentUsers) => [
-      ...new Set([
-        ...currentUsers,
-        ...currentPageIds,
-      ]),
+      ...new Set([...currentUsers, ...currentPageIds]),
     ]);
   };
 
@@ -106,8 +85,9 @@ const UserManagementPage = () => {
   };
 
   return (
-    <main
-      className="
+    <>
+      <main
+        className="
         min-h-screen
         bg-[#f8fafc]
         px-4
@@ -115,107 +95,20 @@ const UserManagementPage = () => {
         sm:px-6
         lg:px-8
       "
-    >
-      <div className="mx-auto max-w-375">
+      >
+        <div className="mx-auto max-w-375">
+          {/* Header */}
 
-        {/* Header */}
+          <UserManagementHeader management={management} />
 
-        <div
-          className="
-            mb-7
-            flex
-            flex-col
-            gap-4
-            lg:flex-row
-            lg:items-start
-            lg:justify-between
-          "
-        >
-          <div>
-            <h1
-              className="
-                text-[28px]
-                font-bold
-                tracking-[-0.02em]
-                text-slate-950
-              "
-            >
-              User Management
-            </h1>
+          {/* Stats */}
 
-            <p className="mt-1 text-sm text-slate-500">
-              View, search and manage all users in
-              your system.
-            </p>
-          </div>
+          <UserStats />
 
-          <div className="flex gap-3">
-            <button
-              type="button"
-              className="
-                flex
-                h-11
-                items-center
-                gap-2
-                rounded-lg
-                border
-                border-slate-200
-                bg-white
-                px-5
-                text-sm
-                font-semibold
-                text-slate-700
-              "
-            >
-              <FiDownload />
-              Export
-            </button>
+          {/* Users */}
 
-            <button
-              type="button"
-              className="
-                flex
-                h-11
-                items-center
-                gap-2
-                rounded-lg
-                bg-violet-600
-                px-5
-                text-sm
-                font-semibold
-                text-white
-                hover:bg-violet-700
-              "
-            >
-              <FiPlus size={18} />
-              Add New User
-            </button>
-          </div>
-        </div>
-
-        {/* Stats */}
-
-        <section
-          className="
-            grid
-            grid-cols-1
-            gap-5
-            sm:grid-cols-2
-            xl:grid-cols-5
-          "
-        >
-          {userStats.map((stat) => (
-            <UserStatsCard
-              key={stat.title}
-              {...stat}
-            />
-          ))}
-        </section>
-
-        {/* Users */}
-
-        <section
-          className="
+          <section
+            className="
             mt-6
             overflow-hidden
             rounded-xl
@@ -223,69 +116,64 @@ const UserManagementPage = () => {
             border-slate-200
             bg-white
           "
-        >
-          <UserFilters
-            search={search}
-            setSearch={setSearch}
-            role={role}
-            setRole={setRole}
-            status={status}
-            setStatus={setStatus}
-            onClear={handleClearFilters}
-          />
-
-          {isLoading ? (
-            <div
-              className="
-                flex
-                min-h-100
-                items-center
-                justify-center
-              "
-            >
-              <p className="text-sm text-slate-500">
-                Loading users...
-              </p>
-            </div>
-          ) : isError ? (
-            <div
-              className="
-                flex
-                min-h-100
-                items-center
-                justify-center
-              "
-            >
-              <p className="text-sm text-red-500">
-                {error?.message ??
-                  "Failed to load users"}
-              </p>
-            </div>
-          ) : users.length === 0 ? (
-            <div
-              className="
-                flex
-                min-h-100
-                items-center
-                justify-center
-              "
-            >
-              <p className="text-sm text-slate-500">
-                No users found.
-              </p>
-            </div>
-          ) : (
-            <UserTable
-              users={users}
-              selectedUsers={selectedUsers}
-              onSelectUser={handleSelectUser}
-              onSelectAll={handleSelectAll}
+          >
+            <UserFilters
+              search={search}
+              setSearch={setSearch}
+              role={role}
+              setRole={setRole}
+              status={status}
+              setStatus={setStatus}
+              onClear={handleClearFilters}
             />
-          )}
 
-          {isFetching && !isLoading && (
-            <div
-              className="
+            {isLoading ? (
+              <div
+                className="
+                flex
+                min-h-100
+                items-center
+                justify-center
+              "
+              >
+                <p className="text-sm text-slate-500">Loading users...</p>
+              </div>
+            ) : isError ? (
+              <div
+                className="
+                flex
+                min-h-100
+                items-center
+                justify-center
+              "
+              >
+                <p className="text-sm text-red-500">
+                  {error?.message ?? "Failed to load users"}
+                </p>
+              </div>
+            ) : users.length === 0 ? (
+              <div
+                className="
+                flex
+                min-h-100
+                items-center
+                justify-center
+              "
+              >
+                <p className="text-sm text-slate-500">No users found.</p>
+              </div>
+            ) : (
+              <UserTable
+                users={users}
+                selectedUsers={selectedUsers}
+                onSelectUser={handleSelectUser}
+                onSelectAll={handleSelectAll}
+              />
+            )}
+
+            {isFetching && !isLoading && (
+              <div
+                className="
                 border-t
                 border-slate-100
                 py-2
@@ -293,24 +181,48 @@ const UserManagementPage = () => {
                 text-xs
                 text-slate-400
               "
-            >
-              Updating users...
-            </div>
-          )}
+              >
+                Updating users...
+              </div>
+            )}
 
-          <UserPagination
-            page={page}
-            limit={limit}
-            pagination={pagination}
-            onPageChange={setPage}
-            onLimitChange={(newLimit) => {
-              setLimit(newLimit);
-              setPage(1);
-            }}
-          />
-        </section>
-      </div>
-    </main>
+            <UserPagination
+              page={page}
+              limit={limit}
+              pagination={pagination}
+              onPageChange={setPage}
+              onLimitChange={(newLimit) => {
+                setLimit(newLimit);
+                setPage(1);
+              }}
+            />
+          </section>
+        </div>
+      </main>
+
+      <AddNewUserModal
+        open={management.addOpen}
+        onClose={management.closeAddUser}
+      />
+
+      <ViewUserModal
+        open={Boolean(management.viewUser)}
+        userId={management.viewUser?.id}
+        onClose={management.closeViewUser}
+      />
+
+      <EditUserModal
+        open={Boolean(management.editUser)}
+        user={management.editUser}
+        onClose={management.closeEditUser}
+      />
+
+      <UserStatusConfirmModal
+        open={Boolean(management.statusChangeUser)}
+        user={management.statusChangeUser}
+        onClose={management.closeStatusConfirmation}
+      />
+    </>
   );
 };
 

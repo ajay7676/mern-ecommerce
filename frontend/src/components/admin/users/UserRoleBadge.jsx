@@ -1,8 +1,8 @@
 const styles = {
-  Admin: "bg-violet-100 text-violet-700",
-  SuperAdmin: "bg-blue-100 text-blue-600",
-  Editor: "bg-amber-50 text-amber-500",
-  User: "bg-slate-100 text-slate-600",
+  admin: "bg-violet-100 text-violet-700",
+  superAdmin: "bg-blue-100 text-blue-600",
+  editor: "bg-amber-50 text-amber-500",
+  user: "bg-green-100 text-slate-600",
 };
 
 const UserRoleBadge = ({ role }) => {
@@ -15,7 +15,7 @@ const UserRoleBadge = ({ role }) => {
         py-1
         text-xs
         font-medium
-        ${styles[role] ?? styles.User}
+        ${styles[role] ?? styles.user}
       `}
     >
       {role}

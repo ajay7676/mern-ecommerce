@@ -1,14 +1,14 @@
 
 const styles = {
-  Active: "bg-emerald-50 text-emerald-600",
-  Pending: "bg-orange-50 text-orange-500",
-  Blocked: "bg-rose-50 text-rose-500",
+  active: "bg-emerald-50 text-emerald-600",
+  pending: "bg-orange-50 text-orange-500",
+  blocked: "bg-rose-50 text-rose-500",
 };
 
 const dotStyles = {
-  Active: "bg-emerald-500",
-  Pending: "bg-orange-500",
-  Blocked: "bg-rose-500",
+  active: "bg-emerald-500",
+  pending: "bg-orange-500",
+  blocked: "bg-rose-500",
 };
 
 const UserStatusBadge = ({ status }) => {
