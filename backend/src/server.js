@@ -74,6 +74,7 @@ app.use(errorHandler);
 
 await connectDB();
 
+
 const server = app.listen(PORT, () => {
   console.log(`Server is running on PORT Number ${PORT}`);
 });

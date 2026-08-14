@@ -1,7 +1,6 @@
 import { FiDownload, FiPlus } from "react-icons/fi";
 
 const UserManagementHeader = ({management}) => {
-     console.log(management)
   return (
     <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div>
@@ -21,7 +20,7 @@ const UserManagementHeader = ({management}) => {
         <button
           type="button"
           onClick={management.openAddUser}
-          className="flex h-11 items-center gap-2 rounded-lg bg-violet-600 px-5 text-sm font-semibold text-white hover:bg-violet-700"
+          className="flex h-11 items-center cursor-pointer gap-2 rounded-lg bg-violet-600 px-5 text-sm font-semibold text-white hover:bg-violet-700"
         >
           <FiPlus size={18} />
           Add New User

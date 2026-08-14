@@ -67,4 +67,6 @@ export const verifyCloudinaryConfiguration = () => {
   return true;
 };
 
+// verifyCloudinaryConfiguration();
+
 export default cloudinary;

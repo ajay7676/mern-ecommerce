@@ -17,11 +17,13 @@ const inputClass = `
 `;
 
 const UserForm = ({ values, errors = {}, onChange, disabled = false }) => {
-    
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     onChange(name, value);
   };
+
+  console.log(errors)
   return (
     <div className="grid gap-5 sm:grid-cols-2">
       <div>
@@ -76,6 +78,9 @@ const UserForm = ({ values, errors = {}, onChange, disabled = false }) => {
           placeholder="+91 98765 43210"
           className={inputClass}
         />
+         {errors.phone && (
+          <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
+        )}
       </div>
 
       <div>

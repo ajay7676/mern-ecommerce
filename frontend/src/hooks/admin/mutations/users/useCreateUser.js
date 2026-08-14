@@ -1,23 +1,29 @@
-import {useMutation , useQueryClient} from '@tanstack/react-query';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import {createUser} from '../../../../api/users.api';
+import { toast } from "react-hot-toast";
 
+import { createUser } from "../../../../api/users.api";
 
-const useCreateUser =  () => {
+const useCreateUser = () => {
+  const queryClient = useQueryClient();
 
-    const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createUser,
+    onSuccess: (response) => {
+      toast.success(
+        response?.message ||
+          "User created successfully"
+      );
+      queryClient.invalidateQueries({
+        queryKey: ["admin-users"],
+      });
+    },
+    onError: (error) => {
+      const message = error?.response?.data?.message || "Failed to create user";
 
-    return useMutation({
-        mutationFn: createUser ,
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ["admin-users"],
-            })
-        }
-    })
-    
-
-}
-
+      toast.error(message);
+    },
+  });
+};
 
 export default useCreateUser;
