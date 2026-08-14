@@ -22,26 +22,24 @@ export const INITIAL_USER_VALUES = {
   },
 };
 
+export const ALL_PERMISSIONS = [
+  "View Dashboard",
+  "Manage Listings",
+  "Manage Inventory",
+  "Process Orders",
+  "Manage Payments",
+  "View Reports",
+  "Manage Users",
+  "Settings",
+];
+
 export const ROLE_PERMISSIONS = {
-  admin: [
+  user: [
     "View Dashboard",
     "View Listings",
-    "Manage Profile",
-    "Manage Inventory",
-    "Process Orders",
-    "Manage Users",
   ],
 
-  superadmin: [
-    "View Dashboard",
-    "Manage Listings",
-    "Manage Inventory",
-    "Process Orders",
-    "Manage Payments",
-    "View Reports",
-    "Manage Users",
-    "Settings",
-  ],
+  admin: ALL_PERMISSIONS,
 };
 
 

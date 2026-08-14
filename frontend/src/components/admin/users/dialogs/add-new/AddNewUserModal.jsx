@@ -385,7 +385,14 @@ const AddNewUserModal = ({ open, onClose }) => {
 
             {/* RIGHT SIDE */}
 
-            <aside className="space-y-5">
+            <aside
+              className="
+              space-y-5
+              xl:sticky
+              xl:top-0
+              xl:self-start
+            "
+            >
               <UserPreview values={values} />
 
               <AssignedPermissions role={values.role} />
