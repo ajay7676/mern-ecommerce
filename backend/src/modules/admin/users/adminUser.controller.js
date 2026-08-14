@@ -1,5 +1,6 @@
 import {
   createAdminUserService,
+  deleteAdminUserService,
   getAdminUserService,
   getAdminUsersService,
   updateAdminUserService,
@@ -104,6 +105,26 @@ export const updateAdminUserStatus = async (req, res, next) => {
       data: {
         user: result.user,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteAdminUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    const adminId = req.user?._id;
+
+    await deleteAdminUserService({
+      userId,
+      adminId,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
     });
   } catch (error) {
     next(error);

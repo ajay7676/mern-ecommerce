@@ -8,6 +8,7 @@ import {
   findUserByEmailExceptId,
   findUserById,
   findUsers,
+  deleteAdminUserById,
 } from "./adminUser.repository.js";
 
 import {
@@ -17,6 +18,11 @@ import {
   validateUpdateUserPayload,
   validateUserId,
 } from "./adminUser.validators.js";
+
+import cloudinary, {
+  verifyCloudinaryConfiguration,
+} from "../../../config/cloudinary.js";
+import { deleteUserAvatarFromCloudinary } from "../../../services/userAvatarCleanup.service.js";
 
 const escapeRegex = (value) => {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -271,4 +277,31 @@ export const updateAdminUserStatusService = async ({
     user: safeUser,
     changed: true,
   };
+};
+
+// Delete User
+
+export const deleteAdminUserService = async ({ userId, adminId }) => {
+  validateUserId(userId);
+  if (adminId.toString() === userId.toString()) {
+    throw new HandleError("You cannot delete your own account", 403);
+  }
+
+  const user = await findUserById(userId);
+  if (!user) {
+    throw new HandleError(
+      "User not found",
+      404
+    );
+  }
+
+  if (user.avatar?.publicId) {
+    await deleteUserAvatarFromCloudinary(
+      user.avatar.publicId
+    );
+  }
+
+  await deleteAdminUserById(userId);
+
+  return true;
 };

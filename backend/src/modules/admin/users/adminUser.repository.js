@@ -46,4 +46,11 @@ export const findUsers = ({ filter, skip, limit, sort }) => {
 };
 
 
+export const deleteAdminUserById = async (
+  userId
+) => {
+  return User.findByIdAndDelete(userId);
+};
+
+
 

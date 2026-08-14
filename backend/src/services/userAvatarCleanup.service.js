@@ -7,8 +7,8 @@ import HandleError from "../utils/handleError.js";
 const TEMP_AVATAR_FOLDER = "valid-super-store/users/avatars/temp/";
 
 export const deleteTemporaryUserAvatarService = async ({ publicId }) => {
-    verifyCloudinaryConfiguration();
-    const config = cloudinary.config();
+  verifyCloudinaryConfiguration();
+  const config = cloudinary.config();
 
   if (!publicId) {
     throw new HandleError("Avatar publicId is required", 400);
@@ -41,4 +41,21 @@ export const deleteTemporaryUserAvatarService = async ({ publicId }) => {
     publicId,
     deleted: result.result === "ok",
   };
+};
+
+export const deleteUserAvatarFromCloudinary = async (publicId) => {
+  if (!publicId) {
+    return;
+  }
+
+  verifyCloudinaryConfiguration();
+
+  const result = await cloudinary.uploader.destroy(publicId, {
+    resource_type: "image",
+    invalidate: true,
+  });
+
+  if (result.result !== "ok" && result.result !== "not found") {
+    throw new HandleError("Failed to delete user avatar", 500);
+  }
 };
