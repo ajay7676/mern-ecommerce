@@ -69,7 +69,19 @@ const userSchema = new mongoose.Schema(
       default: "active",
       index: true,
     },
+    department: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
+    },
 
+    designation: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: "",
+    },
     lastLoginAt: {
       type: Date,
       default: null,

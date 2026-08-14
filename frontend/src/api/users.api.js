@@ -81,48 +81,32 @@ export const getUsers = async ({
       joinedTo: joinedTo || undefined,
     },
   });
-   return response.data;
+  return response.data;
 };
 
 export const getUserById = async (userId) => {
-  const response = await api.get(
-    `/admin/users/${userId}`,
-  );
+  const response = await api.get(`/admin/users/${userId}`);
 
   return response.data;
 };
 
 export const createUser = async (payload) => {
-  const response = await api.post(
-    "/admin/users",
-    payload,
-  );
+  const response = await api.post("/admin/users", payload);
 
   return response.data;
 };
 
-export const updateUser = async ({
-  userId,
-  payload,
-}) => {
-  const response = await api.patch(
-    `/admin/users/${userId}`,
-    payload,
-  );
+export const updateUser = async ({ userId, payload }) => {
+  const response = await api.patch(`/admin/users/${userId}`, payload);
 
   return response.data;
 };
 
-export const updateUserStatus = async ({
-  userId,
-  status,
-}) => {
-  const response = await api.patch(
-    `/admin/users/${userId}/status`,
-    {
-      status,
-    },
-  );
+export const updateUserStatus = async ({ userId, status }) => {
+  const response = await api.patch(`/admin/users/${userId}/status`, {
+    status,
+  });
 
   return response.data;
 };
+

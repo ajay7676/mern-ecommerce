@@ -9,3 +9,13 @@ export const uploadUserAvatar = async (file) => {
 
   return response.data;
 };
+
+export const deleteTemporaryUserAvatar = async (publicId) => {
+  const response = await api.delete("/uploads/user-avatar", {
+    data: {
+      publicId,
+    },
+  });
+
+  return response.data;
+};

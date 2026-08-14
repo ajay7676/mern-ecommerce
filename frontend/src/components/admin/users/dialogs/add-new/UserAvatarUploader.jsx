@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { FiCamera, FiTrash2, FiUploadCloud } from "react-icons/fi";
 
 import useUploadUserAvatar from "../../../../../hooks/admin/mutations/users/useUploadUserAvatar";
+import useDeleteTemporaryUserAvatar from "../../../../../hooks/admin/mutations/users/useDeleteTemporaryUserAvatar";
 
 import {
   validateUserAvatar,
@@ -15,6 +16,8 @@ const UserAvatarUploader = ({ value, onChange, disabled = false }) => {
   const [isDragging, setIsDragging] = useState(false);
 
   const { mutateAsync: uploadAvatar, isPending } = useUploadUserAvatar();
+  const { mutateAsync: deleteAvatar, isPending: isDeleting } =
+    useDeleteTemporaryUserAvatar();
 
   const handleFile = async (file) => {
     if (!file) {
@@ -116,19 +119,34 @@ const UserAvatarUploader = ({ value, onChange, disabled = false }) => {
     setIsDragging(false);
   };
 
-  const handleRemove = () => {
-    setError("");
-
-    if (value?.previewUrl) {
-      URL.revokeObjectURL(value.previewUrl);
+  const handleRemove = async () => {
+    if (!value) {
+      return;
     }
 
-    onChange(null);
+    setError("");
+
+    try {
+      if (value.publicId) {
+        await deleteAvatar(value.publicId);
+      }
+
+      if (value.previewUrl) {
+        URL.revokeObjectURL(value.previewUrl);
+      }
+
+      onChange(null);
+    } catch (error) {
+      setError(
+        error?.response?.data?.message || "Failed to remove profile image",
+      );
+    }
   };
 
   const imageUrl = value?.url || value?.previewUrl;
 
-  return (<div>
+  return (
+    <div>
       <label className="mb-2 block text-sm font-medium text-slate-700">
         Profile Picture
       </label>
@@ -202,8 +220,11 @@ const UserAvatarUploader = ({ value, onChange, disabled = false }) => {
 
               {isPending && (
                 <p className="mt-1 text-xs font-medium text-violet-600">
-                  Uploading to Cloudinary...
+                  Uploading Profile Image...
                 </p>
+              )}
+              {isDeleting && (
+                <p className="mt-1 text-xs font-medium text-violet-600">Removing Profile Image...</p>
               )}
             </div>
           </div>
@@ -211,7 +232,7 @@ const UserAvatarUploader = ({ value, onChange, disabled = false }) => {
           <button
             type="button"
             onClick={handleRemove}
-            disabled={disabled || isPending}
+            disabled={disabled || isPending || isDeleting}
             className="
               flex
               h-9
@@ -225,6 +246,7 @@ const UserAvatarUploader = ({ value, onChange, disabled = false }) => {
               text-red-500
               transition
               hover:bg-red-50
+              cursor-pointer
               disabled:cursor-not-allowed
               disabled:opacity-50
             "
@@ -278,17 +300,11 @@ const UserAvatarUploader = ({ value, onChange, disabled = false }) => {
               text-violet-600
             "
           >
-            {isDragging ? (
-              <FiCamera size={20} />
-            ) : (
-              <FiUploadCloud size={20} />
-            )}
+            {isDragging ? <FiCamera size={20} /> : <FiUploadCloud size={20} />}
           </div>
 
           <p className="mt-2 text-sm font-semibold text-violet-600">
-            {isDragging
-              ? "Drop image here"
-              : "Upload Image"}
+            {isDragging ? "Drop image here" : "Upload Image"}
           </p>
 
           <p className="mt-1 text-xs text-slate-500">
@@ -306,9 +322,7 @@ const UserAvatarUploader = ({ value, onChange, disabled = false }) => {
       />
 
       {error && (
-        <p className="mt-1.5 text-xs font-medium text-red-500">
-          {error}
-        </p>
+        <p className="mt-1.5 text-xs font-medium text-red-500">{error}</p>
       )}
     </div>
   );

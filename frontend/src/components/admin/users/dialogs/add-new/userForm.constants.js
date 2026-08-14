@@ -13,7 +13,13 @@ export const INITIAL_USER_VALUES = {
 
   department: "",
   designation: "",
-  address: "",
+  address: {
+    street: "",
+    city: "",
+    state: "",
+    country: "India",
+    pinCode: "",
+  },
 };
 
 export const ROLE_PERMISSIONS = {
@@ -37,3 +43,5 @@ export const ROLE_PERMISSIONS = {
     "Settings",
   ],
 };
+
+

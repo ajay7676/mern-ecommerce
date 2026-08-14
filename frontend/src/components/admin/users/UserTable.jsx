@@ -3,6 +3,7 @@ import { FiChevronsUp } from "react-icons/fi";
 import UserRoleBadge from "./UserRoleBadge";
 import UserStatusBadge from "./UserStatusBadge";
 import UserActions from "./UserActions";
+import UserAvatar from "../../../utils/UserAvatar";
 
 const SortHeader = ({ children }) => {
   return (
@@ -25,6 +26,8 @@ const UserTable = ({
   const allSelected =
     users.length > 0 &&
     users.every((user) => selectedUsers.includes(user.id));
+
+     console.log(users)
 
   return (
     <div className="overflow-x-auto">
@@ -126,25 +129,26 @@ const UserTable = ({
 
                 <td className="px-2">
                   <div className="flex items-center gap-3">
-                    <img
-                      src={user.avatar}
+                    {/* <img
+                      src={user?.avatar?.url}
                       alt=""
                       className="
-                        h-9
-                        w-9
+                        h-12
+                        w-12
                         rounded-full
                         object-cover
                       "
-                    />
+                    /> */}
+                    <UserAvatar user={user} size={40} />
 
                     <div>
                       <p className="font-semibold text-slate-800">
                         {user.name}
                       </p>
 
-                      <p className="mt-0.5 text-xs text-slate-500">
+                      {/* <p className="mt-0.5 text-xs text-slate-500">
                         ID: #{user.id}
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </td>

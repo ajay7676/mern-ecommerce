@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { FiX } from "react-icons/fi";
 
 import useCreateUser from "../../../../../hooks/admin/mutations/users/useCreateUser";
+import useDeleteTemporaryUserAvatar from "../../../../../hooks/admin/mutations/users/useDeleteTemporaryUserAvatar";
 
 import { validateUser } from "../../../../../utils/userValidation";
-
 
 import { INITIAL_USER_VALUES } from "./userForm.constants";
 
@@ -21,6 +21,9 @@ const AddNewUserModal = ({ open, onClose }) => {
   const [errors, setErrors] = useState({});
 
   const { mutateAsync, isPending } = useCreateUser();
+
+  const { mutateAsync: deleteTemporaryAvatar, isPending: isDeletingAvatar } =
+    useDeleteTemporaryUserAvatar();
 
   /*
    * Prevent background page scrolling
@@ -40,16 +43,24 @@ const AddNewUserModal = ({ open, onClose }) => {
     };
   }, [open]);
 
-  const handleClose = () => {
-    if (isPending) {
+  const handleClose = async () => {
+    if (isPending || isDeletingAvatar) {
       return;
     }
 
-    setValues(INITIAL_USER_VALUES);
+    try {
+      if (values.profileImage?.publicId) {
+        await deleteTemporaryAvatar(values.profileImage.publicId);
+      }
+    } catch (error) {
+      console.error("Failed to cleanup temporary avatar:", error);
+    } finally {
+      setValues(INITIAL_USER_VALUES);
 
-    setErrors({});
+      setErrors({});
 
-    onClose();
+      onClose();
+    }
   };
 
   /*
@@ -83,22 +94,22 @@ const AddNewUserModal = ({ open, onClose }) => {
       [name]: value,
     }));
 
-    /*
-     * Remove the error immediately
-     * when user starts fixing the field.
-     */
-    setErrors((current) => ({
-      ...current,
-      [name]: undefined,
-    }));
+    setErrors((current) => {
+      const nextErrors = {
+        ...current,
+        [name]: undefined,
+      };
+
+      if (name === "password" || name === "confirmPassword") {
+        nextErrors.confirmPassword = undefined;
+      }
+
+      return nextErrors;
+    });
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-
-     console.log("Create User button Clicked")
-
 
     const validationErrors = validateUser(values, {
       requirePassword: true,
@@ -107,7 +118,9 @@ const AddNewUserModal = ({ open, onClose }) => {
     /*
      * Confirm password validation
      */
-    if (values.password !== values.confirmPassword) {
+    if (!values.confirmPassword) {
+      validationErrors.confirmPassword = "Please confirm the password";
+    } else if (values.password !== values.confirmPassword) {
       validationErrors.confirmPassword = "Passwords do not match";
     }
 
@@ -132,7 +145,21 @@ const AddNewUserModal = ({ open, onClose }) => {
 
       department: values.department.trim(),
       designation: values.designation.trim(),
-      address: values.address.trim(),
+
+      address: {
+        street: values.address.street.trim(),
+        city: values.address.city.trim(),
+        state: values.address.state.trim(),
+        country: values.address.country.trim() || "India",
+        pinCode: values.address.pinCode.trim(),
+      },
+
+      avatar: values.profileImage
+        ? {
+            url: values.profileImage.url,
+            publicId: values.profileImage.publicId,
+          }
+        : null,
     };
 
     try {
@@ -144,10 +171,28 @@ const AddNewUserModal = ({ open, onClose }) => {
 
       onClose();
     } catch (error) {
+      const message = error?.response?.data?.message || "Unable to create user";
+
+      /*
+       * Cleanup temporary avatar
+       * because user creation failed.
+       */
+      if (values.profileImage?.publicId) {
+        try {
+          await deleteTemporaryAvatar(values.profileImage.publicId);
+
+          setValues((current) => ({
+            ...current,
+            profileImage: null,
+          }));
+        } catch (cleanupError) {
+          console.error("Temporary avatar cleanup failed:", cleanupError);
+        }
+      }
+
       handleServerError(error);
     }
   };
-
 
   const handleServerError = (error) => {
     const message = error?.response?.data?.message || "Unable to create user";
@@ -180,8 +225,27 @@ const AddNewUserModal = ({ open, onClose }) => {
     }
   };
 
-   console.log(values);
-   console.log(errors)
+  const handleAddressChange = (name, value) => {
+    setValues((current) => ({
+      ...current,
+
+      address: {
+        ...current.address,
+
+        [name]: value,
+      },
+    }));
+
+    setErrors((current) => ({
+      ...current,
+
+      address: {
+        ...current.address,
+
+        [name]: undefined,
+      },
+    }));
+  };
 
   return (
     <div
@@ -314,6 +378,7 @@ const AddNewUserModal = ({ open, onClose }) => {
                 values={values}
                 errors={errors}
                 onChange={handleChange}
+                onAddressChange={handleAddressChange}
                 disabled={isPending}
               />
             </main>
@@ -346,7 +411,7 @@ const AddNewUserModal = ({ open, onClose }) => {
         >
           <button
             type="button"
-            disabled={isPending}
+            disabled={isPending || isDeletingAvatar}
             onClick={handleClose}
             className="
               h-11
