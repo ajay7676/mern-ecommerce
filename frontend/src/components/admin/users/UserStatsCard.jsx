@@ -1,108 +1,95 @@
-
-import {
-  FiUsers,
-  FiUserCheck,
-  FiUser,
-  FiUserX,
-  FiSlash,
-  FiArrowUp,
-  FiArrowDown,
-} from "react-icons/fi";
-
-const config = {
-  total: {
-    icon: FiUsers,
-    boxClass: "bg-violet-50 text-violet-600",
-  },
-  active: {
-    icon: FiUserCheck,
-    boxClass: "bg-emerald-50 text-emerald-600",
-  },
-  admin: {
-    icon: FiUser,
-    boxClass: "bg-amber-50 text-amber-500",
-  },
-  pending: {
-    icon: FiUserX,
-    boxClass: "bg-blue-50 text-blue-600",
-  },
-  blocked: {
-    icon: FiSlash,
-    boxClass: "bg-rose-50 text-rose-500",
-  },
-};
-
-const UserStatsCard = (
-  {
+const UserStatCard = ({
   title,
   value,
-  change,
-  direction,
-  type,
-}
-) => {
-   const Icon = config[type].icon;
-
-  const isUp = direction === "up";
+  icon: Icon,
+  description,
+  isLoading = false,
+}) => {
   return (
-    <article
+    <div
       className="
-        flex
-        min-h-29
-        items-center
-        gap-4
         rounded-xl
         border
         border-slate-200
         bg-white
-        px-5
-        shadow-[0_2px_10px_rgba(15,23,42,0.03)]
+        p-5
+        shadow-sm
       "
     >
       <div
-        className={`
+        className="
           flex
-          h-14
-          w-14
-          shrink-0
-          items-center
-          justify-center
-          rounded-xl
-          ${config[type].boxClass}
-        `}
+          items-start
+          justify-between
+          gap-4
+        "
       >
-        <Icon size={28} strokeWidth={1.8} />
-      </div>
-
-      <div>
-        <p className="text-sm font-semibold text-slate-800">
-          {title}
-        </p>
-
-        <p className="mt-1 text-[25px] font-bold leading-none text-slate-950">
-          {value}
-        </p>
-
-        <div className="mt-3 flex items-center gap-1 text-xs text-slate-500">
-          <span
-            className={`flex items-center font-medium ${
-              isUp ? "text-emerald-500" : "text-rose-500"
-            }`}
+        <div>
+          <p
+            className="
+              text-sm
+              font-medium
+              text-slate-500
+            "
           >
-            {isUp ? (
-              <FiArrowUp size={13} />
-            ) : (
-              <FiArrowDown size={13} />
-            )}
+            {title}
+          </p>
 
-            {change}
-          </span>
+          {isLoading ? (
+            <div
+              className="
+                mt-3
+                h-8
+                w-16
+                animate-pulse
+                rounded
+                bg-slate-200
+              "
+            />
+          ) : (
+            <p
+              className="
+                mt-2
+                text-3xl
+                font-bold
+                text-slate-900
+              "
+            >
+              {value ?? 0}
+            </p>
+          )}
 
-          {/* <span>vs last month</span> */}
+          {description && (
+            <p
+              className="
+                mt-2
+                text-xs
+                text-slate-400
+              "
+            >
+              {description}
+            </p>
+          )}
+        </div>
+
+        <div
+          className="
+            flex
+            h-11
+            w-11
+            shrink-0
+            items-center
+            justify-center
+            rounded-xl
+            bg-slate-100
+            text-slate-600
+          "
+        >
+          <Icon size={20} />
         </div>
       </div>
-    </article>
+    </div>
   );
-}
+};
 
-export default UserStatsCard
+export default UserStatCard;

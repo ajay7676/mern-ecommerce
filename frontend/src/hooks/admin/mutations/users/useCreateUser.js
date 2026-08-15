@@ -9,14 +9,17 @@ const useCreateUser = () => {
 
   return useMutation({
     mutationFn: createUser,
-    onSuccess: (response) => {
-      toast.success(
-        response?.message ||
-          "User created successfully"
-      );
-      queryClient.invalidateQueries({
-        queryKey: ["admin-users"],
-      });
+    onSuccess: async (response) => {
+      toast.success(response?.message || "User created successfully");
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["admin-users"],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: ["admin-user-stats"],
+        }),
+      ]);
     },
     onError: (error) => {
       const message = error?.response?.data?.message || "Failed to create user";

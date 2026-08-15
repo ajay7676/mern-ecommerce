@@ -9,6 +9,7 @@ import {
   findUserById,
   findUsers,
   deleteAdminUserById,
+  getAdminUserStatsRepository,
 } from "./adminUser.repository.js";
 
 import {
@@ -312,3 +313,14 @@ export const deleteAdminUserService = async ({ userId, adminId }) => {
 
   return true;
 };
+
+// User Stats
+
+
+export const getAdminUserStatsService =
+  async () => {
+    const stats =
+      await getAdminUserStatsRepository();
+
+    return stats;
+  };

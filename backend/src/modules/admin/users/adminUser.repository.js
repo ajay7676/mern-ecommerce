@@ -52,5 +52,102 @@ export const deleteAdminUserById = async (
   return User.findByIdAndDelete(userId);
 };
 
+export const getAdminUserStatsRepository =
+  async () => {
+    const [stats] = await User.aggregate([
+      {
+        $group: {
+          _id: null,
+
+          totalUsers: {
+            $sum: 1,
+          },
+
+          activeUsers: {
+            $sum: {
+              $cond: [
+                {
+                  $eq: [
+                    "$status",
+                    "active",
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+
+          admins: {
+            $sum: {
+              $cond: [
+                {
+                  $eq: [
+                    "$role",
+                    "admin",
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+
+          pendingUsers: {
+            $sum: {
+              $cond: [
+                {
+                  $eq: [
+                    "$status",
+                    "pending",
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+
+          blockedUsers: {
+            $sum: {
+              $cond: [
+                {
+                  $eq: [
+                    "$status",
+                    "blocked",
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+
+      {
+        $project: {
+          _id: 0,
+
+          totalUsers: 1,
+          activeUsers: 1,
+          admins: 1,
+          pendingUsers: 1,
+          blockedUsers: 1,
+        },
+      },
+    ]);
+
+    return (
+      stats || {
+        totalUsers: 0,
+        activeUsers: 0,
+        admins: 0,
+        pendingUsers: 0,
+        blockedUsers: 0,
+      }
+    );
+  };
+
 
 

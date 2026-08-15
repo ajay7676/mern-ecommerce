@@ -22,18 +22,18 @@ const useUpdateUser = () => {
           "User updated successfully"
       );
 
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["admin-users"],
-        }),
+    await Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: ["admin-users"],
+    }),
+    queryClient.invalidateQueries({
+      queryKey: ["admin-user"],
+    }),
 
-        queryClient.invalidateQueries({
-          queryKey: [
-            "admin-user",
-            variables.userId,
-          ],
-        }),
-      ]);
+    queryClient.invalidateQueries({
+      queryKey: ["admin-user-stats"],
+    }),
+  ]);
     },
 
     onError: (error) => {

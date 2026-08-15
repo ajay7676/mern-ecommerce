@@ -11,9 +11,15 @@ const useDeleteUser = () => {
     onSuccess: async (response) => {
       toast.success(response?.message || "User deleted successfully");
 
-      await queryClient.invalidateQueries({
-        queryKey: ["admin-users"],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["admin-users"],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: ["admin-user-stats"],
+        }),
+      ]);
     },
 
     onError: (error) => {

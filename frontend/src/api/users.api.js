@@ -120,3 +120,16 @@ export const deleteUser = async (
   return response.data;
 };
 
+
+// GET USERS STATS BY ADMIN
+
+export const getUserStats = async () => {
+  const response = await api.get(
+    "/admin/users/stats",
+  );
+
+  return response.data?.data?.stats;
+};
+
+
+

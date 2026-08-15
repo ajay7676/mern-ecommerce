@@ -134,7 +134,6 @@ const UserTable = ({ users, selectedUsers, onSelectUser, onSelectAll }) => {
           <tbody>
             {users.length > 0 &&
               users.map((user) => {
-                console.log(user);
                 const isSelected = selectedUsers.includes(user._id);
                 return (
                   <tr

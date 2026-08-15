@@ -7,6 +7,7 @@ import {
   updateAdminUser,
   updateAdminUserStatus,
   deleteAdminUser,
+  getAdminUserStats
 } from "./adminUser.controller.js";
 
 import { userAuth } from "../../../middleware/userAuthMIddleware.js";
@@ -18,6 +19,9 @@ const router = express.Router();
 
 router.post("/admin/users", userAuth, adminOnly, createAdminUser);
 router.get("/admin/users", userAuth, adminOnly, getAdminUsers);
+
+router.get("/admin/users/stats", userAuth, adminOnly, getAdminUserStats);
+
 
 router.get("/admin/users/:userId", userAuth, adminOnly, getAdminUser);
 router.patch("/admin/users/:userId", userAuth, adminOnly, updateAdminUser);

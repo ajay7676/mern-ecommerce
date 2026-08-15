@@ -3,6 +3,7 @@ import {
   deleteAdminUserService,
   getAdminUserService,
   getAdminUsersService,
+  getAdminUserStatsService,
   updateAdminUserService,
   updateAdminUserStatusService,
 } from "./adminUser.service.js";
@@ -59,7 +60,7 @@ export const createAdminUser = async (req, res, next) => {
 
 export const updateAdminUser = async (req, res, next) => {
   try {
-    const adminId = req.user?._id ;
+    const adminId = req.user?._id;
 
     const user = await updateAdminUserService({
       userId: req.params.userId,
@@ -123,6 +124,24 @@ export const deleteAdminUser = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "User deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get User Stats by Admin
+
+export const getAdminUserStats = async (req, res, next) => {
+  try {
+    const stats = await getAdminUserStatsService();
+
+    res.status(200).json({
+      success: true,
+      message: "User statistics fetched successfully",
+      data: {
+        stats,
+      },
     });
   } catch (error) {
     next(error);
