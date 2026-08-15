@@ -5,7 +5,7 @@ import {
   FiX,
 } from "react-icons/fi";
 
-import useUser from '../../../../../hooks/admin/queries/users/useUser'
+import useAdminUser from '../../../../../hooks/admin/queries/users/useAdminUser'
 import UserStatusBadge from "../../UserStatusBadge";
 import UserRoleBadge from "../../UserRoleBadge";
 
@@ -18,7 +18,7 @@ const ViewUserModal = ({
     data,
     isLoading,
     isError,
-  } = useUser(userId, {
+  } = useAdminUser(userId, {
     enabled: open && Boolean(userId),
   });
 

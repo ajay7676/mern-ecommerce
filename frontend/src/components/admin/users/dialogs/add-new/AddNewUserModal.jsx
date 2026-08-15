@@ -365,6 +365,7 @@ const AddNewUserModal = ({ open, onClose }) => {
                 errors={errors}
                 onChange={handleChange}
                 disabled={isPending}
+                 mode="create"
               />
 
               <AccountInformationSection

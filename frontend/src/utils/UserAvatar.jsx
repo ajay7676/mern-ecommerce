@@ -1,13 +1,20 @@
-import Fallback from '../../public/images/user-placeholder.png'
-const UserAvatar = ({ user, size = "40px" }) => {
+const FALLBACK_AVATAR =
+  "/images/user-placeholder.png";
+
+const UserAvatar = ({ user }) => {
   return (
     <img
-      src={user?.avatar?.url || Fallback}
+      src={
+        user?.avatar?.url ||
+        FALLBACK_AVATAR
+      }
       alt={user?.name || "User"}
       onError={(event) => {
-        event.currentTarget.src = Fallback;
+        event.currentTarget.onerror = null;
+        event.currentTarget.src =
+          FALLBACK_AVATAR;
       }}
-      className="rounded-full object-cover w-12 h-12"
+      className="h-10 w-10 rounded-full object-cover"
     />
   );
 };

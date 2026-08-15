@@ -120,18 +120,12 @@ const UserAvatarUploader = ({ value, onChange, disabled = false }) => {
   };
 
   const handleRemove = async () => {
-    if (!value) {
-      return;
-    }
-
-    setError("");
-
     try {
-      if (value.publicId) {
+      if (value?.publicId) {
         await deleteAvatar(value.publicId);
       }
 
-      if (value.previewUrl) {
+      if (value?.previewUrl) {
         URL.revokeObjectURL(value.previewUrl);
       }
 
@@ -189,6 +183,11 @@ const UserAvatarUploader = ({ value, onChange, disabled = false }) => {
                   object-cover
                 "
               />
+              {/* <UserAvatarUploader
+                value={imageUrl.profileImage}
+                onChange={(image) => onChange("profileImage", image)}
+                disabled={disabled}
+              /> */}
 
               {isPending && (
                 <div
@@ -224,7 +223,9 @@ const UserAvatarUploader = ({ value, onChange, disabled = false }) => {
                 </p>
               )}
               {isDeleting && (
-                <p className="mt-1 text-xs font-medium text-violet-600">Removing Profile Image...</p>
+                <p className="mt-1 text-xs font-medium text-violet-600">
+                  Removing Profile Image...
+                </p>
               )}
             </div>
           </div>

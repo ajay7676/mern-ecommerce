@@ -24,7 +24,15 @@ const inputClass = `
   disabled:text-slate-500
 `;
 
-const BasicInformationSection = ({ values, errors, onChange, disabled }) => {
+const BasicInformationSection = ({
+  values,
+  errors,
+  onChange,
+  disabled,
+  mode = "create",
+}) => {
+  const isEditMode = mode === "edit";
+
   return (
     <section
       className="
@@ -114,10 +122,15 @@ const BasicInformationSection = ({ values, errors, onChange, disabled }) => {
               type="email"
               value={values.email}
               onChange={(event) => onChange("email", event.target.value)}
-              disabled={disabled}
+              disabled={disabled || isEditMode}
+              readOnly={isEditMode}
               placeholder="Enter email address"
               autoComplete="email"
-              className={inputClass}
+              className={`
+                ${inputClass}
+
+                ${isEditMode ? "cursor-not-allowed bg-slate-100 text-slate-500" : ""}
+              `}
             />
           </div>
 

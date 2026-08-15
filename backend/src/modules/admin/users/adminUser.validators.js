@@ -549,64 +549,193 @@ export const validateCreateUserPayload = (
       normalizedAddress,
   };
 };
-
-export const validateUpdateUserPayload = (payload) => {
-  const allowedFields = ["name", "email", "phone", "role"];
-
-  const receivedFields = Object.keys(payload);
-
-  const invalidFields = receivedFields.filter(
-    (field) => !allowedFields.includes(field),
-  );
-
-  if (invalidFields.length) {
-    throw new HandleError(
-      `Invalid update fields: ${invalidFields.join(", ")}`,
-      400,
-    );
-  }
-
-  if (!receivedFields.length) {
-    throw new HandleError("At least one field is required", 400);
-  }
-
+ 
+export const validateUpdateUserPayload = (payload = {}) => {
   const update = {};
-  if (Object.prototype.hasOwnProperty.call(payload, "name")) {
-    if (typeof payload.name !== "string" || !payload.name.trim()) {
-      throw new HandleError("Name cannot be empty", 400);
+
+  if (payload.name !== undefined) {
+    if (
+      typeof payload.name !== "string" ||
+      !payload.name.trim()
+    ) {
+      throw new HandleError(
+        "Name cannot be empty",
+        400
+      );
     }
 
     update.name = payload.name.trim();
   }
 
-  if (Object.prototype.hasOwnProperty.call(payload, "email")) {
-    const email = payload.email?.trim().toLowerCase();
+  if (payload.email !== undefined) {
+    if (typeof payload.email !== "string") {
+      throw new HandleError(
+        "Invalid email",
+        400
+      );
+    }
 
-    if (!email || !EMAIL_REGEX.test(email)) {
-      throw new HandleError("Please provide a valid email address", 400);
+    const email =
+      payload.email.trim().toLowerCase();
+
+    if (!EMAIL_REGEX.test(email)) {
+      throw new HandleError(
+        "Please provide a valid email address",
+        400
+      );
     }
 
     update.email = email;
   }
 
-  if (Object.prototype.hasOwnProperty.call(payload, "phone")) {
+  if (payload.phone !== undefined) {
     const phone = payload.phone?.trim();
 
-    if (phone && !PHONE_REGEX.test(phone)) {
-      throw new HandleError("Please provide a valid phone number", 400);
+    if (
+      phone &&
+      !PHONE_REGEX.test(phone)
+    ) {
+      throw new HandleError(
+        "Please provide a valid phone number",
+        400
+      );
     }
 
-    update.phone = phone || null;
+    update.phone = phone || undefined;
   }
 
-  if (Object.prototype.hasOwnProperty.call(payload, "role")) {
-    const role = payload.role?.toLowerCase();
+  if (payload.role !== undefined) {
+    const role =
+      payload.role.trim().toLowerCase();
 
-    if (!ADMIN_USER_ROLES.includes(role)) {
-      throw new HandleError("Invalid user role", 400);
+    if (
+      !ADMIN_USER_ROLES.includes(role)
+    ) {
+      throw new HandleError(
+        "Invalid user role",
+        400
+      );
     }
 
     update.role = role;
+  }
+
+  if (payload.status !== undefined) {
+    const status =
+      payload.status.trim().toLowerCase();
+
+    if (
+      !ADMIN_USER_STATUSES.includes(status)
+    ) {
+      throw new HandleError(
+        "Invalid user status",
+        400
+      );
+    }
+
+    update.status = status;
+  }
+
+  if (payload.password) {
+    if (
+      typeof payload.password !== "string" ||
+      payload.password.length < 8
+    ) {
+      throw new HandleError(
+        "Password must contain at least 8 characters",
+        400
+      );
+    }
+
+    update.password = payload.password;
+  }
+
+  if (payload.department !== undefined) {
+    if (
+      typeof payload.department !== "string"
+    ) {
+      throw new HandleError(
+        "Department must be a string",
+        400
+      );
+    }
+
+    update.department =
+      payload.department.trim();
+  }
+
+  if (payload.designation !== undefined) {
+    if (
+      typeof payload.designation !== "string"
+    ) {
+      throw new HandleError(
+        "Designation must be a string",
+        400
+      );
+    }
+
+    update.designation =
+      payload.designation.trim();
+  }
+
+  if (payload.avatar !== undefined) {
+    if (payload.avatar === null) {
+      update.avatar = {
+        url: null,
+        publicId: null,
+      };
+    } else {
+      if (
+        typeof payload.avatar !== "object" ||
+        !payload.avatar.url ||
+        !payload.avatar.publicId
+      ) {
+        throw new HandleError(
+          "Invalid avatar data",
+          400
+        );
+      }
+
+      update.avatar = {
+        url: payload.avatar.url.trim(),
+        publicId:
+          payload.avatar.publicId.trim(),
+      };
+    }
+  }
+
+  if (payload.address !== undefined) {
+    if (
+      typeof payload.address !== "object" ||
+      payload.address === null ||
+      Array.isArray(payload.address)
+    ) {
+      throw new HandleError(
+        "Invalid address",
+        400
+      );
+    }
+
+    update.address = {
+      street:
+        payload.address.street?.trim() || "",
+      city:
+        payload.address.city?.trim() || "",
+      state:
+        payload.address.state?.trim() || "",
+      country:
+        payload.address.country?.trim() ||
+        "India",
+      pinCode:
+        payload.address.pinCode?.trim() || "",
+    };
+  }
+
+  if (Object.keys(update).length === 0) {
+    throw new HandleError(
+      "No valid fields provided for update",
+      400
+    );
   }
 
   return update;

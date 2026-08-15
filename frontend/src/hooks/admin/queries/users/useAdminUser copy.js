@@ -1,11 +1,11 @@
+
+
 import { useQuery } from "@tanstack/react-query";
 
 import { getUserById } from "../../../../api/users.api";
 
-const useUser = (
-  userId,
-  options = {},
-) => {
+const useAdminUser = (userId,
+  options = {}) => {
   return useQuery({
     queryKey: ["admin-user", userId],
 
@@ -17,6 +17,6 @@ const useUser = (
 
     ...options,
   });
-};
+}
 
-export default useUser;
+export default useAdminUser

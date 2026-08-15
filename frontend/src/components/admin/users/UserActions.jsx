@@ -38,7 +38,7 @@ const ActionButton  = ({
   );
 }
 
-const UserActions = ({user}) => {
+const UserActions = ({user , handleDeleteClick , handleEditUser}) => {
   return (
     <div className="flex items-center gap-1">
       <ActionButton
@@ -50,13 +50,13 @@ const UserActions = ({user}) => {
 
       <ActionButton
         label={`Edit ${user.name}`}
-        onClick={() => console.log("Edit", user)}
+        onClick={() => handleEditUser(user)}
       >
         <FiEdit2 size={16} />
       </ActionButton>
       <ActionButton
         label={`Delete ${user.name}`}
-        onClick={() => console.log("Delete", user)}
+        onClick={() => handleDeleteClick(user)}
       >
         <FiTrash size={16} />
       </ActionButton>

@@ -6,7 +6,7 @@ import {
   getAdminUsers,
   updateAdminUser,
   updateAdminUserStatus,
-  deleteAdminUser
+  deleteAdminUser,
 } from "./adminUser.controller.js";
 
 import { userAuth } from "../../../middleware/userAuthMIddleware.js";
@@ -14,14 +14,17 @@ import adminOnly from "../../../middleware/adminMddleware.js";
 
 const router = express.Router();
 
-router.use(userAuth, adminOnly);
+// router.use(userAuth, adminOnly);
 
-router.route("/admin/users").get(getAdminUsers).post(createAdminUser);
+router.post("/admin/users", userAuth, adminOnly, createAdminUser);
+router.get("/admin/users", userAuth, adminOnly, getAdminUsers);
 
-router.route("/admin/users/:userId").get(getAdminUser).patch(updateAdminUser);
+router.get("/admin/users/:userId", userAuth, adminOnly, getAdminUser);
+router.patch("/admin/users/:userId", userAuth, adminOnly, updateAdminUser);
 
-router.patch("/admin/users/:userId/status", updateAdminUserStatus);
 
-router.delete("/admin/users/:userId", deleteAdminUser);
+router.patch("/admin/users/:userId/status",userAuth, adminOnly, updateAdminUserStatus);
+
+router.delete("/admin/users/:userId", userAuth, adminOnly ,deleteAdminUser);
 
 export default router;

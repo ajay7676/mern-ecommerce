@@ -59,13 +59,11 @@ export const createAdminUser = async (req, res, next) => {
 
 export const updateAdminUser = async (req, res, next) => {
   try {
-    const adminId = req.user?._id || req.user?.id;
+    const adminId = req.user?._id ;
 
     const user = await updateAdminUserService({
       userId: req.params.userId,
-
       payload: req.body,
-
       adminId,
     });
 

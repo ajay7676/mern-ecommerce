@@ -5,7 +5,6 @@ import FALLBACK_AVATAR from "../../../../../../public/images/user-placeholder.pn
 const UserPreview = ({ values }) => {
   const avatarUrl =
     values?.profileImage?.url ||
-    values?.profileImage?.previewUrl ||
     FALLBACK_AVATAR;
 
   const roleLabel = values?.role === "admin" ? "Admin" : "User";

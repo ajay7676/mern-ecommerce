@@ -2,6 +2,8 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+
 
 import { updateUser } from "../../../../api/users.api";
 
@@ -11,17 +13,34 @@ const useUpdateUser = () => {
   return useMutation({
     mutationFn: updateUser,
 
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["admin-users"],
-      });
+    onSuccess: async (
+      response,
+      variables
+    ) => {
+      toast.success(
+        response?.message ||
+          "User updated successfully"
+      );
 
-      queryClient.invalidateQueries({
-        queryKey: [
-          "admin-user",
-          variables.userId,
-        ],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["admin-users"],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: [
+            "admin-user",
+            variables.userId,
+          ],
+        }),
+      ]);
+    },
+
+    onError: (error) => {
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to update user"
+      );
     },
   });
 };

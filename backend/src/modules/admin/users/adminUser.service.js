@@ -206,6 +206,18 @@ export const updateAdminUserService = async ({ userId, payload, adminId }) => {
   ) {
     throw new HandleError("You cannot remove your own admin role", 403);
   }
+  if (update.email && update.email !== user.email) {
+    const existingUser = await User.findOne({
+      email: update.email,
+      _id: {
+        $ne: userId,
+      },
+    });
+
+    if (existingUser) {
+      throw new HandleError("Email is already in use", 409);
+    }
+  }
 
   Object.entries(update).forEach(([field, value]) => {
     user[field] = value;
@@ -289,16 +301,11 @@ export const deleteAdminUserService = async ({ userId, adminId }) => {
 
   const user = await findUserById(userId);
   if (!user) {
-    throw new HandleError(
-      "User not found",
-      404
-    );
+    throw new HandleError("User not found", 404);
   }
 
   if (user.avatar?.publicId) {
-    await deleteUserAvatarFromCloudinary(
-      user.avatar.publicId
-    );
+    await deleteUserAvatarFromCloudinary(user.avatar.publicId);
   }
 
   await deleteAdminUserById(userId);
