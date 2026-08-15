@@ -98,7 +98,7 @@ const UserStatsCard = (
             {change}
           </span>
 
-          <span>vs last month</span>
+          {/* <span>vs last month</span> */}
         </div>
       </div>
     </article>

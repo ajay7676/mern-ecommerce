@@ -8,7 +8,8 @@ import useDeleteUser from "../../../hooks/admin/mutations/users/useDeleteUser";
 import { useState } from "react";
 import DeleteUserModal from "./dialogs/DeleteUserModal";
 import EditUserModal from "./dialogs/edit-user/EditUserModal";
-import { formatUserDate , formatLastLogin } from "../../../utils/dateFormatter";
+import { formatUserDate, formatLastLogin } from "../../../utils/dateFormatter";
+import ViewUserModal from "./dialogs/view-user/ViewUserModal";
 
 const SortHeader = ({ children }) => {
   return (
@@ -30,6 +31,10 @@ const UserTable = ({ users, selectedUsers, onSelectUser, onSelectAll }) => {
   const [editUserId, setEditUserId] = useState(null);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
+
+  const [viewUserId, setViewUserId] = useState(null);
+
+  const [viewModalOpen, setViewModalOpen] = useState(false);
 
   const { mutateAsync: deleteUserMutation, isPending: isDeleting } =
     useDeleteUser();
@@ -60,7 +65,11 @@ const UserTable = ({ users, selectedUsers, onSelectUser, onSelectAll }) => {
     setEditModalOpen(true);
   };
 
-
+  const handleViewUser = (user) => {
+     console.log("View  Modal Clicked")
+    setViewUserId(user._id);
+    setViewModalOpen(true);
+  };
 
   return (
     <>
@@ -195,13 +204,16 @@ const UserTable = ({ users, selectedUsers, onSelectUser, onSelectAll }) => {
 
                     <td className="px-3">{formatUserDate(user.createdAt)}</td>
 
-                    <td className="px-3">{formatLastLogin(user.lastLoginAt)}</td>
+                    <td className="px-3">
+                      {formatLastLogin(user.lastLoginAt)}
+                    </td>
 
                     <td className="px-3">
                       <UserActions
                         user={user}
                         handleDeleteClick={handleDeleteClick}
                         handleEditUser={handleEditUser}
+                        handleViewUser={handleViewUser}
                       />
                     </td>
                   </tr>
@@ -210,6 +222,14 @@ const UserTable = ({ users, selectedUsers, onSelectUser, onSelectAll }) => {
           </tbody>
         </table>
       </div>
+      <ViewUserModal
+        open={viewModalOpen}
+        userId={viewUserId}
+        onClose={() => {
+          setViewModalOpen(false);
+          setViewUserId(null);
+        }}
+      />
       <EditUserModal
         open={editModalOpen}
         userId={editUserId}

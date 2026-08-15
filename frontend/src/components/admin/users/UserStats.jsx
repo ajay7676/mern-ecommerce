@@ -1,7 +1,7 @@
 import { userStats } from "../../../data/admin/users/users.data";
 import UserStatsCard from "./UserStatsCard";
 
-const UserStats = () => {
+const UserStats = ({users}) => {
   return (
     <section
       className="
@@ -13,7 +13,7 @@ const UserStats = () => {
           "
     >
       {userStats.map((stat) => (
-        <UserStatsCard key={stat.title} {...stat} />
+        <UserStatsCard key={stat.title} {...stat} users={users} />
       ))}
     </section>
   );

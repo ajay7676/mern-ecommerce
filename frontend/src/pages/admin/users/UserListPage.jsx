@@ -96,7 +96,7 @@ const UserManagementPage = () => {
 
           {/* Stats */}
 
-          <UserStats />
+          <UserStats users={users} />
 
           {/* Users */}
 

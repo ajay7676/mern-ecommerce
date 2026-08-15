@@ -1,33 +1,42 @@
 import {
   FiMail,
   FiPhone,
+  FiBriefcase,
+  FiMapPin,
+  FiCalendar,
+  FiClock,
   FiShield,
-  FiX,
 } from "react-icons/fi";
 
 import useAdminUser from '../../../../../hooks/admin/queries/users/useAdminUser'
+import UserAvatar from "../../../../../utils/UserAvatar";
+import UserViewSkeleton from "./UserViewSkeleton";
 import UserStatusBadge from "../../UserStatusBadge";
-import UserRoleBadge from "../../UserRoleBadge";
+import { formatUserAddress } from "../../../../../utils/fromatAddress";
+import ActivityCard from "./ActivityCard";
+import { formatLastLogin, formatUserDate } from "../../../../../utils/dateFormatter";
+import DetailsCard from "./DetailsCard";
+import { ROLE_PERMISSIONS } from "../add-new/userForm.constants";
+import UserViewHeader from "./UserViewHeader";
 
 const ViewUserModal = ({
   userId,
   open,
   onClose,
 }) => {
-  const {
+   const {
     data,
     isLoading,
     isError,
-  } = useAdminUser(userId, {
-    enabled: open && Boolean(userId),
-  });
-
-  const user = data?.user;
+    error,
+  } = useAdminUser(userId, open);
 
   if (!open) {
     return null;
   }
-
+  const user = data?.data?.user;
+   const permissions =
+    ROLE_PERMISSIONS[user?.role] || [];
   return (
     <div className="fixed inset-0 z-50">
       <button
@@ -54,147 +63,274 @@ const ViewUserModal = ({
           shadow-2xl
         "
       >
-        <header
-          className="
-            sticky
-            top-0
-            z-10
-            flex
-            items-center
-            justify-between
-            border-b
-            border-slate-200
-            bg-white
-            px-6
-            py-5
-          "
-        >
-          <div>
-            <h2 className="text-xl font-bold">
-              User Details
-            </h2>
+        {/* /Header */}
+        <UserViewHeader onClose={onClose} />
+         {/* Body */}
 
-            <p className="text-sm text-slate-500">
-              Account information and activity
-            </p>
-          </div>
+        <div className="flex-1 overflow-y-auto p-6">
+          {isLoading && (
+            <UserViewSkeleton />
+          )}
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="
-              grid
-              h-9
-              w-9
-              place-items-center
-              rounded-lg
-              hover:bg-slate-100
-            "
-          >
-            <FiX />
-          </button>
-        </header>
-
-        {isLoading && (
-          <div className="p-6 text-sm text-slate-500">
-            Loading user...
-          </div>
-        )}
-
-        {isError && (
-          <div className="p-6 text-sm text-red-500">
-            Failed to load user.
-          </div>
-        )}
-
-        {user && (
-          <div className="p-6">
+          {isError && (
             <div
               className="
-                flex
-                flex-col
-                items-center
-                border-b
-                border-slate-200
-                pb-6
-                text-center
+                rounded-xl
+                border
+                border-red-200
+                bg-red-50
+                p-5
+                text-sm
+                text-red-700
               "
             >
-              <img
-                src={user.avatar}
-                alt={user.name}
+              {error?.response?.data?.message ||
+                "Failed to load user details"}
+            </div>
+          )}
+
+          {!isLoading && !isError && user && (
+            <div className="space-y-5">
+
+              {/* Profile Summary */}
+
+              <section
                 className="
-                  h-20
-                  w-20
-                  rounded-full
-                  object-cover
+                  rounded-xl
+                  border
+                  border-slate-200
+                  bg-white
+                  p-6
                 "
-              />
+              >
+                <div
+                  className="
+                    flex
+                    flex-col
+                    gap-5
+                    sm:flex-row
+                    sm:items-center
+                  "
+                >
+                  <UserAvatar
+                    user={user}
+                    size={88}
+                  />
 
-              <h3 className="mt-4 text-xl font-bold">
-                {user.name}
-              </h3>
+                  <div className="min-w-0 flex-1">
+                    <h3
+                      className="
+                        truncate
+                        text-xl
+                        font-bold
+                        text-slate-900
+                      "
+                    >
+                      {user.name}
+                    </h3>
 
-              <p className="mt-1 text-sm text-slate-500">
-                ID: #{user?.id}
-              </p>
+                    <div
+                      className="
+                        mt-3
+                        flex
+                        flex-wrap
+                        gap-2
+                      "
+                    >
+                      <span
+                        className="
+                          rounded-md
+                          bg-violet-50
+                          px-3
+                          py-1
+                          text-xs
+                          font-semibold
+                          capitalize
+                          text-violet-700
+                        "
+                      >
+                        {user.role}
+                      </span>
 
-              <div className="mt-3 flex gap-2">
-                <UserRoleBadge
-                  role={user.role}
+                      <UserStatusBadge
+                        status={user.status}
+                      />
+                    </div>
+
+                    <div
+                      className="
+                        mt-4
+                        flex
+                        flex-col
+                        gap-2
+                        text-sm
+                        text-slate-500
+                        sm:flex-row
+                        sm:gap-5
+                      "
+                    >
+                      <span className="flex items-center gap-2">
+                        <FiMail />
+                        {user.email}
+                      </span>
+
+                      <span className="flex items-center gap-2">
+                        <FiPhone />
+                        {user.phone || "Not provided"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Details grid */}
+
+              <div className="grid gap-5 lg:grid-cols-2">
+
+                <DetailsCard
+                  title="Basic Information"
+                  items={[
+                    {
+                      label: "Department",
+                      value:
+                        user.department ||
+                        "Not assigned",
+                      icon: FiBriefcase,
+                    },
+                    {
+                      label: "Designation",
+                      value:
+                        user.designation ||
+                        "Not assigned",
+                      icon: FiBriefcase,
+                    },
+                  ]}
                 />
 
-                <UserStatusBadge
-                  status={user.status}
+                <DetailsCard
+                  title="Account Information"
+                  items={[
+                    {
+                      label: "Role",
+                      value: user.role,
+                      icon: FiShield,
+                    },
+                    {
+                      label: "Status",
+                      value: user.status,
+                      icon: FiShield,
+                    },
+                  ]}
+                />
+
+              </div>
+
+              {/* Address */}
+
+              <section
+                className="
+                  rounded-xl
+                  border
+                  border-slate-200
+                  bg-white
+                  p-5
+                "
+              >
+                <h3 className="font-semibold text-slate-900">
+                  Address
+                </h3>
+
+                <div
+                  className="
+                    mt-4
+                    flex
+                    items-start
+                    gap-3
+                    text-sm
+                    text-slate-600
+                  "
+                >
+                  <FiMapPin
+                    className="mt-0.5 shrink-0"
+                  />
+
+                  <p>
+                    {formatUserAddress(
+                      user.address
+                    )}
+                  </p>
+                </div>
+              </section>
+
+              {/* Activity */}
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                <ActivityCard
+                  icon={FiCalendar}
+                  label="Joined On"
+                  value={formatUserDate(
+                    user.createdAt
+                  )}
+                />
+
+                <ActivityCard
+                  icon={FiClock}
+                  label="Last Login"
+                  value={formatLastLogin(
+                    user.lastLoginAt
+                  )}
                 />
               </div>
+
+              {/* Permissions */}
+
+              <section
+                className="
+                  rounded-xl
+                  border
+                  border-slate-200
+                  bg-white
+                  p-5
+                "
+              >
+                <h3 className="font-semibold text-slate-900">
+                  Assigned Permissions
+                </h3>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Permissions are based on the user's role.
+                </p>
+
+                <div
+                  className="
+                    mt-4
+                    grid
+                    gap-3
+                    sm:grid-cols-2
+                  "
+                >
+                  {permissions.map(
+                    (permission) => (
+                      <div
+                        key={permission}
+                        className="
+                          rounded-lg
+                          bg-slate-50
+                          px-3
+                          py-2
+                          text-sm
+                          text-slate-600
+                        "
+                      >
+                        {permission}
+                      </div>
+                    )
+                  )}
+                </div>
+              </section>
             </div>
-
-            <div className="space-y-5 py-6">
-              <div className="flex gap-3">
-                <FiMail className="mt-1 text-slate-400" />
-
-                <div>
-                  <p className="text-xs text-slate-400">
-                    Email
-                  </p>
-
-                  <p className="text-sm font-medium">
-                    {user.email}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <FiPhone className="mt-1 text-slate-400" />
-
-                <div>
-                  <p className="text-xs text-slate-400">
-                    Phone
-                  </p>
-
-                  <p className="text-sm font-medium">
-                    {user.phone}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <FiShield className="mt-1 text-slate-400" />
-
-                <div>
-                  <p className="text-xs text-slate-400">
-                    Account Role
-                  </p>
-
-                  <p className="text-sm font-medium">
-                    {user.role}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </aside>
     </div>
   );

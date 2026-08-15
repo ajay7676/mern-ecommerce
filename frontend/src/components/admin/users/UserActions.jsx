@@ -38,12 +38,12 @@ const ActionButton  = ({
   );
 }
 
-const UserActions = ({user , handleDeleteClick , handleEditUser}) => {
+const UserActions = ({user , handleDeleteClick , handleEditUser , handleViewUser}) => {
   return (
     <div className="flex items-center gap-1">
       <ActionButton
         label={`View ${user.name}`}
-        onClick={() => console.log("View", user)}
+        onClick={() => handleViewUser(user)}
       >
         <FiEye size={17} />
       </ActionButton>
