@@ -74,6 +74,7 @@ const CategoriesHeader = ({ onExport, onAddCategory }) => {
             text-white
             shadow-sm
             transition
+            cursor-pointer
             hover:bg-violet-700
           "
         >
