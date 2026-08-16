@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import  { ROUTES } from '../../../constants/routes';
+import { FiBox, FiGitBranch, FiGrid, FiLayers, FiPlusCircle, FiSliders, FiTag } from "react-icons/fi";
 
 export  const sidebarMenu  = [
     {
@@ -26,12 +27,44 @@ export  const sidebarMenu  = [
     icon: Package,
     path: ROUTES.ADMIN.LISTINGS,
   },
-   {
-    id: "inventory",
-    label: "Inventory",
-    icon: Boxes,
-    path: ROUTES.ADMIN.CATEGORIES,
+  {
+    label: "Products",
+    icon: FiGrid,
+    children: [
+      {
+        label: "All Products",
+        icon: FiGrid,
+        path: ROUTES.ADMIN.PRODUCTS,
+      },
+      {
+        label: "Add New Product",
+        icon: FiPlusCircle,
+        path: ROUTES.ADMIN.CREATE_PRODUCT,
+      },
+      {
+        label: "Categories",
+        icon: FiLayers,
+        path: ROUTES.ADMIN.CATEGORIES,
+      },
+      {
+        label: "Brands",
+        icon: FiTag,
+        path: ROUTES.ADMIN.BRANDS,
+      },
+      {
+        label: "Attributes",
+        icon: FiSliders,
+        path: ROUTES.ADMIN.ATTRIBUTES,
+      },
+      {
+        label: "Product Variation",
+        icon: FiGitBranch,
+        path: ROUTES.ADMIN.PRODUCT_VARIATIONS,
+      },
+    ],
+    path: ROUTES.ADMIN.PRODUCTS
   },
+  // s
    {
     id: "orders",
     label: "Orders",

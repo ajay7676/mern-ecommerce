@@ -20,13 +20,16 @@ export const ADMIN_ROUTES = {
 
     REPORTS: "/admin/reports",
 
-    PRODUCTS: "/admin/products",
+    PRODUCTS: "/admin/products/all",
     CREATE_PRODUCT: "/admin/products/create",
     EDIT_PRODUCT: "/admin/products/:id/edit",
 
-    CATEGORIES: "/admin/categories",
+    CATEGORIES: "/admin/products/categories",
 
-    BRANDS: "/admin/brands",
+    BRANDS: "/admin/products/brands",
+    ATTRIBUTES: "/admin/products/attributes",
+
+    PRODUCT_VARIATIONS: "/admin/products/product-variations",
 
     ORDERS: "/admin/orders",
     ORDER_DETAILS: "/admin/orders/:id",

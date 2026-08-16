@@ -38,7 +38,6 @@ const ImageUploader = ({
   };
 
   const openUrlDialog = () => {
-     console.log("OPEN ADD URL MODAL")
     setImageUrl("");
     setUrlError("");
     dialogRef.current?.showModal();

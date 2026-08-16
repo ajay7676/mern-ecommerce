@@ -15,7 +15,7 @@ const UserManagementHeader = ({management}) => {
           className="flex h-11 items-center gap-2 rounded-lg border border-slate-200
            bg-white px-5 text-sm font-semibold text-slate-700">
           <FiDownload />
-          Export ssss
+          Export
         </button>
         <button
           type="button"

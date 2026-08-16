@@ -17,6 +17,10 @@ import CategoryPage from '../pages/admin/categories/CategoryPage';
 
 import BrandsPage from '../pages/admin/brands/BrandsPage';
 
+import AttributesPage from '../pages/admin/attributes/AttributesPage';
+
+import ProductVariation from '../pages/admin/product-variations/ProductVariation';
+
 import OrderListPage from '../pages/admin/orders/OrderListPage';
 import OrderDetailsPage from '../pages/admin/orders/OrderDetailsPage';
 
@@ -89,7 +93,14 @@ export const adminRoutes = [
             path: ROUTES.ADMIN.BRANDS,
             element: <BrandsPage />,
           },
-
+          {
+            path: ROUTES.ADMIN.ATTRIBUTES,
+            element: <AttributesPage />,
+          },
+          {
+            path: ROUTES.ADMIN.PRODUCT_VARIATIONS,
+            element: <ProductVariation />,
+          },
           {
             path: ROUTES.ADMIN.ORDERS,
             element: <OrderListPage />,
