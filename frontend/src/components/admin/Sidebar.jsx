@@ -15,7 +15,7 @@ const Sidebar = () => {
       <div className="h-16 flex items-center px-6 border-b border-gray-200">
         <div>
           <h1 className="text-2xl font-bold text-blue-600">
-            <Link to="/">Valid Super Store</Link>
+            <Link to="/">Valid Super Store </Link>
           </h1>
           <p className="text-xs text-gray-500">Admin Panel</p>
         </div>

@@ -19,16 +19,18 @@ const AdminSidebar = () => {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-hidden px-3 py-4">
           <ul className="space-y-1">
-            {sidebarMenu.map((item) => (
-              <li key={item.id}>
-                <SidebarItem item={item} />
-              </li>
-            ))}
+            {sidebarMenu.map((item) => {
+              return (
+                <li key={item.label}>
+                  <SidebarItem key={item.id} item={item} />
+                </li>
+              );
+            })}
           </ul>
         </nav>
       </aside>
     </div>
-  )
+  );
 };
 
 export default AdminSidebar;

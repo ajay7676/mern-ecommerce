@@ -30,6 +30,7 @@ export  const sidebarMenu  = [
   {
     label: "Products",
     icon: FiGrid,
+    path: ROUTES.ADMIN.PRODUCTS,
     children: [
       {
         label: "All Products",
@@ -62,7 +63,6 @@ export  const sidebarMenu  = [
         path: ROUTES.ADMIN.PRODUCT_VARIATIONS,
       },
     ],
-    path: ROUTES.ADMIN.PRODUCTS
   },
   // s
    {

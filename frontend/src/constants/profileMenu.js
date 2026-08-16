@@ -37,7 +37,7 @@ export const userMenu = [
   },
   {
     label: "Dashboard",
-    path: "/admin",
+    path: "/admin/dashboard",
     icon: FiLayout,
     access: ["admin"],
   },

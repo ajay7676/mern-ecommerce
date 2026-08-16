@@ -13,13 +13,13 @@ import ListingPage from '../pages/admin/listings/ListingPage'
 
 
 
-import CategoryPage from '../pages/admin/categories/CategoryPage';
+import CategoriesPage from '../pages/admin/products/categories/CategoriesPage';
 
-import BrandsPage from '../pages/admin/brands/BrandsPage';
+import BrandsPage from '../pages/admin/products/brands/BrandsPage';
 
-import AttributesPage from '../pages/admin/attributes/AttributesPage';
+import AttributesPage from '../pages/admin/products/attributes/AttributesPage';
 
-import ProductVariation from '../pages/admin/product-variations/ProductVariation';
+import ProductVariation from '../pages/admin/products/product-variations/ProductVariation';
 
 import OrderListPage from '../pages/admin/orders/OrderListPage';
 import OrderDetailsPage from '../pages/admin/orders/OrderDetailsPage';
@@ -86,7 +86,7 @@ export const adminRoutes = [
           },
           {
             path: ROUTES.ADMIN.CATEGORIES,
-            element: <CategoryPage />,
+            element: <CategoriesPage />,
           },
 
           {

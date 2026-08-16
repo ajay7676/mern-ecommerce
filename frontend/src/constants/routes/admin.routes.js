@@ -1,11 +1,11 @@
 export const ADMIN_ROUTES = {
 
-    ROOT: "/admin",
+    ROOT: "/admin/dashboard",
 
     LOGIN: "/admin/login",
     REGISTER: "/admin/login",
 
-    DASHBOARD: "/admin",
+    DASHBOARD: "/admin/dashboard",
 
     LISTINGS: "/admin/listings",
     CREATE_LISTINGS: "/admin/listings/create",

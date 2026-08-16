@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router";
 import { FiChevronDown } from "react-icons/fi";
 import clsx from "clsx";
-import {ROUTES} from '../../../constants/routes'
 
 const SidebarItem = ({ item, onNavigate }) => {
   const Icon = item.icon;
