@@ -1,17 +1,12 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
-import {
-  FiPlus,
-  FiX,
-} from "react-icons/fi";
+import { FiPlus, FiX } from "react-icons/fi";
 
 import CategoryForm from "./CategoryForm";
 
-import {validateCategoryForm} from '../../../../../../utils/admin/categoryValidation'
-import {generateCategorySlug} from '../../../../../../utils/admin/generateCategorySlug'
+import { validateCategoryForm } from "../../../../../../utils/admin/categoryValidation";
+import { generateCategorySlug } from "../../../../../../utils/admin/generateCategorySlug";
+import { buildCategoryPayload } from "../../../../../../utils/admin/products/category/categoryForm.helpers";
 
 const INITIAL_VALUES = {
   name: "",
@@ -24,6 +19,7 @@ const INITIAL_VALUES = {
   seoTitle: "",
   seoDescription: "",
   seoKeywords: "",
+
 };
 
 const AddCategoryModal = ({
@@ -32,21 +28,18 @@ const AddCategoryModal = ({
   parentCategories = [],
   onSubmit,
   isSubmitting = false,
+  mode="add"
+
 }) => {
-  const [values, setValues] =
-    useState(INITIAL_VALUES);
+  const [values, setValues] = useState(INITIAL_VALUES);
 
-  const [errors, setErrors] =
-    useState({});
+  const [errors, setErrors] = useState({});
 
-  const [image, setImage] =
-    useState(null);
+  const [image, setImage] = useState(null);
 
-  const [imagePreview, setImagePreview] =
-    useState("");
+  const [imagePreview, setImagePreview] = useState("");
 
-  const [slugManuallyEdited, setSlugManuallyEdited] =
-    useState(false);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
 
   useEffect(() => {
     if (!image) {
@@ -54,15 +47,12 @@ const AddCategoryModal = ({
       return;
     }
 
-    const previewUrl =
-      URL.createObjectURL(image);
+    const previewUrl = URL.createObjectURL(image);
 
     setImagePreview(previewUrl);
 
     return () => {
-      URL.revokeObjectURL(
-        previewUrl,
-      );
+      URL.revokeObjectURL(previewUrl);
     };
   }, [image]);
 
@@ -82,24 +72,15 @@ const AddCategoryModal = ({
     onClose();
   };
 
-  const handleChange = (
-    field,
-    value,
-  ) => {
+  const handleChange = (field, value) => {
     setValues((current) => {
       const next = {
         ...current,
         [field]: value,
       };
 
-      if (
-        field === "name" &&
-        !slugManuallyEdited
-      ) {
-        next.slug =
-          generateCategorySlug(
-            value,
-          );
+      if (field === "name" && !slugManuallyEdited) {
+        next.slug = generateCategorySlug(value);
       }
 
       return next;
@@ -115,41 +96,28 @@ const AddCategoryModal = ({
     }));
   };
 
-  const handleImageChange = (
-    file,
-  ) => {
+  const handleImageChange = (file) => {
     if (!file) {
       return;
     }
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-    ];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
 
-    if (
-      !allowedTypes.includes(
-        file.type,
-      )
-    ) {
+    if (!allowedTypes.includes(file.type)) {
       setErrors((current) => ({
         ...current,
-        image:
-          "Only JPG, PNG and WEBP images are allowed",
+        image: "Only JPG, PNG and WEBP images are allowed",
       }));
 
       return;
     }
 
-    const maxSize =
-      5 * 1024 * 1024;
+    const maxSize = 5 * 1024 * 1024;
 
     if (file.size > maxSize) {
       setErrors((current) => ({
         ...current,
-        image:
-          "Image size cannot exceed 5 MB",
+        image: "Image size cannot exceed 5 MB",
       }));
 
       return;
@@ -163,76 +131,23 @@ const AddCategoryModal = ({
     }));
   };
 
-  const handleSubmit = async (
-    event,
-  ) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const validationErrors =
-      validateCategoryForm(
-        values,
-      );
+    const validationErrors = validateCategoryForm(values);
 
-    if (
-      Object.keys(
-        validationErrors,
-      ).length
-    ) {
-      setErrors(
-        validationErrors,
-      );
+    if (Object.keys(validationErrors).length) {
+      setErrors(validationErrors);
 
       return;
     }
 
-    const payload = {
-      name: values.name.trim(),
-
-      slug:
-        values.slug.trim(),
-
-      description:
-        values.description.trim(),
-
-      parentCategory:
-        values.parentCategory ||
-        null,
-
-      status:
-        values.status,
-
-      sortOrder:
-        values.sortOrder === ""
-          ? 0
-          : Number(
-              values.sortOrder,
-            ),
-
-      icon:
-        values.icon.trim() ||
-        null,
-
-      seo: {
-        title:
-          values.seoTitle.trim(),
-
-        description:
-          values.seoDescription.trim(),
-
-        keywords:
-          values.seoKeywords
-            .split(",")
-            .map((keyword) =>
-              keyword.trim(),
-            )
-            .filter(Boolean),
-      },
-
-      image,
-    };
+    const payload = buildCategoryPayload({
+      values,
+    });
 
     try {
-      await onSubmit(payload);
+      await onSubmit(payload , image);
 
       resetForm();
 
@@ -240,10 +155,7 @@ const AddCategoryModal = ({
     } catch (error) {
       // API field errors will be
       // wired in the React Query phase.
-      console.error(
-        "Failed to create category:",
-        error,
-      );
+      console.error("Failed to create category:", error);
     }
   };
 
@@ -360,30 +272,17 @@ const AddCategoryModal = ({
             values={values}
             errors={errors}
             image={image}
-            imagePreview={
-              imagePreview
-            }
-            parentCategories={
-              parentCategories
-            }
-            onChange={
-              handleChange
-            }
-            onImageChange={
-              handleImageChange
-            }
-            onRemoveImage={() =>
-              setImage(null)
-            }
-            disabled={
-              isSubmitting
-            }
+            imagePreview={imagePreview}
+            parentCategories={parentCategories}
+            onChange={handleChange}
+            onImageChange={handleImageChange}
+            onRemoveImage={() => setImage(null)}
+            disabled={isSubmitting}
+            mode={mode}
           />
 
           {errors.image && (
-            <p className="mt-2 text-xs text-red-500">
-              {errors.image}
-            </p>
+            <p className="mt-2 text-xs text-red-500">{errors.image}</p>
           )}
         </div>
 
@@ -451,9 +350,7 @@ const AddCategoryModal = ({
           >
             <FiPlus size={17} />
 
-            {isSubmitting
-              ? "Creating..."
-              : "Create Category"}
+            {isSubmitting ? "Creating..." : "Create Category"}
           </button>
         </footer>
       </form>

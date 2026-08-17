@@ -148,6 +148,7 @@ const CategoryRow = ({
             aria-label={`Edit ${category.name}`}
             className="
               text-slate-700
+              cursor-pointer
               transition
               hover:text-violet-600
             "
@@ -164,6 +165,7 @@ const CategoryRow = ({
             className="
               text-slate-700
               transition
+              cursor-pointer
               hover:text-red-500
             "
           >

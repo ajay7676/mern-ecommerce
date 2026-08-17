@@ -12,6 +12,7 @@ import CategoryTree from "../../../../components/admin/products/categories/Categ
 import QuickTipsCard from "../../../../components/admin/products/categories/QuickTipsCard";
 import BulkActionsCard from "../../../../components/admin/products/categories/BulkActionsCard";
 import AddCategoryModal from "../../../../components/admin/products/categories/modals/add-new/AddCategoryModal";
+import EditCategoryModal from "../../../../components/admin/products/categories/modals/edit/EditCategoryModal";
 const CategoriesPage = () => {
   const [search, setSearch] = useState("");
 
@@ -26,6 +27,10 @@ const CategoriesPage = () => {
   const [bulkAction, setBulkAction] = useState("");
 
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
+
+  const [editingCategory, setEditingCategory] = useState(null);
+
+  console.log(editingCategory);
 
   const filteredCategories = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -61,6 +66,7 @@ const CategoriesPage = () => {
 
   const handleEdit = (category) => {
     console.log("Edit category", category);
+    setEditingCategory(category);
   };
 
   const handleDelete = (category) => {
@@ -77,6 +83,7 @@ const CategoriesPage = () => {
       id: category.id,
       name: category.name,
     }));
+  console.log("editingCategory", editingCategory);
   return (
     <>
       <main
@@ -160,6 +167,29 @@ const CategoriesPage = () => {
           </div>
         </div>
       </main>
+      <EditCategoryModal
+        open={Boolean(editingCategory)}
+        category={editingCategory}
+        parentCategories={parentCategories}
+        isSubmitting={false}
+        onClose={() => setEditingCategory(null)}
+        onSubmit={async ({
+          categoryId,
+          payload,
+          image,
+          removeExistingImage,
+        }) => {
+          console.log("Category ID:", categoryId);
+
+          console.log("Update payload:", payload);
+
+          console.log("New image:", image);
+
+          console.log("Remove old image:", removeExistingImage);
+
+          await new Promise((resolve) => setTimeout(resolve, 800));
+        }}
+      />
       <AddCategoryModal
         open={addCategoryOpen}
         onClose={() => setAddCategoryOpen(false)}

@@ -13,6 +13,7 @@ const CategoryBasicFields = ({
   parentCategories,
   onChange,
   disabled,
+  mode = "add"
 }) => {
   return (
     <section>
@@ -96,9 +97,9 @@ const CategoryBasicFields = ({
           <div className="mt-1 flex items-center justify-between gap-3">
             <CategoryFieldError message={errors.description} />
 
-            <span className="ml-auto text-xs text-slate-400">
-              {values.description.length}/500
-            </span>
+            {/* <span className="ml-auto text-xs text-slate-400">
+              {values?.description.length ?? 0}/500
+            </span> */}
           </div>
         </div>
         <div>
