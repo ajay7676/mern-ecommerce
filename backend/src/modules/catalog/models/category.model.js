@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const categoryImageSchema = new mongoose.Schema(
   {
-    public_id: {
+    publicId: {
       type: String,
       trim: true,
     },
@@ -106,7 +106,23 @@ const categorySchema = new mongoose.Schema(
       default: true,
       index: true,
     },
-
+     status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+      index: true,
+    },
+     sortOrder: {
+      type: Number,
+      default: 0,
+      min: 0,
+      index: true,
+    },
+    icon: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     isFeatured: {
       type: Boolean,
       default: false,

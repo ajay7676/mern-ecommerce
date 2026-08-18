@@ -1,7 +1,7 @@
 import express from "express";
 import {
-    createCategory,
-    getAdminCategories,
+    // createCategory,
+    // getAdminCategories,
     getPublicCategories,
     getPublicCategoryTree
  } from "../controllers/category.controller.js";
@@ -23,17 +23,17 @@ router.get("/categories/tree", getPublicCategoryTree);
  * Admin category routes
  */
 
-router.post(
-  "/admin/categories",
-  userAuth,
-  adminOnly,
-  createCategory
-);
-router.get(
-  "/admin/categories",
-  userAuth,
-  adminOnly,
-  getAdminCategories
-);
+// router.post(
+//   "/admin/categories",
+//   userAuth,
+//   adminOnly,
+//   createCategory
+// );
+// router.get(
+//   "/admin/categories",
+//   userAuth,
+//   adminOnly,
+//   getAdminCategories
+// );
 
 export default router;

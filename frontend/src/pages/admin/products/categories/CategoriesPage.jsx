@@ -13,6 +13,9 @@ import QuickTipsCard from "../../../../components/admin/products/categories/Quic
 import BulkActionsCard from "../../../../components/admin/products/categories/BulkActionsCard";
 import AddCategoryModal from "../../../../components/admin/products/categories/modals/add-new/AddCategoryModal";
 import EditCategoryModal from "../../../../components/admin/products/categories/modals/edit/EditCategoryModal";
+import useCategories from "../../../../hooks/admin/queries/products/categories/useCategories";
+
+import useDebounce from "../../../../hooks/useDebounce";
 const CategoriesPage = () => {
   const [search, setSearch] = useState("");
 
@@ -83,7 +86,24 @@ const CategoriesPage = () => {
       id: category.id,
       name: category.name,
     }));
-  console.log("editingCategory", editingCategory);
+
+  const debouncedSearch = useDebounce(search, 400);
+
+  const { data, isLoading, isFetching, isError, error } = useCategories({
+    page,
+    limit,
+
+    search: debouncedSearch,
+
+    status,
+
+    parentCategory: parent,
+
+    sortBy: "sortOrder",
+
+    sortOrder: "asc",
+  });
+
   return (
     <>
       <main

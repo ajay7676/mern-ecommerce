@@ -7,9 +7,11 @@ const errorHandler = (err, req, res, next) => {
     message = `Invalid ${err.path}: ${err.value}`;
   }
   if (err.code === 11000) {
-    statusCode = 400;
+    statusCode = 409;
     const field = Object.keys(err.keyValue)[0];
-    message = `${field} already exists`;
+    message = field
+      ? `${field} already exists`
+      : "Duplicate value already exists";
   }
   if (err.name === "ValidationError") {
     statusCode = 400;
@@ -22,6 +24,9 @@ const errorHandler = (err, req, res, next) => {
     success: false,
     message: message,
     statusCode,
+     ...(err.errors && {
+      errors: err.errors,
+    }),
   });
 };
 

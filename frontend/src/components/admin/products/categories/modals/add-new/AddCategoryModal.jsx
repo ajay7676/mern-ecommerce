@@ -8,6 +8,9 @@ import { validateCategoryForm } from "../../../../../../utils/admin/categoryVali
 import { generateCategorySlug } from "../../../../../../utils/admin/generateCategorySlug";
 import { buildCategoryPayload } from "../../../../../../utils/admin/products/category/categoryForm.helpers";
 
+import useCreateCategory from "../../../../../../hooks/admin/mutations/products/categories/useCreateCategory";
+import { getCategoryFieldErrors } from "../../../../../../utils/admin/products/category/categoryApiError";
+
 const INITIAL_VALUES = {
   name: "",
   slug: "",
@@ -19,7 +22,6 @@ const INITIAL_VALUES = {
   seoTitle: "",
   seoDescription: "",
   seoKeywords: "",
-
 };
 
 const AddCategoryModal = ({
@@ -28,8 +30,7 @@ const AddCategoryModal = ({
   parentCategories = [],
   onSubmit,
   isSubmitting = false,
-  mode="add"
-
+  mode = "add",
 }) => {
   const [values, setValues] = useState(INITIAL_VALUES);
 
@@ -40,6 +41,8 @@ const AddCategoryModal = ({
   const [imagePreview, setImagePreview] = useState("");
 
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+
+  const { mutateAsync: createCategory, isPending } = useCreateCategory();
 
   useEffect(() => {
     if (!image) {
@@ -147,15 +150,17 @@ const AddCategoryModal = ({
     });
 
     try {
-      await onSubmit(payload , image);
+      await createCategory(payload);
 
       resetForm();
 
       onClose();
     } catch (error) {
-      // API field errors will be
-      // wired in the React Query phase.
-      console.error("Failed to create category:", error);
+
+      const fieldErrors = getCategoryFieldErrors(error);
+      if (Object.keys(fieldErrors).length) {
+        setErrors(fieldErrors);
+      }
     }
   };
 
@@ -239,7 +244,7 @@ const AddCategoryModal = ({
           <button
             type="button"
             onClick={handleClose}
-            disabled={isSubmitting}
+            disabled={isPending}
             className="
               grid
               h-9
@@ -328,7 +333,7 @@ const AddCategoryModal = ({
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isPending}
             className="
               inline-flex
               h-10
@@ -348,9 +353,9 @@ const AddCategoryModal = ({
               disabled:opacity-60
             "
           >
-            <FiPlus size={17} />
+            <FiPlus size={17} / >
 
-            {isSubmitting ? "Creating..." : "Create Category"}
+            {isPending ? "Creating..." : "Create Category"}
           </button>
         </footer>
       </form>
