@@ -13,6 +13,11 @@ import {
   countChildCategories,
   countProductsByCategory,
   deleteCategoryById,
+  findAllCategoriesForTree,
+  countAllCategories,
+  countCategoriesByStatus,
+  countProductsWithCategory,
+  findCategoryOptions,
 } from "./adminCategory.repository.js";
 
 import {
@@ -24,6 +29,8 @@ import {
 } from "./adminCategory.validators.js";
 
 import { escapeRegex } from "./adminCategory.helpers.js";
+import { buildCategoryTree } from "./adminCategoryTree.helpers.js";
+import { CATEGORY_STATUSES } from "./adminCategory.constants.js";
 
 const assertParentDoesNotCreateCycle = async ({
   categoryId,
@@ -283,7 +290,6 @@ export const deleteAdminCategoryService = async (categoryId) => {
 
   const category = await findCategoryById(categoryId);
 
-
   if (!category) {
     throw new HandleError("Category not found", 404);
   }
@@ -294,41 +300,86 @@ export const deleteAdminCategoryService = async (categoryId) => {
   ]);
 
   if (childCount > 0) {
-    const childLabel =
-      childCount === 1
-        ? "subcategory"
-        : "subcategories";
+    const childLabel = childCount === 1 ? "subcategory" : "subcategories";
     throw new HandleError(
       "Category cannot be deleted because it contains subcategories",
       409,
       {
-        category:
-          `Move or delete ${childCount} ${childLabel} first`,
+        category: `Move or delete ${childCount} ${childLabel} first`,
       },
     );
   }
 
- if (productCount > 0) {
-    const productLabel =
-      productCount === 1
-        ? "product is"
-        : "products are";
+  if (productCount > 0) {
+    const productLabel = productCount === 1 ? "product is" : "products are";
 
     throw new HandleError(
       "Category cannot be deleted because products are assigned to it",
       409,
       {
-        category:
-          `${productCount} ${productLabel} currently assigned to this category`,
+        category: `${productCount} ${productLabel} currently assigned to this category`,
       },
     );
   }
 
   await deleteCategoryById(categoryId);
 
-   return {
+  return {
     categoryId,
     name: category.name,
   };
+};
 
+export const getAdminCategoryTreeService = async () => {
+  const categories = await findAllCategoriesForTree();
+
+  return buildCategoryTree(categories);
+};
+
+export const getAdminCategoryStatsService = async () => {
+  const [
+    totalCategories,
+    activeCategories,
+    inactiveCategories,
+    productsInCategories,
+  ] = await Promise.all([
+    countAllCategories(),
+
+    countCategoriesByStatus("active"),
+
+    countCategoriesByStatus("inactive"),
+
+    countProductsWithCategory(),
+  ]);
+
+  return {
+    totalCategories,
+    activeCategories,
+    inactiveCategories,
+    productsInCategories,
+  };
+};
+
+export const getAdminCategoryOptionsService = async ({ status = "" } = {}) => {
+  const normalizedStatus = status?.trim().toLowerCase();
+
+  if (normalizedStatus && !CATEGORY_STATUSES.includes(normalizedStatus)) {
+    throw new HandleError("Invalid category status", 400);
+  }
+
+  const categories = await findCategoryOptions({
+    status: normalizedStatus || undefined,
+  });
+
+  return categories.map((category) => ({
+    id: category._id,
+
+    name: category.name,
+
+    parentCategory: category.parentCategory,
+
+    status: category.status,
+
+    sortOrder: category.sortOrder,
+  }));
 };

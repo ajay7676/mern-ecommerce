@@ -1,5 +1,5 @@
 import Category from "../../catalog/models/category.model.js";
-import Product from '../../product/models/product.model.js'
+import Product from "../../product/models/product.model.js";
 
 export const findCategoryById = (categoryId) => {
   return Category.findById(categoryId);
@@ -82,8 +82,7 @@ export const findChildrenByParentId = (parentId) => {
     .lean();
 };
 
-
-//  For Delete Category 
+//  For Delete Category
 
 export const countChildCategories = (categoryId) => {
   return Category.countDocuments({
@@ -99,4 +98,49 @@ export const countProductsByCategory = (categoryId) => {
 
 export const deleteCategoryById = (categoryId) => {
   return Category.findByIdAndDelete(categoryId);
+};
+
+export const findAllCategoriesForTree = () => {
+  return Category.find({})
+    .select("_id name slug parentCategory status sortOrder")
+    .sort({
+      sortOrder: 1,
+      name: 1,
+    })
+    .lean();
+};
+
+export const findCategoryOptions = ({ status } = {}) => {
+  const filter = {};
+
+  if (status) {
+    filter.status = status;
+  }
+
+  return Category.find(filter)
+    .select("_id name parentCategory status sortOrder")
+    .sort({
+      sortOrder: 1,
+      name: 1,
+    })
+    .lean();
+};
+
+export const countAllCategories = () => {
+  return Category.countDocuments();
+};
+
+export const countCategoriesByStatus = (status) => {
+  return Category.countDocuments({
+    status,
+  });
+};
+
+
+export const countProductsWithCategory = () => {
+  return Product.countDocuments({
+    category: {
+      $ne: null,
+    },
+  });
 };
