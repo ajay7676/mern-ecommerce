@@ -129,7 +129,7 @@ const getAdminCategoriesService = async (queryParams = {}) => {
     level,
     isActive,
     page = 1,
-    limit = 20,
+    limit = 10,
   } = queryParams;
 
   const query = {
@@ -163,7 +163,7 @@ const getAdminCategoriesService = async (queryParams = {}) => {
   }
 
   const currentPage = Number(page) || 1;
-  const perPage = Number(limit) || 20;
+  const perPage = Number(limit) || 10;
   const skip = (currentPage - 1) * perPage;
 
   const [categories, totalCategories] = await Promise.all([
@@ -199,7 +199,7 @@ const getPublicCategoriesService = async (queryParams = {}) => {
     level,
     isFeatured,
     page = 1,
-    limit = 50,
+    limit = 10,
   } = queryParams;
 
   const query = {
@@ -234,7 +234,7 @@ const getPublicCategoriesService = async (queryParams = {}) => {
   }
 
   const currentPage = Number(page) || 1;
-  const perPage = Number(limit) || 50;
+  const perPage = Number(limit) || 10;
   const skip = (currentPage - 1) * perPage;
 
   const [categories, totalCategories] = await Promise.all([
