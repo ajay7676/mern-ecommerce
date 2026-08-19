@@ -2,6 +2,8 @@ import CategoryRow from "./CategoryRow";
 
 const CategoryTable = ({
   categories,
+  page,
+  limit,
   onEdit,
   onDelete,
   onToggle,
@@ -62,13 +64,17 @@ const CategoryTable = ({
 
         <tbody>
           {categories.map(
-            (category) => (
+            (category , index) => (
               <CategoryRow
-                key={category.id}
+                key={category._id}
+                index={index}
+                page={page}
+                limit={limit}
                 category={category}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onToggle={onToggle}
+                
               />
             ),
           )}

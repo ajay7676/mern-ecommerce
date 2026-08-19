@@ -76,7 +76,7 @@ const CategoryTreeItem = ({
             {item.children.map(
               (child) => (
                 <CategoryTreeItem
-                  key={child.id}
+                  key={child._id}
                   item={child}
                   level={
                     level + 1

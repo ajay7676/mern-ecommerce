@@ -65,13 +65,102 @@ export const countCategories = (filter) => {
   return Category.countDocuments(filter);
 };
 
-export const findCategories = ({ filter, skip, limit, sort }) => {
-  return Category.find(filter)
-    .populate("parentCategory", "name slug")
-    .sort(sort)
-    .skip(skip)
-    .limit(limit)
-    .lean();
+export const findCategories = async ({
+  filter,
+  skip,
+  limit,
+  sort,
+}) => {
+  return Category.aggregate([
+    {
+      $match: filter,
+    },
+
+    {
+      $lookup: {
+        from: "products",
+        localField: "_id",
+        foreignField: "category",
+        as: "products",
+      },
+    },
+
+    {
+      $addFields: {
+        productCount: {
+          $size: "$products",
+        },
+      },
+    },
+
+    {
+      $lookup: {
+        from: "categories",
+        localField: "parentCategory",
+        foreignField: "_id",
+        as: "parentCategoryData",
+      },
+    },
+
+    {
+      $addFields: {
+        parentCategory: {
+          $cond: [
+            {
+              $gt: [
+                {
+                  $size: "$parentCategoryData",
+                },
+                0,
+              ],
+            },
+
+            {
+              $arrayElemAt: [
+                "$parentCategoryData",
+                0,
+              ],
+            },
+
+            null,
+          ],
+        },
+      },
+    },
+
+    {
+      $project: {
+        name: 1,
+        slug: 1,
+        description: 1,
+        status: 1,
+        sortOrder: 1,
+        icon: 1,
+        image: 1,
+        seo: 1,
+        createdAt: 1,
+        updatedAt: 1,
+
+        productCount: 1,
+
+        "parentCategory._id": 1,
+        "parentCategory.name": 1,
+        "parentCategory.slug": 1,
+      },
+    },
+
+    {
+      $sort: sort,
+    },
+
+    {
+      $skip: skip,
+    },
+
+    {
+      $limit: limit,
+    },
+  ]);
 };
 
 export const findChildrenByParentId = (parentId) => {

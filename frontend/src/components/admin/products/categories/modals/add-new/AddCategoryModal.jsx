@@ -169,7 +169,8 @@ const AddCategoryModal = ({
   }
 
   return (
-    <div
+    <>
+         <div
       className="
         fixed
         inset-0
@@ -353,13 +354,14 @@ const AddCategoryModal = ({
               disabled:opacity-60
             "
           >
-            <FiPlus size={17} / >
+            <FiPlus size={17} />
 
             {isPending ? "Creating..." : "Create Category"}
           </button>
         </footer>
       </form>
     </div>
+    </>
   );
 };
 

@@ -1,9 +1,5 @@
-import { useMemo, useState } from "react";
-import {
-  categories,
-  categoryStats,
-  categoryTree,
-} from "../../../../data/admin/products/categories.data";
+import { useMemo, useState, useEffect } from "react";
+import { categoryTree } from "../../../../data/admin/products/categories.data";
 import CategoriesHeader from "../../../../components/admin/products/categories/CategoriesHeader";
 import CategoryFilters from "../../../../components/admin/products/categories/CategoryFilters";
 import CategoryStats from "../../../../components/admin/products/categories/CategoryStats";
@@ -16,12 +12,14 @@ import EditCategoryModal from "../../../../components/admin/products/categories/
 import useCategories from "../../../../hooks/admin/queries/products/categories/useCategories";
 
 import useDebounce from "../../../../hooks/useDebounce";
+import useCategoryStats from "../../../../hooks/admin/queries/products/categories/useCategoryStats";
+import useCategoriesTree from "../../../../hooks/admin/queries/products/categories/useCategoriesTree";
 const CategoriesPage = () => {
   const [search, setSearch] = useState("");
 
   const [status, setStatus] = useState("");
 
-  const [parent, setParent] = useState("");
+  const [parentCategory, setParentCategory] = useState("");
 
   const [page, setPage] = useState(1);
 
@@ -33,37 +31,46 @@ const CategoriesPage = () => {
 
   const [editingCategory, setEditingCategory] = useState(null);
 
-  console.log(editingCategory);
+  const debouncedSearch = useDebounce(search, 400);
 
-  const filteredCategories = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
+  const { data, isLoading, isFetching, isError, error } = useCategories({
+    page,
+    limit,
 
-    return categories.filter((category) => {
-      const matchesSearch =
-        !normalizedSearch ||
-        category.name.toLowerCase().includes(normalizedSearch);
+    search: debouncedSearch,
 
-      const matchesStatus = !status || category.status === status;
+    status,
 
-      const matchesParent =
-        !parent || category.parentCategory?.toLowerCase() === parent;
+    parentCategory,
 
-      return matchesSearch && matchesStatus && matchesParent;
-    });
-  }, [search, status, parent]);
+    sortBy: "sortOrder",
 
-  const paginatedCategories = useMemo(() => {
-    const start = (page - 1) * limit;
+    sortOrder: "asc",
+  });
 
-    return filteredCategories.slice(start, start + limit);
-  }, [filteredCategories, page, limit]);
+  const {
+    data: statsData,
+    isLoading: isStatsLoading,
+    isError: isStatsError,
+  } = useCategoryStats();
+  const {
+    data: treeData,
+    isLoading: isTreeLoading,
+    isError: isTreeError,
+  } = useCategoriesTree();
 
-  const totalPages = Math.max(Math.ceil(filteredCategories.length / limit), 1);
+  const categories = data?.data?.categories ?? [];
+
+  const pagination = data?.data?.pagination ?? {};
+
+  const stats = statsData?.data?.stats;
+
+  const categoryTree = treeData?.data?.tree ?? [];
 
   const handleReset = () => {
     setSearch("");
     setStatus("");
-    setParent("");
+    setParentCategory("");
     setPage(1);
   };
 
@@ -83,26 +90,11 @@ const CategoriesPage = () => {
   const parentCategories = categories
     .filter((category) => category.level === 0)
     .map((category) => ({
-      id: category.id,
+      id: category._id,
       name: category.name,
     }));
 
-  const debouncedSearch = useDebounce(search, 400);
-
-  const { data, isLoading, isFetching, isError, error } = useCategories({
-    page,
-    limit,
-
-    search: debouncedSearch,
-
-    status,
-
-    parentCategory: parent,
-
-    sortBy: "sortOrder",
-
-    sortOrder: "asc",
-  });
+  const hasActiveFilters = Boolean(search.trim() || status || parentCategory);
 
   return (
     <>
@@ -128,7 +120,7 @@ const CategoriesPage = () => {
             status={status}
             onStatusChange={setStatus}
             parent={parent}
-            onParentChange={setParent}
+            onParentChange={setParentCategory}
             onFilter={() => setPage(1)}
             onReset={handleReset}
           />
@@ -145,22 +137,30 @@ const CategoriesPage = () => {
             {/* LEFT SIDE */}
 
             <div className="min-w-0 space-y-4">
-              <CategoryStats stats={categoryStats} />
+              <CategoryStats
+                stats={stats}
+                isLoading={isStatsLoading}
+                isError={isStatsError}
+              />
 
               <CategoryTableCard
-                categories={paginatedCategories}
-                page={page}
-                limit={limit}
-                total={filteredCategories.length}
-                totalPages={totalPages}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onToggle={handleToggle}
+                categories={categories}
+                isLoading={isLoading}
+                isFetching={isFetching}
+                isError={isError}
+                error={error}
+                page={pagination.currentPage ?? page}
+                limit={pagination.limit ?? limit}
+                total={pagination.totalCategories ?? 0}
+                totalPages={pagination.totalPages ?? 1}
+                hasFilters={hasActiveFilters}
                 onPageChange={setPage}
-                onLimitChange={(value) => {
-                  setLimit(value);
+                onLimitChange={(newLimit) => {
+                  setLimit(newLimit);
                   setPage(1);
                 }}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
               />
             </div>
 
@@ -193,6 +193,7 @@ const CategoriesPage = () => {
         parentCategories={parentCategories}
         isSubmitting={false}
         onClose={() => setEditingCategory(null)}
+        mode="edit"
         onSubmit={async ({
           categoryId,
           payload,

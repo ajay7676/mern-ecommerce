@@ -61,3 +61,19 @@ export const updateCategory = async ({
 
   return response.data;
 };
+
+
+export const getCategoryStats = async () => {
+  const response = await api.get(
+    "/admin/categories/stats",
+  );
+
+  return response.data;
+};
+
+
+export const getCategoriesTree = async() => {
+    const response = await api.get("/admin/categories/tree");
+
+    return response.data;
+}

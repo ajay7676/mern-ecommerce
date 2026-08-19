@@ -21,7 +21,7 @@ const CategoryTree = ({
       <div>
         {items.map((item) => (
           <CategoryTreeItem
-            key={item.id}
+            key={item._id}
             item={item}
           />
         ))}

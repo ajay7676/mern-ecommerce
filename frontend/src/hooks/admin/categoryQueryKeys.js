@@ -30,4 +30,8 @@ export const categoryQueryKeys = {
     ...categoryQueryKeys.all,
     "stats",
   ],
+   options: () => [
+    ...categoryQueryKeys.all,
+    "options",
+  ],
 };

@@ -1,22 +1,11 @@
-import {
-  FiChevronDown,
-  FiChevronRight,
-  FiEdit2,
-  FiFolder,
-  FiTrash2,
-} from "react-icons/fi";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
 
 import CategoryStatusBadge from "./CategoryStatusBadge";
 
-const CategoryRow = ({
-  category,
-  onEdit,
-  onDelete,
-  onToggle,
-}) => {
-  const isChild =
-    category.level > 0;
-
+const CategoryRow = ({ category, onEdit, onDelete, index, page, limit }) => {
+  const isChild = category.level > 0;
+  const rowNumber = (page - 1) * limit + index + 1;
+  const isSubcategory = Boolean(category.parentCategory);
   return (
     <tr
       className="
@@ -44,24 +33,19 @@ const CategoryRow = ({
         )}
       </td>
 
-      <td className="w-13.75 px-2">
-        {category.number}
-      </td>
+      <td className="w-13.75 px-2">{rowNumber}</td>
 
-      <td className="min-w-52.5 px-2">
+      {/* <td className="min-w-52.5 px-2">
         <div
           className="flex items-center gap-2.5"
           style={{
-            paddingLeft:
-              category.level * 18,
+            paddingLeft: category.level * 18,
           }}
         >
-          {category.hasChildren ? (
+          {category.parentCategory ? (
             <button
               type="button"
-              onClick={() =>
-                onToggle(category)
-              }
+              onClick={() => onToggle(category)}
               className="
                 grid
                 h-5
@@ -72,15 +56,6 @@ const CategoryRow = ({
                 hover:bg-slate-100
               "
             >
-              {category.expanded ? (
-                <FiChevronDown
-                  size={13}
-                />
-              ) : (
-                <FiChevronRight
-                  size={13}
-                />
-              )}
             </button>
           ) : (
             <span className="w-5">
@@ -97,10 +72,7 @@ const CategoryRow = ({
             </span>
           )}
 
-          <FiFolder
-            size={15}
-            className="shrink-0 text-slate-600"
-          />
+          <FiFolder size={15} className="shrink-0 text-slate-600" />
 
           <span
             className="
@@ -111,44 +83,47 @@ const CategoryRow = ({
           >
             {category.name}
           </span>
+          <span
+            className="
+              whitespace-nowrap
+              font-medium
+              text-slate-800
+            "
+          >
+            {category.slug}
+          </span>
+        </div>
+      </td> */}
+      <td className="px-5 py-4 text-sm text-slate-600">
+        <div>
+          <p className="font-medium text-slate-900">{category.name}</p>
+
+          <p className="mt-0.5 text-xs text-slate-400">
+            {isSubcategory
+              ? `Under ${category.parentCategory.name}`
+              : "Top-level category"}
+          </p>
         </div>
       </td>
-
-      <td className="min-w-41.25 px-2">
-        {category.parentCategory ? (
-          category.parentCategory
-        ) : (
-          <span>
-            — (Top Level)
-          </span>
-        )}
+      <td className="px-5 py-4 text-sm text-slate-600">
+        {category.parentCategory?.name ?? "—"}
       </td>
-
-      <td className="w-22.5 px-2">
-        {category.products}
-      </td>
+      <td className="w-22.5 px-2">{category.productCount ?? 0}</td>
 
       <td className="w-27.5 px-2">
-        <CategoryStatusBadge
-          status={category.status}
-        />
+        <CategoryStatusBadge status={category.status} />
       </td>
 
-      <td className="w-25 px-2">
-        {category.sortOrder}
-      </td>
+      <td className="w-25 px-2">{category.sortOrder ?? 0}</td>
 
       <td className="w-26.25 px-2">
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={() =>
-              onEdit(category)
-            }
+            onClick={() => onEdit(category)}
             aria-label={`Edit ${category.name}`}
             className="
               text-slate-700
-              cursor-pointer
               transition
               hover:text-violet-600
             "
@@ -158,14 +133,11 @@ const CategoryRow = ({
 
           <button
             type="button"
-            onClick={() =>
-              onDelete(category)
-            }
+            onClick={() => onDelete(category)}
             aria-label={`Delete ${category.name}`}
             className="
               text-slate-700
               transition
-              cursor-pointer
               hover:text-red-500
             "
           >
