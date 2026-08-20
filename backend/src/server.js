@@ -15,7 +15,8 @@ import adminUserRoutes from "./modules/admin/users/adminUser.routes.js";
 import productVariantRoutes from "./modules/catalog/routes/productVariant.routes.js";
 import userRoutes from "./routes/userRoutes.js";
 import categoryRoutes from "./modules/catalog/routes/category.routes.js";
-import adminCategoryRoutes from './modules/admin/categories/adminCategory.routes.js'
+import adminCategoryRoutes from "./modules/admin/categories/adminCategory.routes.js";
+import adminBrandRoutes from "./modules/admin/brands/adminBrand.routes.js";
 import categoryAttributeRoutes from "./modules/catalog/routes/categoryAttribute.routes.js";
 import productImageUploadRoutes from "./modules/product/routes/productImageUpload.routes.js";
 // import cartRoutes from './routes/cartRoutes.js'
@@ -25,7 +26,6 @@ import connectDB from "./config/db.js";
 import errorHandler from "./middleware/errorMiddleware.js";
 import cookieParser from "cookie-parser";
 import path from "path";
-
 
 const app = express();
 
@@ -60,6 +60,7 @@ app.use("/api/v1", productRoutes);
 app.use("/api/v1", adminUserRoutes);
 app.use("/api/v1", productVariantRoutes);
 app.use("/api/v1", categoryRoutes);
+app.use("/api/v1", adminBrandRoutes);
 app.use("/api/v1", adminCategoryRoutes);
 app.use("/api/v1", categoryAttributeRoutes);
 app.use("/api/v1", userRoutes);
@@ -75,7 +76,6 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 await connectDB();
-
 
 const server = app.listen(PORT, () => {
   console.log(`Server is running on PORT Number ${PORT}`);

@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
  const brandLogoSchema = new mongoose.Schema(
   {
-    public_id: {
+    publicId: {
       type: String,
       trim: true,
     },
@@ -16,6 +16,28 @@ import mongoose from 'mongoose';
       type: String,
       trim: true,
       maxlength: [120, "Logo alt text cannot exceed 120 characters"],
+    },
+  },
+    {
+    _id: false,
+  }
+ )
+ const brandBannerSchema = new mongoose.Schema(
+  {
+    publicId: {
+      type: String,
+      trim: true,
+    },
+
+    url: {
+      type: String,
+      trim: true,
+    },
+
+    alt: {
+      type: String,
+      trim: true,
+      maxlength: [120, "Banner alt text cannot exceed 120 characters"],
     },
   },
     {
@@ -67,21 +89,18 @@ const brandSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       index: true,
+      maxlength: [100, "Brand slug cannot exceed 100 characters"],
     },
 
     description: {
       type: String,
       trim: true,
       maxlength: [1000, "Brand description cannot exceed 1000 characters"],
+      default: "",
     },
 
     logo: brandLogoSchema,
-
-    website: {
-      type: String,
-      trim: true,
-       default: "",
-    },
+    banner: brandBannerSchema,
     status: {
       type: String,
       enum: ["active", "inactive"],
@@ -133,8 +152,15 @@ const brandSchema = new mongoose.Schema(
 );
 
 
-brandSchema.index({ isActive: 1, isDeleted: 1 });
-brandSchema.index({ isFeatured: 1, isActive: 1, isDeleted: 1 });
+brandSchema.index({
+  status: 1,
+  sortOrder: 1,
+});
+
+brandSchema.index({
+  isFeatured: 1,
+  sortOrder: 1,
+});
 brandSchema.index({ createdAt: -1 });
 
 const BrandModel = mongoose.model("Brand", brandSchema);
