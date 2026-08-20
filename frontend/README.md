@@ -132,3 +132,69 @@ Features included
 ✅ Accessible keyboard navigation
 ✅ Reusable UI components
 ✅ Production-ready architecture
+
+
+
+
+// Brands
+
+
+features/
+└── admin/
+    └── brands/
+        ├── api/
+        │   └── brands.api.js
+        │
+        ├── hooks/
+        │   ├── useBrands.js
+        │   ├── useBrand.js
+        │   ├── useBrandStats.js
+        │   ├── useBrandOverview.js
+        │   ├── useTopBrands.js
+        │   ├── useBrandOptions.js
+        │   ├── useCreateBrand.js
+        │   ├── useUpdateBrand.js
+        │   ├── useDeleteBrand.js
+        │   └── useToggleFeaturedBrand.js
+        │
+        ├── components/
+        │   ├── BrandsHeader.jsx
+        │   ├── BrandFilters.jsx
+        │   ├── BrandStats.jsx
+        │   ├── BrandStatCard.jsx
+        │   ├── BrandTableCard.jsx
+        │   ├── BrandTable.jsx
+        │   ├── BrandRow.jsx
+        │   ├── BrandStatusBadge.jsx
+        │   ├── BrandPagination.jsx
+        │   ├── BrandOverview.jsx
+        │   ├── TopBrands.jsx
+        │   ├── BrandQuickTips.jsx
+        │   ├── BrandTableSkeleton.jsx
+        │   ├── BrandEmptyState.jsx
+        │   ├── AddBrandModal.jsx
+        │   ├── EditBrandModal.jsx
+        │   └── DeleteBrandModal.jsx
+        │
+        ├── utils/
+        │   ├── brandQueryKeys.js
+        │   ├── brandValidation.js
+        │   ├── brandApiError.js
+        │   └── generateBrandSlug.js
+        │
+        └── pages/
+            └── BrandsPage.jsx
+
+
+Phase 1   Brand domain/model + API design
+Phase 2   Static responsive Brands page
+Phase 3   GET brands + server pagination/filter/search
+Phase 4   Brand stats API
+Phase 5   Brand overview + top-brands APIs
+Phase 6   Add Brand modal + POST API
+Phase 7   Edit Brand modal + PATCH API
+Phase 8   Delete Brand + dependency protection
+Phase 9   Featured brand toggle
+Phase 10  Logo upload with Cloudinary
+Phase 11  Loading/empty/error states
+Phase 12  Export + polish + responsive testing            

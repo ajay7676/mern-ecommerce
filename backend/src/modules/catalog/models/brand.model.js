@@ -80,28 +80,31 @@ const brandSchema = new mongoose.Schema(
     website: {
       type: String,
       trim: true,
+       default: "",
     },
-
-    seo: brandSeoSchema,
-
-    isActive: {
-      type: Boolean,
-      default: true,
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
       index: true,
     },
-
     isFeatured: {
       type: Boolean,
       default: false,
       index: true,
     },
-
+    sortOrder: {
+      type: Number,
+      min: 0,
+      default: 0,
+      index: true,
+    },
+    seo: brandSeoSchema,
     isDeleted: {
       type: Boolean,
       default: false,
       index: true,
     },
-
     deletedAt: {
       type: Date,
     },

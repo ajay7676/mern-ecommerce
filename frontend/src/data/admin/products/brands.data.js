@@ -1,0 +1,141 @@
+export const brandStats = [
+  {
+    id: "total",
+    label: "Total Brands",
+    value: 36,
+    type: "total",
+  },
+  {
+    id: "active",
+    label: "Active Brands",
+    value: 30,
+    type: "active",
+  },
+  {
+    id: "inactive",
+    label: "Inactive Brands",
+    value: 4,
+    type: "inactive",
+  },
+  {
+    id: "products",
+    label: "Products using Brands",
+    value: 256,
+    type: "products",
+  },
+];
+
+export const brands = [
+  {
+    id: "1",
+    name: "Nike",
+    slug: "nike",
+    logo: "https://dummyimage.com/70x40/ffffff/111111&text=NIKE",
+    productCount: 45,
+    status: "active",
+    isFeatured: true,
+    sortOrder: 1,
+  },
+  {
+    id: "2",
+    name: "Adidas",
+    slug: "adidas",
+    logo: "https://dummyimage.com/70x40/ffffff/111111&text=ADIDAS",
+    productCount: 38,
+    status: "active",
+    isFeatured: true,
+    sortOrder: 2,
+  },
+  {
+    id: "3",
+    name: "Puma",
+    slug: "puma",
+    logo: "https://dummyimage.com/70x40/ffffff/111111&text=PUMA",
+    productCount: 28,
+    status: "active",
+    isFeatured: false,
+    sortOrder: 3,
+  },
+  {
+    id: "4",
+    name: "Levi's",
+    slug: "levis",
+    logo: "https://dummyimage.com/70x40/ffffff/111111&text=LEVIS",
+    productCount: 24,
+    status: "active",
+    isFeatured: false,
+    sortOrder: 4,
+  },
+  {
+    id: "5",
+    name: "Zara",
+    slug: "zara",
+    logo: "https://dummyimage.com/70x40/ffffff/111111&text=ZARA",
+    productCount: 22,
+    status: "active",
+    isFeatured: true,
+    sortOrder: 5,
+  },
+  {
+    id: "6",
+    name: "H&M",
+    slug: "hm",
+    logo: "https://dummyimage.com/70x40/ffffff/111111&text=H%26M",
+    productCount: 18,
+    status: "active",
+    isFeatured: false,
+    sortOrder: 6,
+  },
+  {
+    id: "7",
+    name: "Reebok",
+    slug: "reebok",
+    logo: "https://dummyimage.com/70x40/ffffff/111111&text=REEBOK",
+    productCount: 16,
+    status: "inactive",
+    isFeatured: false,
+    sortOrder: 7,
+  },
+  {
+    id: "8",
+    name: "Under Armour",
+    slug: "under-armour",
+    logo: "https://dummyimage.com/70x40/ffffff/111111&text=UA",
+    productCount: 14,
+    status: "active",
+    isFeatured: false,
+    sortOrder: 8,
+  },
+  {
+    id: "9",
+    name: "Gucci",
+    slug: "gucci",
+    logo: "https://dummyimage.com/70x40/ffffff/111111&text=GUCCI",
+    productCount: 10,
+    status: "inactive",
+    isFeatured: false,
+    sortOrder: 9,
+  },
+  {
+    id: "10",
+    name: "Tommy Hilfiger",
+    slug: "tommy-hilfiger",
+    logo: "https://dummyimage.com/70x40/ffffff/111111&text=TOMMY",
+    productCount: 8,
+    status: "active",
+    isFeatured: false,
+    sortOrder: 10,
+  },
+];
+
+export const topBrands = brands
+  .slice()
+  .sort((a, b) => b.productCount - a.productCount)
+  .slice(0, 5);
+
+export const brandOverview = {
+  totalBrands: 36,
+  active: 30,
+  inactive: 4,
+  withoutProducts: 2,
+};
