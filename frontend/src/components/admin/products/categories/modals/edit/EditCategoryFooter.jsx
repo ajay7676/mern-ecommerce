@@ -1,6 +1,6 @@
 import { FiSave } from 'react-icons/fi'
 
-const EditCategoryFooter = ({onClose,isSubmitting}) => {
+const EditCategoryFooter = ({onClose,isPending}) => {
   return (
         <footer
           className="
@@ -24,7 +24,7 @@ const EditCategoryFooter = ({onClose,isSubmitting}) => {
               onClose
             }
             disabled={
-              isSubmitting
+              isPending
             }
             className="
               h-10
@@ -48,7 +48,7 @@ const EditCategoryFooter = ({onClose,isSubmitting}) => {
           <button
             type="submit"
             disabled={
-              isSubmitting
+              isPending
             }
             className="
               inline-flex
@@ -73,7 +73,7 @@ const EditCategoryFooter = ({onClose,isSubmitting}) => {
               size={16}
             />
 
-            {isSubmitting
+            {isPending
               ? "Saving..."
               : "Save Changes"}
           </button>

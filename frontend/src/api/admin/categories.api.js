@@ -28,9 +28,7 @@ export const getCategories = async ({
   return response.data;
 };
 
-export const getCategoryById = async (
-  categoryId,
-) => {
+export const getCategoryById = async (categoryId) => {
   const response = await api.get(
     `/admin/categories/${categoryId}`,
   );
@@ -76,4 +74,13 @@ export const getCategoriesTree = async() => {
     const response = await api.get("/admin/categories/tree");
 
     return response.data;
+}
+
+export const deleteCategory = async (categoryId) => {
+
+
+   const response = await api.delete(`/admin/categories/${categoryId}`);
+
+   return response.data;
+
 }

@@ -49,7 +49,7 @@ const CategoryStats = ({ stats, isLoading = false, isError = false }) => {
             key={index}
             className="
               flex
-              min-h-[82px]
+              min-h-20.5
               items-center
               gap-4
               rounded-xl

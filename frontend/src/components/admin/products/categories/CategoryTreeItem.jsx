@@ -1,4 +1,8 @@
 import {
+  useState,
+} from "react";
+
+import {
   FiChevronDown,
   FiChevronRight,
   FiFolder,
@@ -11,15 +15,31 @@ const CategoryTreeItem = ({
   const hasChildren =
     item.children?.length > 0;
 
+  const [
+    expanded,
+    setExpanded,
+  ] = useState(
+    level === 0,
+  );
+
+  const isInactive =
+    item.status ===
+    "inactive";
+
   return (
     <div>
       <div
         className="
+          group
           flex
-          min-h-7.25
+          min-h-7.5
           items-center
           gap-2
+          rounded-md
+          px-1
           text-[12px]
+          transition
+          hover:bg-slate-50
         "
         style={{
           paddingLeft:
@@ -27,47 +47,75 @@ const CategoryTreeItem = ({
         }}
       >
         {hasChildren ? (
-          item.expanded ||
-          level === 0 ? (
-            <FiChevronDown
-              size={13}
-              className="text-slate-500"
-            />
-          ) : (
-            <FiChevronRight
-              size={13}
-              className="text-slate-500"
-            />
-          )
+          <button
+            type="button"
+            onClick={() =>
+              setExpanded(
+                (current) =>
+                  !current,
+              )
+            }
+            className="
+              grid
+              h-5
+              w-5
+              shrink-0
+              place-items-center
+              rounded
+              text-slate-400
+              transition
+              hover:bg-slate-100
+              hover:text-slate-700
+            "
+          >
+            {expanded ? (
+              <FiChevronDown
+                size={13}
+                className="cursor-pointer"
+              />
+            ) : (
+              <FiChevronRight
+                size={13}
+              />
+            )}
+          </button>
         ) : (
-          <FiChevronRight
-            size={12}
-            className="text-slate-400"
-          />
+          <span className="grid h-5 w-5 place-items-center">
+            <FiChevronRight
+              size={12}
+              className="text-slate-300"
+            />
+          </span>
         )}
 
         <FiFolder
           size={14}
-          className="text-slate-600"
+          className="
+            shrink-0
+            text-slate-500
+          "
         />
 
         <span
-          className={
-            item.danger
-              ? "text-red-500"
-              : "text-slate-700"
-          }
+          className={`
+            truncate
+            font-medium
+            ${
+              isInactive
+                ? "text-red-500"
+                : "text-slate-700"
+            }
+          `}
         >
           {item.name}
         </span>
       </div>
 
       {hasChildren &&
-        (item.expanded ||
-          level === 0) && (
+        expanded && (
           <div
             className="
-              ml-4.5
+              ml-2.5
               border-l
               border-dotted
               border-slate-200
@@ -76,7 +124,9 @@ const CategoryTreeItem = ({
             {item.children.map(
               (child) => (
                 <CategoryTreeItem
-                  key={child._id}
+                  key={
+                    child._id
+                  }
                   item={child}
                   level={
                     level + 1

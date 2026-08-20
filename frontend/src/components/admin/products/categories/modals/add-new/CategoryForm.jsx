@@ -16,7 +16,7 @@ const CategoryForm = ({
   onImageChange,
   onRemoveImage,
   disabled,
-  mode={mode}
+  mode = { mode },
 }) => {
   const preview = imagePreview || existingImage?.url || "";
 
@@ -46,6 +46,11 @@ const CategoryForm = ({
         onChange={onChange}
         disabled={disabled}
       />
+      {mode === "edit" && (
+        <p className="mt-1 text-xs text-amber-600">
+          Changing the slug may affect existing category URLs.
+        </p>
+      )}
     </div>
   );
 };

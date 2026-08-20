@@ -125,6 +125,7 @@ const CategoryRow = ({ category, onEdit, onDelete, index, page, limit }) => {
             className="
               text-slate-700
               transition
+              cursor-pointer
               hover:text-violet-600
             "
           >
@@ -139,6 +140,7 @@ const CategoryRow = ({ category, onEdit, onDelete, index, page, limit }) => {
               text-slate-700
               transition
               hover:text-red-500
+              cursor-pointer
             "
           >
             <FiTrash2 size={15} />

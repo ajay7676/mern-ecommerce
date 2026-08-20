@@ -4,11 +4,10 @@ import { getCategoryById } from "../../../../../api/admin/categories.api";
 
 const useCategory = (categoryId, { enabled = true }) => {
   return useQuery({
-    queryKey: categoryQueryKeys.details(categoryId),
-    queryFn: () => {
-      getCategoryById(categoryId);
-    },
+    queryKey: categoryQueryKeys.detail(categoryId),
 
+    queryFn: () => getCategoryById(categoryId),
+    
     enabled: enabled && Boolean(categoryId),
     staleTime: 30 * 1000,
     retry: (failureCount, error) => {

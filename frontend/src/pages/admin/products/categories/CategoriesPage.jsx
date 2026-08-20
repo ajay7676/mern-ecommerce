@@ -1,5 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
-import { categoryTree } from "../../../../data/admin/products/categories.data";
+import { useState } from "react";
 import CategoriesHeader from "../../../../components/admin/products/categories/CategoriesHeader";
 import CategoryFilters from "../../../../components/admin/products/categories/CategoryFilters";
 import CategoryStats from "../../../../components/admin/products/categories/CategoryStats";
@@ -14,6 +13,7 @@ import useCategories from "../../../../hooks/admin/queries/products/categories/u
 import useDebounce from "../../../../hooks/useDebounce";
 import useCategoryStats from "../../../../hooks/admin/queries/products/categories/useCategoryStats";
 import useCategoriesTree from "../../../../hooks/admin/queries/products/categories/useCategoriesTree";
+import DeleteCategoryModal from "../../../../components/admin/products/categories/modals/delete/DeleteCategoryModal";
 const CategoriesPage = () => {
   const [search, setSearch] = useState("");
 
@@ -29,7 +29,9 @@ const CategoriesPage = () => {
 
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
 
-  const [editingCategory, setEditingCategory] = useState(null);
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+
+  const [deletingCategory, setDeletingCategory] = useState(null);
 
   const debouncedSearch = useDebounce(search, 400);
 
@@ -75,25 +77,18 @@ const CategoriesPage = () => {
   };
 
   const handleEdit = (category) => {
-    console.log("Edit category", category);
-    setEditingCategory(category);
+    setEditingCategoryId(category._id);
   };
 
   const handleDelete = (category) => {
-    console.log("Delete category", category);
+    setDeletingCategory(category);
   };
-
-  const handleToggle = (category) => {
-    console.log("Toggle category", category);
-  };
-
   const parentCategories = categories
-    .filter((category) => category.level === 0)
+    .filter((category) => category.level === 0 || 1)
     .map((category) => ({
       id: category._id,
       name: category.name,
     }));
-
   const hasActiveFilters = Boolean(search.trim() || status || parentCategory);
 
   return (
@@ -174,7 +169,11 @@ const CategoriesPage = () => {
               xl:grid-cols-1
             "
             >
-              <CategoryTree items={categoryTree} />
+              <CategoryTree
+                tree={categoryTree}
+                isTreeLoading={isTreeLoading}
+                isTreeError={isTreeError}
+              />
 
               <QuickTipsCard />
 
@@ -188,28 +187,27 @@ const CategoriesPage = () => {
         </div>
       </main>
       <EditCategoryModal
-        open={Boolean(editingCategory)}
-        category={editingCategory}
+        open={Boolean(editingCategoryId)}
+        categoryId={editingCategoryId}
         parentCategories={parentCategories}
-        isSubmitting={false}
-        onClose={() => setEditingCategory(null)}
+        onClose={() => setEditingCategoryId(null)}
         mode="edit"
-        onSubmit={async ({
-          categoryId,
-          payload,
-          image,
-          removeExistingImage,
-        }) => {
-          console.log("Category ID:", categoryId);
+        // onSubmit={async ({
+        //   categoryId,
+        //   payload,
+        //   image,
+        //   removeExistingImage,
+        // }) => {
+        //   console.log("Category ID:", categoryId);
 
-          console.log("Update payload:", payload);
+        //   console.log("Update payload:", payload);
 
-          console.log("New image:", image);
+        //   console.log("New image:", image);
 
-          console.log("Remove old image:", removeExistingImage);
+        //   console.log("Remove old image:", removeExistingImage);
 
-          await new Promise((resolve) => setTimeout(resolve, 800));
-        }}
+        //   await new Promise((resolve) => setTimeout(resolve, 800));
+        // }}
       />
       <AddCategoryModal
         open={addCategoryOpen}
@@ -221,6 +219,11 @@ const CategoriesPage = () => {
 
           await new Promise((resolve) => setTimeout(resolve, 800));
         }}
+      />
+      <DeleteCategoryModal
+        open={Boolean(deletingCategory)}
+        category={deletingCategory}
+        onClose={() => setDeletingCategory(null)}
       />
     </>
   );

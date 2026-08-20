@@ -1,6 +1,6 @@
 import { FiX } from "react-icons/fi";
 
-const EditCategoryHeader = ({ onClose, isSubmitting }) => {
+const EditCategoryHeader = ({ onClose, isPending }) => {
   return (
     <header
       className="
@@ -42,7 +42,7 @@ const EditCategoryHeader = ({ onClose, isSubmitting }) => {
       <button
         type="button"
         onClick={onClose}
-        disabled={isSubmitting}
+        disabled={isPending}
         className="
               grid
               h-9
@@ -52,6 +52,7 @@ const EditCategoryHeader = ({ onClose, isSubmitting }) => {
               rounded-lg
               text-slate-500
               transition
+              cursor-pointer
               hover:bg-slate-100
               hover:text-slate-900
             "

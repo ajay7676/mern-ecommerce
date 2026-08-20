@@ -1,19 +1,53 @@
-export const getCategoryFormValues = (category) => {
-  const safeCategory = category ?? {};
+
+export const getCategoryFormValues = (
+  category,
+) => {
+  const safe =
+    category ?? {};
+
   return {
-    name: safeCategory.name ?? "",
-    slug: safeCategory.slug ?? "",
-    description: safeCategory.description ?? "",
+    name:
+      safe.name ?? "",
+
+    slug:
+      safe.slug ?? "",
+
+    description:
+      safe.description ?? "",
+
     parentCategory:
-      safeCategory.parentCategory?._id ?? safeCategory.parentCategory ?? "",
-    status: safeCategory.status ?? "active",
-    sortOrder: safeCategory.sortOrder ?? "",
-    icon: safeCategory.icon ?? "",
-    seoTitle: safeCategory.seo?.title ?? "",
-    seoDescription: safeCategory.seo?.description ?? "",
-    seoKeywords: Array.isArray(safeCategory.seo?.keywords)
-      ? safeCategory.seo.keywords.join(", ")
-      : "",
+      safe.parentCategory?._id ??
+      safe.parentCategory ??
+      "",
+
+    status:
+      safe.status ??
+      "active",
+
+    sortOrder:
+      safe.sortOrder ??
+      "",
+
+    icon:
+      safe.icon ??
+      "",
+
+    seoTitle:
+      safe.seo?.title ??
+      "",
+
+    seoDescription:
+      safe.seo?.description ??
+      "",
+
+    seoKeywords:
+      Array.isArray(
+        safe.seo?.keywords,
+      )
+        ? safe.seo.keywords.join(
+            ", ",
+          )
+        : "",
   };
 };
 
