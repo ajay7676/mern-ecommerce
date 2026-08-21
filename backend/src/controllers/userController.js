@@ -18,7 +18,14 @@ const createRegisterUser = async (req, res, next) => {
       return next(new HandleError("User is already exist", 400));
     }
     const user = await User.create({ name, email, password });
-    return sendToken(user, 201, res, "User registered successfully");
+
+    const createdUser = await User.findById(user._id).select("-password");
+
+     if (!createdUser) {
+      return next(new HandleError("Something went wrong , While registering a user", 500));
+    }
+
+    return sendToken(createdUser, 201, res, "User registered successfully");
   } catch (error) {
     next(error);
   }

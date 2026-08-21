@@ -181,14 +181,9 @@ export const uploadProductImagesService = async (files, { adminId } = {}) => {
       }),
     ),
   );
-   console.log("uploadResults");
-    console.log(uploadResults)
   const successfulImages = uploadResults
     .filter((result) => result.status === "fulfilled")
     .map((result) => result.value);
-
-    console.log("successfulImages")
-    console.log(successfulImages)
 
   const failedUpload = uploadResults.find(
     (result) => result.status === "rejected",
