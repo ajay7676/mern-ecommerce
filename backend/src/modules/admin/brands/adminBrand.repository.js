@@ -16,7 +16,27 @@ export const findBrandByName = (name) => {
     },
   });
 };
+export const findBrandUsingPublicId = (
+  publicId,
+) => {
+  return Brand.findOne({
+    $or: [
+      {
+        "logo.publicId":
+          publicId,
+      },
+      {
+        "banner.publicId":
+          publicId,
+      },
+    ],
+  })
+    .select("_id")
+    .lean();
+};
 
 export const createBrand = (payload) => {
   return Brand.create(payload);
 };
+
+

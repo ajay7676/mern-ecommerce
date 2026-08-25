@@ -6,9 +6,9 @@ import {
 } from "./adminBrand.repository.js";
 
 import { validateCreateBrandPayload } from "./adminBrand.validators.js";
+import { markBrandAssetsPermanent } from "./adminBrandUpload.service.js";
 
 export const createAdminBrandService = async (payload, adminId) => {
-
   const normalized = validateCreateBrandPayload(payload);
 
   const [existingSlug, existingName] = await Promise.all([
@@ -30,7 +30,19 @@ export const createAdminBrandService = async (payload, adminId) => {
   }
 
   try {
-    const brand = await createBrand({...normalized, createdBy: adminId});
+    const brand = await createBrand({ ...normalized, createdBy: adminId });
+
+    await markBrandAssetsPermanent([
+      brand.logo?.publicId,
+      brand.banner?.publicId,
+    ]);
+
+    if (!permanenceResult.success) {
+      console.error("Brand created but asset finalization failed:", {
+        brandId: brand._id,
+      });
+    }
+
     return brand;
   } catch (error) {
     /*

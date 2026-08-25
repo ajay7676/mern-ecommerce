@@ -1,10 +1,18 @@
 import express from "express";
 
-import { createAdminBrand, uploadBrandBanner, uploadBrandLogo } from "./adminBrand.controller.js";
+import {
+  createAdminBrand,
+  deleteTemporaryBrandUploads,
+  uploadBrandBanner,
+  uploadBrandLogo,
+} from "./adminBrand.controller.js";
 
 import { userAuth } from "../../../middleware/userAuthMIddleware.js";
 import adminOnly from "../../../middleware/adminMddleware.js";
-import { bannerUpload, logoUpload } from "../../../middleware/brandUpload.middleware.js";
+import {
+  bannerUpload,
+  logoUpload,
+} from "../../../middleware/brandUpload.middleware.js";
 
 const router = express.Router();
 
@@ -24,6 +32,12 @@ router.post(
   adminOnly,
   bannerUpload,
   uploadBrandBanner,
+);
+router.delete(
+  "/admin/brands/uploads",
+  userAuth,
+  adminOnly,
+  deleteTemporaryBrandUploads,
 );
 
 export default router;

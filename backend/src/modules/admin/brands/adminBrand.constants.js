@@ -10,21 +10,19 @@ export const MAX_BRAND_SEO_DESCRIPTION_LENGTH = 160;
 
 export const MAX_BRAND_SEO_KEYWORDS = 20;
 
+export const BRAND_LOGO_FOLDER = "ecommerce/brands/logos";
 
-export const BRAND_LOGO_FOLDER =
-  "ecommerce/brands/logos";
+export const BRAND_BANNER_FOLDER = "ecommerce/brands/banners";
 
-export const BRAND_BANNER_FOLDER =
-  "ecommerce/brands/banners";
+export const BRAND_LOGO_MAX_SIZE = 2 * 1024 * 1024;
 
-export const BRAND_LOGO_MAX_SIZE =
-  2 * 1024 * 1024;
+export const BRAND_BANNER_MAX_SIZE = 5 * 1024 * 1024;
 
-export const BRAND_BANNER_MAX_SIZE =
-  5 * 1024 * 1024;
+export const BRAND_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export const BRAND_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
+export const BRAND_UPLOAD_ALLOWED_FOLDERS = [
+  "ecommerce/brands/logos/",
+  "ecommerce/brands/banners/",
 ];
+
+export const MAX_BRAND_UPLOAD_DELETE_COUNT = 5;

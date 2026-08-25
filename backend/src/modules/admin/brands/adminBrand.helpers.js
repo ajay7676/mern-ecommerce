@@ -1,6 +1,6 @@
-export const normalizeBrandSlug = (
-  value = "",
-) => {
+// import cloudinary from "../../../config/cloudinary.js";
+
+export const normalizeBrandSlug = (value = "") => {
   return value
     .toString()
     .trim()
@@ -10,3 +10,15 @@ export const normalizeBrandSlug = (
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
 };
+
+
+
+// export const removeTemporaryTagFromAsset = async (publicId) => {
+//   if (!publicId) {
+//     return;
+//   }
+
+//   await cloudinary.uploader.remove_tag("temporary", [publicId], {
+//     resource_type: "image",
+//   });
+// };
