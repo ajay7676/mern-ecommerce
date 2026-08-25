@@ -1,5 +1,6 @@
 import { deleteImageFromCloudinary } from "../../../utils/cloudinary.js";
 import HandleError from "../../../utils/handleError.js";
+import { escapeRegex } from "./adminBrand.helpers.js";
 import {
   createBrand,
   findBrandById,
@@ -7,12 +8,16 @@ import {
   findBrandByNameExceptId,
   findBrandBySlug,
   findBrandBySlugExceptId,
+  countBrands,
+  findBrandDetailById,
+  findBrands,
 } from "./adminBrand.repository.js";
 
 import {
   validateBrandId,
   validateCreateBrandPayload,
   validateUpdateBrandPayload,
+  normalizeBrandQuery,
 } from "./adminBrand.validators.js";
 import { markBrandAssetsPermanent } from "./adminBrandUpload.service.js";
 
@@ -187,3 +192,82 @@ export const updateAdminBrandService = async ({ brandId, payload }) => {
 
   return brand;
 };
+
+export const getAdminBrandsService = async (query) => {
+  const { page, limit, search, status, sortBy, sortOrder } =
+    normalizeBrandQuery(query);
+
+  const filter = {};
+
+  if (search) {
+    const regex = new RegExp(escapeRegex(search), "i");
+
+    filter.$or = [
+      {
+        name: regex,
+      },
+      {
+        slug: regex,
+      },
+    ];
+  }
+
+  if (status) {
+    filter.status = status;
+  }
+
+  const skip = (page - 1) * limit;
+
+  const sort = {
+    [sortBy]: sortOrder === "desc" ? -1 : 1,
+
+    _id: 1,
+  };
+
+  const [brands, totalBrands] = await Promise.all([
+    findBrands({
+      filter,
+      skip,
+      limit,
+      sort,
+    }),
+
+    countBrands(filter),
+  ]);
+
+  const totalPages = Math.ceil(totalBrands / limit);
+
+  return {
+    brands,
+
+    pagination: {
+      currentPage: page,
+      limit,
+      totalBrands,
+      totalPages,
+
+      hasNextPage: page < totalPages,
+
+      hasPreviousPage: page > 1,
+    },
+  };
+};
+
+export const getAdminBrandService =
+  async (brandId) => {
+    validateBrandId(brandId);
+
+    const brand =
+      await findBrandDetailById(
+        brandId,
+      );
+
+    if (!brand) {
+      throw new HandleError(
+        "Brand not found",
+        404,
+      );
+    }
+
+    return brand;
+  };

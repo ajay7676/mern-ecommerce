@@ -1,4 +1,10 @@
-import { createAdminBrandService ,updateAdminBrandService} from "./adminBrand.service.js";
+import {
+  createAdminBrandService,
+  getAdminBrandService,
+  getAdminBrandsService,
+  updateAdminBrandService,
+} from "./adminBrand.service.js";
+
 import {
   deleteTemporaryBrandUploadsService,
   uploadBrandBannerService,
@@ -107,6 +113,38 @@ export const updateAdminBrand = async (req, res, next) => {
       success: true,
 
       message: "Brand updated successfully",
+
+      data: {
+        brand,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdminBrands = async (req, res, next) => {
+  try {
+    const result = await getAdminBrandsService(req.query);
+
+    res.status(200).json({
+      success: true,
+      message: "Brands fetched successfully",
+
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdminBrand = async (req, res, next) => {
+  try {
+    const brand = await getAdminBrandService(req.params.brandId);
+
+    res.status(200).json({
+      success: true,
+      message: "Brand fetched successfully",
 
       data: {
         brand,

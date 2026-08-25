@@ -61,3 +61,98 @@ export const findBrandByNameExceptId = (name, brandId) => {
     },
   });
 };
+
+export const findBrandDetailById = (brandId) => {
+  return Brand.findById(brandId).lean();
+};
+
+export const countBrands = (filter) => {
+  return Brand.countDocuments(filter);
+};
+
+export const findBrands = async ({
+  filter,
+  skip,
+  limit,
+  sort,
+}) => {
+  return Brand.aggregate([
+    {
+      $match: filter,
+    },
+
+    {
+      $lookup: {
+        from: "products",
+
+        let: {
+          brandId: "$_id",
+        },
+
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: [
+                  "$brand",
+                  "$$brandId",
+                ],
+              },
+            },
+          },
+
+          {
+            $count: "count",
+          },
+        ],
+
+        as: "productStats",
+      },
+    },
+
+    {
+      $addFields: {
+        productCount: {
+          $ifNull: [
+            {
+              $arrayElemAt: [
+                "$productStats.count",
+                0,
+              ],
+            },
+            0,
+          ],
+        },
+      },
+    },
+
+    {
+      $project: {
+        name: 1,
+        slug: 1,
+        description: 1,
+        logo: 1,
+        banner: 1,
+        status: 1,
+        isFeatured: 1,
+        sortOrder: 1,
+        seo: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        productCount: 1,
+      },
+    },
+
+    {
+      $sort: sort,
+    },
+
+    {
+      $skip: skip,
+    },
+
+    {
+      $limit: limit,
+    },
+  ]);
+};

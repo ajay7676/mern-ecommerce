@@ -26,3 +26,20 @@ export const BRAND_UPLOAD_ALLOWED_FOLDERS = [
 ];
 
 export const MAX_BRAND_UPLOAD_DELETE_COUNT = 5;
+
+
+export const BRAND_SORT_FIELDS = [
+  "name",
+  "slug",
+  "status",
+  "isFeatured",
+  "sortOrder",
+  "createdAt",
+  "updatedAt",
+];
+
+export const DEFAULT_BRAND_PAGE = 1;
+
+export const DEFAULT_BRAND_LIMIT = 10;
+
+export const MAX_BRAND_LIMIT = 100;

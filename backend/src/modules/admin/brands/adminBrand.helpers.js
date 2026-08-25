@@ -12,6 +12,13 @@ export const normalizeBrandSlug = (value = "") => {
 };
 
 
+export const escapeRegex = (value = "") => {
+  return value.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&",
+  );
+};
+
 
 // export const removeTemporaryTagFromAsset = async (publicId) => {
 //   if (!publicId) {

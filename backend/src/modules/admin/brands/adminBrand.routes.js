@@ -3,6 +3,8 @@ import express from "express";
 import {
   createAdminBrand,
   deleteTemporaryBrandUploads,
+  getAdminBrand,
+  getAdminBrands,
   updateAdminBrand,
   uploadBrandBanner,
   uploadBrandLogo,
@@ -40,6 +42,14 @@ router.delete(
   adminOnly,
   deleteTemporaryBrandUploads,
 );
+
+// GET ALL BRANDS
+
+router.get("/admin/brands", userAuth,getAdminBrands);
+router.get("/admin/brands/:brandId", userAuth, getAdminBrand );
+
+
+
 router.patch("/admin/brands/:brandId", userAuth, adminOnly, updateAdminBrand);
 
 export default router;
