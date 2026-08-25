@@ -1,7 +1,4 @@
-import {
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
 import BrandsHeader from "../../../../components/admin/products/brands/BrandsHeader";
 import BrandFilters from "../../../../components/admin/products/brands/BrandFilters";
@@ -11,96 +8,52 @@ import BrandOverview from "../../../../components/admin/products/brands/BrandOve
 import TopBrands from "../../../../components/admin/products/brands/TopBrands";
 import BrandQuickTips from "../../../../components/admin/products/brands/BrandQuickTips";
 
-
 import {
   brandOverview,
   brandStats,
-  brands,
   topBrands,
 } from "../../../../data/admin/products/brands.data";
+import useDebounce from "../../../../hooks/useDebounce";
+import useBrands from "../../../../hooks/admin/queries/products/brands/useBrands";
 
 const BrandsPage = () => {
-  const [search, setSearch] =
-    useState("");
+  const [page, setPage] = useState(1);
 
-  const [status, setStatus] =
-    useState("");
+  const [limit, setLimit] = useState(10);
 
-  const [page, setPage] =
-    useState(1);
+  const [search, setSearch] = useState("");
 
-  const [limit, setLimit] =
-    useState(10);
+  const [status, setStatus] = useState("");
 
-  const filteredBrands =
-    useMemo(() => {
-      const normalizedSearch =
-        search
-          .trim()
-          .toLowerCase();
+  const debouncedSearch = useDebounce(search, 400);
 
-      return brands.filter(
-        (brand) => {
-          const matchesSearch =
-            !normalizedSearch ||
-            brand.name
-              .toLowerCase()
-              .includes(
-                normalizedSearch,
-              ) ||
-            brand.slug
-              .toLowerCase()
-              .includes(
-                normalizedSearch,
-              );
+  const { data, isLoading, isFetching, isError, error } = useBrands({
+    page,
+    limit,
 
-          const matchesStatus =
-            !status ||
-            brand.status ===
-              status;
+    search: debouncedSearch,
 
-          return (
-            matchesSearch &&
-            matchesStatus
-          );
-        },
-      );
-    }, [
-      search,
-      status,
-    ]);
+    status,
 
-  const paginatedBrands =
-    useMemo(() => {
-      const start =
-        (page - 1) *
-        limit;
+    sortBy: "sortOrder",
 
-      return filteredBrands.slice(
-        start,
-        start + limit,
-      );
-    }, [
-      filteredBrands,
-      page,
-      limit,
-    ]);
+    sortOrder: "asc",
+  });
 
-  const totalPages =
-    Math.max(
-      Math.ceil(
-        filteredBrands.length /
-          limit,
-      ),
-      1,
-    );
+  const brands = data?.data?.brands ?? [];
 
-  const handleReset =
-    () => {
-      setSearch("");
-      setStatus("");
-      setPage(1);
-    };
+  const pagination = data?.data?.pagination ?? {};
+
+  console.log(brands);
+  console.log(pagination);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, status]);
+
+  const hasFilters = Boolean(search.trim() || status);
+
+  const handleReset = () => {};
 
   return (
     <main
@@ -115,33 +68,16 @@ const BrandsPage = () => {
     >
       <div className="mx-auto max-w-375">
         <BrandsHeader
-          onExport={() =>
-            console.log(
-              "Export brands",
-            )
-          }
-          onAddBrand={() =>
-            console.log(
-              "Add brand",
-            )
-          }
+          onExport={() => console.log("Export brands")}
+          onAddBrand={() => console.log("Add brand")}
         />
 
         <BrandFilters
-          search={search}
-          status={status}
-          onSearchChange={
-            setSearch
-          }
-          onStatusChange={
-            setStatus
-          }
-          onFilter={() =>
-            setPage(1)
-          }
-          onReset={
-            handleReset
-          }
+          search=""
+          status="active"
+          onSearchChange=""
+          onStatusChange={setStatus}
+          onReset={handleReset}
         />
 
         <div
@@ -154,55 +90,51 @@ const BrandsPage = () => {
           "
         >
           <div className="min-w-0 space-y-4">
-            <BrandStats
-              stats={brandStats}
-            />
-
+            <BrandStats stats={brandStats} />
             <BrandTableCard
-              brands={
-                paginatedBrands
-              }
+              brands={brands}
+              page={pagination.currentPage ?? page}
+              limit={pagination.limit ?? limit}
+              total={pagination.totalBrands ?? 0}
+              totalPages={pagination.totalPages ?? 1}
+              isLoading={isLoading}
+              isFetching={isFetching}
+              isError={isError}
+              error={error}
+              hasFilters={hasFilters}
+              onPageChange={setPage}
+              onLimitChange={(newLimit) => {
+                setLimit(newLimit);
+                setPage(1);
+              }}
+              onEdit={(brand) => {
+                console.log("Edit brand", brand);
+              }}
+              onDelete={(brand) => {
+                console.log("Delete brand", brand);
+              }}
+              onToggleFeatured={(brand) => {
+                console.log("Toggle featured", brand);
+              }}
+            />
+            {/* <BrandTableCard
+              brands={paginatedBrands}
               page={page}
               limit={limit}
-              total={
-                filteredBrands.length
-              }
-              totalPages={
-                totalPages
-              }
-              onPageChange={
-                setPage
-              }
-              onLimitChange={(
-                newLimit,
-              ) => {
-                setLimit(
-                  newLimit,
-                );
+              total={filteredBrands.length}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              onLimitChange={(newLimit) => {
+                setLimit(newLimit);
 
                 setPage(1);
               }}
-              onEdit={(brand) =>
-                console.log(
-                  "Edit brand",
-                  brand,
-                )
+              onEdit={(brand) => console.log("Edit brand", brand)}
+              onDelete={(brand) => console.log("Delete brand", brand)}
+              onToggleFeatured={(brand) =>
+                console.log("Toggle featured", brand)
               }
-              onDelete={(brand) =>
-                console.log(
-                  "Delete brand",
-                  brand,
-                )
-              }
-              onToggleFeatured={(
-                brand,
-              ) =>
-                console.log(
-                  "Toggle featured",
-                  brand,
-                )
-              }
-            />
+            /> */}
           </div>
 
           <aside
@@ -213,21 +145,11 @@ const BrandsPage = () => {
               xl:grid-cols-1
             "
           >
-            <BrandOverview
-              overview={
-                brandOverview
-              }
-            />
+            <BrandOverview overview={brandOverview} />
 
             <TopBrands
-              brands={
-                topBrands
-              }
-              onViewAll={() =>
-                console.log(
-                  "View all brands",
-                )
-              }
+              brands={topBrands}
+              onViewAll={() => console.log("View all brands")}
             />
 
             <BrandQuickTips />

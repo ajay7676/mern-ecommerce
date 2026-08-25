@@ -2,6 +2,8 @@ import BrandRow from "./BrandRow";
 
 const BrandTable = ({
   brands,
+  page,
+  limit,
   onEdit,
   onDelete,
   onToggleFeatured,
@@ -68,9 +70,14 @@ const BrandTable = ({
           {brands.map(
             (brand, index) => (
               <BrandRow
-                key={brand.id}
+                key={brand._id}
                 brand={brand}
-                index={index}
+                rowNumber={
+                  (page - 1) *
+                    limit +
+                  index +
+                  1
+                }
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onToggleFeatured={

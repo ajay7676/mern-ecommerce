@@ -1,18 +1,8 @@
-import {
-  FiEdit2,
-  FiStar,
-  FiTrash2,
-} from "react-icons/fi";
+import { FiEdit2, FiStar, FiTrash2 } from "react-icons/fi";
 
 import BrandStatusBadge from "./BrandStatusBadge";
 
-const BrandRow = ({
-  brand,
-  index,
-  onEdit,
-  onDelete,
-  onToggleFeatured,
-}) => {
+const BrandRow = ({ brand, rowNumber, onEdit, onDelete, onToggleFeatured }) => {
   return (
     <tr
       className="
@@ -26,56 +16,40 @@ const BrandRow = ({
       "
     >
       <td className="w-8 px-2">
-        <span className="cursor-grab text-slate-400">
-          ⠿
-        </span>
+        <span className="cursor-grab text-slate-400">⠿</span>
       </td>
 
-      <td className="w-12 px-2">
-        {index + 1}
-      </td>
+      <td className="w-12 px-2">{rowNumber }</td>
 
       <td className="min-w-45 px-2">
         <div className="flex items-center gap-3">
           <img
-            src={brand.logo}
-            alt={brand.name}
+            src={brand.logo?.url || "/images/brand-placeholder.png"}
+            alt={brand.logo?.alt || `${brand.name} logo`}
             className="
-              h-7
-              w-10
-              rounded
+              h-8
+              w-11
+              rounded-md
               object-contain
             "
           />
 
-          <span className="font-medium text-slate-900">
-            {brand.name}
-          </span>
+          <span className="font-medium text-slate-900">{brand.name}</span>
         </div>
       </td>
 
-      <td className="min-w-32.5 px-2">
-        {brand.slug}
-      </td>
+      <td className="min-w-32.5 px-2">{brand.slug}</td>
 
-      <td className="w-22.5 px-2">
-        {brand.productCount}
-      </td>
+      <td className="w-22.5 px-2">{brand.productCount}</td>
 
       <td className="w-25 px-2">
-        <BrandStatusBadge
-          status={brand.status}
-        />
+        <BrandStatusBadge status={brand.status} />
       </td>
 
       <td className="w-25 px-2">
         <button
           type="button"
-          onClick={() =>
-            onToggleFeatured(
-              brand,
-            )
-          }
+          onClick={() => onToggleFeatured(brand)}
           className="
             grid
             h-8
@@ -96,17 +70,13 @@ const BrandRow = ({
         </button>
       </td>
 
-      <td className="w-25 px-2">
-        {brand.sortOrder}
-      </td>
+      <td className="w-25 px-2">{brand.sortOrder}</td>
 
       <td className="w-27.5 px-2">
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() =>
-              onEdit(brand)
-            }
+            onClick={() => onEdit(brand)}
             className="
               text-slate-700
               transition
@@ -118,9 +88,7 @@ const BrandRow = ({
 
           <button
             type="button"
-            onClick={() =>
-              onDelete(brand)
-            }
+            onClick={() => onDelete(brand)}
             className="
               text-slate-700
               transition
