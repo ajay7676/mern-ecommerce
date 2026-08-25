@@ -3,6 +3,7 @@ import express from "express";
 import {
   createAdminBrand,
   deleteTemporaryBrandUploads,
+  updateAdminBrand,
   uploadBrandBanner,
   uploadBrandLogo,
 } from "./adminBrand.controller.js";
@@ -39,5 +40,6 @@ router.delete(
   adminOnly,
   deleteTemporaryBrandUploads,
 );
+router.patch("/admin/brands/:brandId", userAuth, adminOnly, updateAdminBrand);
 
 export default router;

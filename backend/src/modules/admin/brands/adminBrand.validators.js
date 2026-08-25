@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import HandleError from "../../../utils/handleError.js";
 
 import {
@@ -10,6 +11,14 @@ import {
 } from "./adminBrand.constants.js";
 
 import { normalizeBrandSlug } from "./adminBrand.helpers.js";
+
+export const validateBrandId = (brandId) => {
+  if (!brandId || !mongoose.isValidObjectId(brandId)) {
+    throw new HandleError("Invalid brand ID", 400 );
+  }
+
+  return brandId;
+};
 
 export const validateCreateBrandPayload = (payload = {}) => {
   const {
@@ -161,4 +170,350 @@ export const validateCreateBrandPayload = (payload = {}) => {
       keywords,
     },
   };
+};
+
+export const validateUpdateBrandPayload = (
+  payload = {},
+) => {
+  const allowedFields = [
+    "name",
+    "slug",
+    "description",
+    "logo",
+    "banner",
+    "status",
+    "isFeatured",
+    "sortOrder",
+    "seo",
+  ];
+
+  const receivedFields =
+    Object.keys(payload);
+
+  if (!receivedFields.length) {
+    throw new HandleError(
+      "At least one field is required",
+      400,
+    );
+  }
+
+  const invalidFields =
+    receivedFields.filter(
+      (field) =>
+        !allowedFields.includes(field),
+    );
+
+  if (invalidFields.length) {
+    throw new HandleError(
+      `Invalid update fields: ${invalidFields.join(", ")}`,
+      400,
+    );
+  }
+
+  const update = {};
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      payload,
+      "name",
+    )
+  ) {
+    if (
+      typeof payload.name !== "string" ||
+      !payload.name.trim()
+    ) {
+      throw new HandleError(
+        "Brand name is required",
+        400,
+        {
+          name:
+            "Brand name cannot be empty",
+        },
+      );
+    }
+
+    update.name =
+      payload.name.trim();
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      payload,
+      "slug",
+    )
+  ) {
+    const slug =
+      normalizeBrandSlug(
+        payload.slug,
+      );
+
+    if (!slug) {
+      throw new HandleError(
+        "Invalid brand slug",
+        400,
+        {
+          slug:
+            "Brand slug cannot be empty",
+        },
+      );
+    }
+
+    update.slug = slug;
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      payload,
+      "description",
+    )
+  ) {
+    const description =
+      payload.description?.trim() ??
+      "";
+
+    if (
+      description.length >
+      MAX_BRAND_DESCRIPTION_LENGTH
+    ) {
+      throw new HandleError(
+        "Brand description is too long",
+        400,
+        {
+          description:
+            `Description cannot exceed ${MAX_BRAND_DESCRIPTION_LENGTH} characters`,
+        },
+      );
+    }
+
+    update.description =
+      description;
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      payload,
+      "status",
+    )
+  ) {
+    const status =
+      payload.status
+        ?.trim()
+        .toLowerCase();
+
+    if (
+      !BRAND_STATUSES.includes(
+        status,
+      )
+    ) {
+      throw new HandleError(
+        "Invalid brand status",
+        400,
+        {
+          status:
+            "Status must be active or inactive",
+        },
+      );
+    }
+
+    update.status =
+      status;
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      payload,
+      "isFeatured",
+    )
+  ) {
+    if (
+      typeof payload.isFeatured !==
+      "boolean"
+    ) {
+      throw new HandleError(
+        "Invalid featured value",
+        400,
+        {
+          isFeatured:
+            "Featured must be true or false",
+        },
+      );
+    }
+
+    update.isFeatured =
+      payload.isFeatured;
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      payload,
+      "sortOrder",
+    )
+  ) {
+    const sortOrder =
+      Number(payload.sortOrder);
+
+    if (
+      !Number.isInteger(sortOrder) ||
+      sortOrder < 0
+    ) {
+      throw new HandleError(
+        "Invalid display order",
+        400,
+        {
+          sortOrder:
+            "Display order must be 0 or greater",
+        },
+      );
+    }
+
+    update.sortOrder =
+      sortOrder;
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      payload,
+      "logo",
+    )
+  ) {
+    const logo =
+      payload.logo;
+
+    if (
+      !logo?.publicId ||
+      !logo?.url
+    ) {
+      throw new HandleError(
+        "Invalid brand logo",
+        400,
+        {
+          logo:
+            "Logo must contain publicId and url",
+        },
+      );
+    }
+
+    update.logo = {
+      publicId:
+        logo.publicId.trim(),
+
+      url:
+        logo.url.trim(),
+
+      alt:
+        logo.alt?.trim() || "",
+    };
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      payload,
+      "banner",
+    )
+  ) {
+    const banner =
+      payload.banner;
+
+    if (
+      banner === null
+    ) {
+      update.banner = {
+        publicId: null,
+        url: null,
+        alt: "",
+      };
+    } else {
+      if (
+        !banner?.publicId ||
+        !banner?.url
+      ) {
+        throw new HandleError(
+          "Invalid brand banner",
+          400,
+          {
+            banner:
+              "Banner must contain publicId and url",
+          },
+        );
+      }
+
+      update.banner = {
+        publicId:
+          banner.publicId.trim(),
+
+        url:
+          banner.url.trim(),
+
+        alt:
+          banner.alt?.trim() || "",
+      };
+    }
+  }
+
+  if (
+    Object.prototype.hasOwnProperty.call(
+      payload,
+      "seo",
+    )
+  ) {
+    const seo =
+      payload.seo ?? {};
+
+    const title =
+      seo.title?.trim() ?? "";
+
+    const description =
+      seo.description?.trim() ?? "";
+
+    const keywords =
+      Array.isArray(
+        seo.keywords,
+      )
+        ? [
+            ...new Set(
+              seo.keywords
+                .map((keyword) =>
+                  String(keyword).trim(),
+                )
+                .filter(Boolean),
+            ),
+          ]
+        : [];
+
+    if (
+      title.length >
+      MAX_BRAND_SEO_TITLE_LENGTH
+    ) {
+      throw new HandleError(
+        "SEO title is too long",
+        400,
+        {
+          seoTitle:
+            `SEO title cannot exceed ${MAX_BRAND_SEO_TITLE_LENGTH} characters`,
+        },
+      );
+    }
+
+    if (
+      description.length >
+      MAX_BRAND_SEO_DESCRIPTION_LENGTH
+    ) {
+      throw new HandleError(
+        "SEO description is too long",
+        400,
+        {
+          seoDescription:
+            `SEO description cannot exceed ${MAX_BRAND_SEO_DESCRIPTION_LENGTH} characters`,
+        },
+      );
+    }
+
+    update.seo = {
+      title,
+      description,
+      keywords,
+    };
+  }
+
+  return update;
 };

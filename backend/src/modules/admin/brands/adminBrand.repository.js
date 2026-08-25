@@ -1,5 +1,4 @@
-
-import Brand from '../../catalog/models/brand.model.js'
+import Brand from "../../catalog/models/brand.model.js";
 
 export const findBrandBySlug = (slug) => {
   return Brand.findOne({
@@ -16,18 +15,14 @@ export const findBrandByName = (name) => {
     },
   });
 };
-export const findBrandUsingPublicId = (
-  publicId,
-) => {
+export const findBrandUsingPublicId = (publicId) => {
   return Brand.findOne({
     $or: [
       {
-        "logo.publicId":
-          publicId,
+        "logo.publicId": publicId,
       },
       {
-        "banner.publicId":
-          publicId,
+        "banner.publicId": publicId,
       },
     ],
   })
@@ -39,4 +34,30 @@ export const createBrand = (payload) => {
   return Brand.create(payload);
 };
 
+export const findBrandById = (brandId) => {
+  return Brand.findById(brandId);
+};
 
+export const findBrandBySlugExceptId = (slug, brandId) => {
+  return Brand.findOne({
+    slug,
+
+    _id: {
+      $ne: brandId,
+    },
+  });
+};
+
+export const findBrandByNameExceptId = (name, brandId) => {
+  return Brand.findOne({
+    _id: {
+      $ne: brandId,
+    },
+
+    name: {
+      $regex: `^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+
+      $options: "i",
+    },
+  });
+};
