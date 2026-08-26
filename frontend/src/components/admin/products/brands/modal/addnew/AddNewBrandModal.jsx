@@ -1,19 +1,28 @@
 import { useEffect, useState } from "react";
-
+import toast from "react-hot-toast";
 import AddBrandHeader from "./AddBrandHeader";
 import BrandFooter from "./BrandFooter";
 import BrandInformationSection from "../brandform/BrandInformationSection";
 import BrandLogoSection from "../brandform/BrandLogoSection";
 import BrandBannerSection from "../brandform/BrandBannerSection";
-import BrandVisibilitySection from '../brandform/BrandVisibilitySection'
+import BrandVisibilitySection from "../brandform/BrandVisibilitySection";
 import BrandPreview from "../brandform/BrandPreview";
 import BrandSeoSection from "../brandform/BrandSeoSection";
 
-import {INITIAL_BRAND_FORM} from '../../../../../../constants/admin/products/brandForm.constants'
+import { INITIAL_BRAND_FORM } from "../../../../../../constants/admin/products/brandForm.constants";
+import { useUploadBrandLogo } from "../../../../../../hooks/admin/mutations/products/brands/useUploadBrandLogo";
+import { useUploadBrandBanner } from "../../../../../../hooks/admin/mutations/products/brands/useUploadBrandBanner";
+import { useCreateBrand } from "../../../../../../hooks/admin/mutations/products/brands/useCreateBrand";
+import { useDeleteTemporaryBrandAsset } from "../../../../../../hooks/admin/mutations/products/brands/useDeleteTemporaryBrandAsset";
+import { generateSlug } from "../../../../../../utils/generateSlug";
+import { validateBrandForm } from "../../../../../../validation/admin/brand/brandForm.validators";
+import { buildCreateBrandPayload } from "../../../../../../utils/admin/products/brand/brandForm.helpers";
+import { deleteTemporaryBrandAsset } from "../../../../../../api/admin/brands.api";
 
 const AddNewBrandModal = ({ isOpen, onClose }) => {
-    const [values, setValues] = useState(INITIAL_BRAND_FORM);
-    const [errors, setErrors] = useState("")
+  const [values, setValues] = useState(INITIAL_BRAND_FORM);
+  const [errors, setErrors] = useState({});
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
 
   // ESC key
   useEffect(() => {
@@ -45,11 +54,206 @@ const AddNewBrandModal = ({ isOpen, onClose }) => {
     };
   }, [isOpen]);
 
-  const handleOnChange = () => {
+  const logoUpload = useUploadBrandLogo();
+  const bannerUpload = useUploadBrandBanner();
+  const deleteTemporaryAsset = useDeleteTemporaryBrandAsset();
 
+  const createBrandMutation = useCreateBrand();
+
+  const handleLogoUpload = async (file) => {
+    if (!file) return;
+
+    const previousLogo = values.logo;
+
+    try {
+      const response = await logoUpload.mutateAsync(file);
+
+      const newLogo = response?.data?.logo;
+
+      if (!newLogo) {
+        throw new Error("Invalid upload response");
+      }
+
+      setValues((current) => ({
+        ...current,
+        logo: newLogo,
+      }));
+
+      if (
+        previousLogo?.publicId &&
+        previousLogo.publicId !== newLogo.publicId
+      ) {
+        try {
+          await deleteTemporaryAsset.mutateAsync([previousLogo.publicId]);
+        } catch (cleanupError) {
+          console.error("Old temporary logo cleanup failed", cleanupError);
+        }
+      }
+    } catch (error) {
+      setErrors((current) => ({
+        ...current,
+
+        logo: error?.response?.data?.message || "Brand Logo upload failed",
+      }));
+    }
+  };
+
+  const handleBannerUpload = async (file) => {
+    if (!file) return;
+
+    const previousBanner = values.banner;
+
+    try {
+      const response = await bannerUpload.mutateAsync(file);
+
+      const newBanner = response?.data?.banner;
+
+      if (!newBanner) {
+        throw new Error("Invalid banner upload response");
+      }
+
+      setValues((current) => ({
+        ...current,
+
+        banner: newBanner,
+      }));
+
+      if (
+        previousBanner?.publicId &&
+        previousBanner.publicId !== newBanner.publicId
+      ) {
+        try {
+          await deleteTemporaryAsset.mutateAsync([previousBanner.publicId]);
+        } catch (cleanupError) {
+          console.error("Temporary banner cleanup failed", cleanupError);
+          toast.error("Temporary banner cleanup failed");
+        }
+      }
+    } catch (error) {
+      setErrors((current) => ({
+        ...current,
+        banner: error?.response?.data?.message || "Banner upload failed",
+      }));
+      toast.error(error?.response?.data?.message || "Banner upload failed");
+    }
+  };
+  const handleRemoveLogo = async () => {
+    const logo = values.logo;
+
+    if (!logo) return;
+
+    setValues((current) => ({
+      ...current,
+      logo: null,
+    }));
+
+    try {
+      await deleteTemporaryAsset.mutateAsync([logo.publicId]);
+    } catch (error) {
+      console.error("Brand Logo cleanup failed", error);
+    }
+  };
+
+  const handleRemoveBanner = async () => {
+    const banner = values.banner;
+
+    if (!banner) return;
+
+    setValues((current) => ({
+      ...current,
+      banner: null,
+    }));
+
+    try {
+      await deleteTemporaryAsset.mutateAsync([banner.publicId]);
+    } catch (error) {
+      console.error("Banner cleanup failed", error);
+    }
+  };
+
+  const handleChange = (field, value) => {
+    setValues((current) => {
+      const next = {
+        ...current,
+        [field]: value,
+      };
+
+      if (field === "name" && !slugManuallyEdited) {
+        next.slug = generateSlug(value);
+      }
+
+      return next;
+    });
+
+    if (field === "slug") {
+      setSlugManuallyEdited(true);
+    }
+
+    setErrors((current) => ({
+      ...current,
+      [field]: undefined,
+    }));
+  };
+  const handleSeoChange = (field, value) => {
+    setValues((current) => ({
+      ...current,
+
+      seo: {
+        ...current.seo,
+        [field]: value,
+      },
+    }));
+  };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const validationErrors = validateBrandForm(values);
+
+    if (Object.keys(validationErrors).length) {
+      setErrors(validationErrors);
+
+      return;
+    }
+
+    setErrors({});
+
+    const payload = buildCreateBrandPayload(values);
+
+    try {
+      await createBrandMutation.mutateAsync(payload);
+
+      toast.success("Brand created successfully");
+
+      onClose();
+    } catch (error) {
+      const response = error?.response?.data;
+
+      if (response?.errors) {
+        setErrors(response.errors);
+      }
+
+      toast.error(response?.message || "Failed to create brand");
+    }
+  };
+
+  const handleCancel = async () => {
+  const publicIds = [
+    values.logo?.publicId,
+    values.banner?.publicId,
+  ].filter(Boolean);
+
+  if (publicIds.length) {
+    await Promise.allSettled(
+      publicIds.map(
+        (publicId) =>
+          deleteTemporaryBrandAsset(
+            [publicId],
+          ),
+      ),
+    );
   }
 
-  const handleSubmit = () => {};
+  onClose();
+};
   return (
     <div
       className={`
@@ -84,10 +288,7 @@ const AddNewBrandModal = ({ isOpen, onClose }) => {
           ${isOpen ? "translate-x-0" : "translate-x-full"}
         `}
       >
-        <form
-         onSubmit={handleSubmit} 
-          className="flex h-full min-h-0 flex-col"
-         >
+        <form onSubmit={handleSubmit} className="flex h-full min-h-0 flex-col">
           {/* Header */}
 
           <AddBrandHeader onClose={onClose} />
@@ -95,24 +296,33 @@ const AddNewBrandModal = ({ isOpen, onClose }) => {
           {/* Scrollable content */}
 
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-6">
-            <div
-              className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_330px]"
-            >
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_330px]">
               {/* LEFT SIDE */}
 
               <main className="space-y-5">
                 <BrandInformationSection
-                   values={values}
-                   errors={errors}
-                   onChange={handleOnChange}
+                  values={values}
+                  errors={errors}
+                  onChange={handleChange}
                 />
-                <BrandLogoSection />
-                <BrandBannerSection />
+                <BrandLogoSection
+                  logo={values?.logo}
+                  error={errors.logo}
+                  isUploading={logoUpload.isPending}
+                  onUpload={handleLogoUpload}
+                  onRemove={handleRemoveLogo}
+                />
+                <BrandBannerSection
+                  banner={values?.banner}
+                  error={errors.banner}
+                  isUploading={bannerUpload.isPending}
+                  onUpload={handleBannerUpload}
+                  onRemove={handleRemoveBanner}
+                />
                 <BrandVisibilitySection
-                   values={values}
-                   onChange={handleOnChange}
+                  values={values}
+                  onChange={handleChange}
                 />
-
               </main>
               {/* RIGHT SIDE */}
 
@@ -124,20 +334,27 @@ const AddNewBrandModal = ({ isOpen, onClose }) => {
               xl:self-start
             "
               >
-                <BrandPreview
-                   values={values}
-                />
+                <BrandPreview values={values} />
                 <BrandSeoSection
                   seo={values.seo}
-                   errors={errors}
-                   onChange={handleOnChange}
+                  errors={errors}
+                  onChange={handleSeoChange}
                 />
               </aside>
             </div>
           </div>
           {/* Footer */}
 
-          <BrandFooter onClose={onClose} />
+          <BrandFooter
+            onClose={handleCancel}
+            disabled={
+              createBrandMutation.isPending ||
+              logoUpload.isPending ||
+              bannerUpload.isPending
+            }
+            onSubmit={handleSubmit}
+            isPending={createBrandMutation.isPending}
+          />
         </form>
       </aside>
     </div>

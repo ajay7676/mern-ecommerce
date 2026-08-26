@@ -47,8 +47,6 @@ const BrandsPage = () => {
 
   const pagination = data?.data?.pagination ?? {};
 
-  console.log(brands);
-  console.log(pagination);
 
   useEffect(() => {
     setPage(1);
