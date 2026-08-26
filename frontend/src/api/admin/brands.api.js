@@ -1,6 +1,5 @@
 import api from "../axios";
 
-
 export const getBrands = async ({
   page = 1,
   limit = 10,
@@ -20,6 +19,41 @@ export const getBrands = async ({
 
       sortBy,
       sortOrder,
+    },
+  });
+
+  return response.data;
+};
+
+export const uploadBrandLogo = async (file) => {
+  const formData = new FormData();
+  formData.append("logo", file);
+
+  const response = await api.post("/admin/brands/upload-logo", formData);
+
+  return response.data;
+};
+
+export const uploadBrandBanner = async (file) => {
+  const formData = new FormData();
+
+  formData.append("banner", file);
+
+  const response = await api.post("/admin/brands/upload-banner", formData);
+
+  return response.data;
+};
+
+export const createBrand = async (payload) => {
+  const response = await api.post("/admin/brands", payload);
+
+  return response.data;
+};
+
+export const deleteTemporaryBrandAsset = async (publicId) => {
+  const response = await api.delete("/admin/brands/uploads", {
+    data: {
+      publicId,
     },
   });
 

@@ -70,6 +70,7 @@ const BrandsHeader = ({ onExport, onAddBrand }) => {
             px-7
             text-sm
             font-semibold
+            cursor-pointer
             text-white
             shadow-sm
             transition
