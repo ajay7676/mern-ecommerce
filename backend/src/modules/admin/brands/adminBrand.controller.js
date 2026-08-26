@@ -35,7 +35,7 @@ export const uploadBrandLogo = async (req, res, next) => {
   try {
     const adminId = req.user?._id;
 
-    const image = await uploadBrandLogoService({
+    const logo = await uploadBrandLogoService({
       file: req.file,
 
       adminId,
@@ -47,7 +47,7 @@ export const uploadBrandLogo = async (req, res, next) => {
       message: "Brand logo uploaded successfully",
 
       data: {
-        image,
+        logo,
       },
     });
   } catch (error) {
@@ -59,7 +59,7 @@ export const uploadBrandBanner = async (req, res, next) => {
   try {
     const adminId = req.user?._id;
 
-    const image = await uploadBrandBannerService({
+    const banner = await uploadBrandBannerService({
       file: req.file,
 
       adminId,
@@ -71,7 +71,7 @@ export const uploadBrandBanner = async (req, res, next) => {
       message: "Brand banner uploaded successfully",
 
       data: {
-        image,
+        banner,
       },
     });
   } catch (error) {

@@ -256,6 +256,8 @@ export const deleteTemporaryBrandUploadsService = async ({ payload }) => {
 };
 
 export const markBrandAssetsPermanent = async (publicIds = []) => {
+    verifyCloudinaryConfiguration();
+
   const normalizedPublicIds = [
     ...new Set(
       publicIds

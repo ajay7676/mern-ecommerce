@@ -53,7 +53,7 @@ export const createBrand = async (payload) => {
 export const deleteTemporaryBrandAsset = async (publicId) => {
   const response = await api.delete("/admin/brands/uploads", {
     data: {
-      publicId,
+      publicIds: publicId,
     },
   });
 

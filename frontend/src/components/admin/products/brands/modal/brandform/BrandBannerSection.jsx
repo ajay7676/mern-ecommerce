@@ -10,7 +10,7 @@ const BrandBannerSection = ({
   banner,
   error,
   isUploading = false,
-  onSelect,
+  onUpload,
   onRemove,
 }) => {
   return (
@@ -77,7 +77,7 @@ const BrandBannerSection = ({
             accept="image/png,image/jpeg,image/webp"
             disabled={isUploading}
             onChange={(event) =>
-              onSelect(
+              onUpload(
                 event.target.files?.[0] ??
                   null,
               )

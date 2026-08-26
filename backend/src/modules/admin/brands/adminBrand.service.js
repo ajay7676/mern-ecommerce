@@ -44,17 +44,10 @@ export const createAdminBrandService = async (payload, adminId) => {
 
   try {
     const brand = await createBrand({ ...normalized, createdBy: adminId });
-
     await markBrandAssetsPermanent([
       brand.logo?.publicId,
       brand.banner?.publicId,
     ]);
-
-    if (!permanenceResult.success) {
-      console.error("Brand created but asset finalization failed:", {
-        brandId: brand._id,
-      });
-    }
 
     return brand;
   } catch (error) {
@@ -144,6 +137,9 @@ export const updateAdminBrandService = async ({ brandId, payload }) => {
 
   if (newAssetPublicIds.length) {
     const permanenceResult = await markBrandAssetsPermanent(newAssetPublicIds);
+
+    console.log("permanenceResult");
+    console.log(permanenceResult);
 
     if (!permanenceResult.success) {
       console.error("Brand updated but new asset finalization failed", {
@@ -253,21 +249,14 @@ export const getAdminBrandsService = async (query) => {
   };
 };
 
-export const getAdminBrandService =
-  async (brandId) => {
-    validateBrandId(brandId);
+export const getAdminBrandService = async (brandId) => {
+  validateBrandId(brandId);
 
-    const brand =
-      await findBrandDetailById(
-        brandId,
-      );
+  const brand = await findBrandDetailById(brandId);
 
-    if (!brand) {
-      throw new HandleError(
-        "Brand not found",
-        404,
-      );
-    }
+  if (!brand) {
+    throw new HandleError("Brand not found", 404);
+  }
 
-    return brand;
-  };
+  return brand;
+};

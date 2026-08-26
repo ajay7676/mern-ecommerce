@@ -10,7 +10,7 @@ const BrandLogoSection = ({
   logo,
   error,
   isUploading = false,
-  onSelect,
+  onUpload,
   onRemove,
 }) => {
   return (
@@ -75,7 +75,7 @@ const BrandLogoSection = ({
             accept="image/png,image/jpeg,image/webp"
             disabled={isUploading}
             onChange={(event) =>
-              onSelect(
+              onUpload(
                 event.target.files?.[0] ??
                   null,
               )
@@ -125,6 +125,7 @@ const BrandLogoSection = ({
                     grid
                     h-8
                     w-8
+                    cursor-pointer
                     place-items-center
                     rounded-full
                     bg-white
