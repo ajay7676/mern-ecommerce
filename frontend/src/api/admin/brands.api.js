@@ -77,3 +77,12 @@ export const updateBrand = async({
 
   return response.data.data;
 };
+
+
+export const deleteBrand = async(brandId) => {
+
+  const response = await api.delete(`/admin/brands/${brandId}`);
+
+  return response.data;
+
+}

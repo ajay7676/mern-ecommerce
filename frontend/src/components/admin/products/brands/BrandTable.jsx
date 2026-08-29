@@ -1,25 +1,49 @@
+import { useState } from "react";
 import BrandRow from "./BrandRow";
+import DeleteBrandModal from "./modal/delete/DeleteBrandModal";
 
 const BrandTable = ({
-  brands,
+  brands=[],
   page,
   limit,
   onEdit,
-  onDelete,
   onToggleFeatured,
 }) => {
+  const [selectedBrand, setSelectedBrand] = useState(null);
+
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const handleDeleteOpenModal = (brand) => {
+     setSelectedBrand(brand)
+    setIsDeleteOpen(true);
+  };
+  const handleDeleteCloseModal = () => {
+    setIsDeleteOpen(false);
+    setSelectedBrand(null)
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <table
-        className="
+    <>
+      {isDeleteOpen ? (
+        <>
+          <DeleteBrandModal
+            isOpen={isDeleteOpen}
+            onClose={handleDeleteCloseModal}
+            brand={selectedBrand}
+          />
+        </>
+      ) : null}
+      <div className="overflow-x-auto">
+        <table
+          className="
           w-full
           min-w-212.5
           border-collapse
         "
-      >
-        <thead>
-          <tr
-            className="
+        >
+          <thead>
+            <tr
+              className="
               h-11
               border-b
               border-slate-200
@@ -29,66 +53,42 @@ const BrandTable = ({
               font-semibold
               text-slate-900
             "
-          >
-            <th className="w-8 px-2" />
+            >
+              <th className="w-8 px-2" />
 
-            <th className="px-2">
-              #
-            </th>
+              <th className="px-2">#</th>
 
-            <th className="px-2">
-              Brand
-            </th>
+              <th className="px-2">Brand</th>
 
-            <th className="px-2">
-              Slug
-            </th>
+              <th className="px-2">Slug</th>
 
-            <th className="px-2">
-              Products
-            </th>
+              <th className="px-2">Products</th>
 
-            <th className="px-2">
-              Status
-            </th>
+              <th className="px-2">Status</th>
 
-            <th className="px-2">
-              Featured
-            </th>
+              <th className="px-2">Featured</th>
 
-            <th className="px-2">
-              Sort Order
-            </th>
+              <th className="px-2">Sort Order</th>
 
-            <th className="px-2">
-              Actions
-            </th>
-          </tr>
-        </thead>
+              <th className="px-2">Actions</th>
+            </tr>
+          </thead>
 
-        <tbody>
-          {brands.map(
-            (brand, index) => (
+          <tbody>
+            {brands.map((brand, index) => (
               <BrandRow
                 key={brand._id}
                 brand={brand}
-                rowNumber={
-                  (page - 1) *
-                    limit +
-                  index +
-                  1
-                }
+                rowNumber={(page - 1) * limit + index + 1}
                 onEdit={onEdit}
-                onDelete={onDelete}
-                onToggleFeatured={
-                  onToggleFeatured
-                }
+                onDelete={handleDeleteOpenModal}
+                onToggleFeatured={onToggleFeatured}
               />
-            ),
-          )}
-        </tbody>
-      </table>
-    </div>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 };
 

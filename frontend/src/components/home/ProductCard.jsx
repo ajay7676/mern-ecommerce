@@ -34,7 +34,7 @@ const ProductCard = ({ product }) => {
 
       <div className="p-3">
         <h3 className="text-sm font-bold text-slate-900 truncate">
-          {product.brand.name}
+          {product?.brand?.name}
         </h3>
 
         <p className="text-xs text-slate-500 truncate">{product.name}</p>

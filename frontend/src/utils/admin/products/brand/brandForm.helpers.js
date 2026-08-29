@@ -48,35 +48,33 @@ export const buildCreateBrandPayload = (values) => {
 export const getBrandFormValues = (brand = null) => {
   const safe = brand ?? {};
 
-  console.log(safe)
   const exitingInfo = {
-    name: brand?.name ?? "",
-    slug: brand?.slug ?? "",
-    description: brand?.description ?? "",
+    name: safe.brand?.name ?? "",
+    slug: safe.brand?.slug ?? "",
+    description: safe.brand?.description ?? "",
 
-    logo: brand?.logo
+    logo: safe.brand?.logo
       ? {
           publicId: brand.logo.publicId ?? "",
           url: brand.logo.url ?? "",
         }
       : null,
 
-    banner: brand?.banner
+    banner: safe.brand?.banner
       ? {
           publicId: brand.banner.publicId ?? "",
           url: brand.banner.url ?? "",
         }
       : null,
 
-    metaTitle: brand?.seo?.metaTitle ?? "",
-    metaDescription: brand?.seo?.metaDescription ?? "",
-    metaKeywords: brand?.seo?.metaKeywords ?? "",
+    metaTitle: safe.brand?.seo?.metaTitle ?? "",
+    metaDescription: safe.brand?.seo?.metaDescription ?? "",
+    metaKeywords: safe.brand?.seo?.metaKeywords ?? "",
 
-    status: brand?.status ?? "active",
-    isFeatured: Boolean(brand?.isFeatured),
-    sortOrder: brand?.sortOrder ?? 0,
+    status: safe.brand?.status ?? "active",
+    isFeatured: Boolean(safe.brand?.isFeatured),
+    sortOrder: safe.brand?.sortOrder ?? 0,
   };
-  console.log(exitingInfo);
 
   return exitingInfo;
 };

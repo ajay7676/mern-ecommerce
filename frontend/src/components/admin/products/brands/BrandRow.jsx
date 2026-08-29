@@ -3,6 +3,8 @@ import { FiEdit2, FiStar, FiTrash2 } from "react-icons/fi";
 import BrandStatusBadge from "./BrandStatusBadge";
 
 const BrandRow = ({ brand, rowNumber, onEdit, onDelete, onToggleFeatured }) => {
+  
+
   return (
     <tr
       className="
@@ -93,6 +95,7 @@ const BrandRow = ({ brand, rowNumber, onEdit, onDelete, onToggleFeatured }) => {
             className="
               text-slate-700
               transition
+              cursor-pointer
               hover:text-red-500
             "
           >

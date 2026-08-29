@@ -17,6 +17,7 @@ import useDebounce from "../../../../hooks/useDebounce";
 import useBrands from "../../../../hooks/admin/queries/products/brands/useBrands";
 import AddNewBrandModal from "../../../../components/admin/products/brands/modal/addnew/AddNewBrandModal";
 import EditBrandModal from "../../../../components/admin/products/brands/modal/edit/EditBrandModal";
+// import DeleteBrandModal from '../../../../components/admin/products/brands/modal/delete/DeleteBrandModal'
 
 const BrandsPage = () => {
   const [page, setPage] = useState(1);

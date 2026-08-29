@@ -1,8 +1,8 @@
 import { FiMail, FiPhone, FiUser } from "react-icons/fi";
-import FALLBACK_AVATAR from "../../../../../../public/images/user-placeholder.png";
 
 
 const UserPreview = ({ values }) => {
+  const FALLBACK_AVATAR= '/images/user-placeholder.png'
   const avatarUrl =
     values?.profileImage?.url ||
     FALLBACK_AVATAR;
