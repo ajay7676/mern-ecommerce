@@ -27,6 +27,10 @@ const deleteImageFromCloudinary = async (publicId) => {
     resource_type: "image",
     invalidate: true,
   });
+
+  if (result.result !== "ok" && result.result !== "not found") {
+    throw new Error(`Cloudinary deletion failed: ${result.result}`);
+  }
   return result;
 };
 

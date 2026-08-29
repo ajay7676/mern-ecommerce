@@ -1,5 +1,6 @@
 import {
   createAdminBrandService,
+  deleteAdminBrandService,
   getAdminBrandService,
   getAdminBrandsService,
   updateAdminBrandService,
@@ -149,6 +150,23 @@ export const getAdminBrand = async (req, res, next) => {
       data: {
         brand,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteAdminBrand = async (req, res, next) => {
+  try {
+    const {brandId} = req.params;
+
+    await deleteAdminBrandService({
+      brandId,
+      adminId: req.user?._id
+    })
+    res.status(200).json({
+      success: true,
+      message: "Brand Delele successfully",
     });
   } catch (error) {
     next(error);

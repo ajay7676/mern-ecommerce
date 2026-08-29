@@ -1,6 +1,10 @@
+import cloudinary, {
+  verifyCloudinaryConfiguration,
+} from "../../../config/cloudinary.js";
 import { deleteImageFromCloudinary } from "../../../utils/cloudinary.js";
 import HandleError from "../../../utils/handleError.js";
 import { escapeRegex } from "./adminBrand.helpers.js";
+import Product from '../../product/models/product.model.js'
 import {
   createBrand,
   findBrandById,
@@ -11,6 +15,8 @@ import {
   countBrands,
   findBrandDetailById,
   findBrands,
+  deleteBrand,
+  productCounts
 } from "./adminBrand.repository.js";
 
 import {
@@ -260,3 +266,76 @@ export const getAdminBrandService = async (brandId) => {
 
   return brand;
 };
+
+
+export const deleteAdminBrandService = async({brandId , adminId}) => {
+    verifyCloudinaryConfiguration();
+
+  validateBrandId(brandId);
+  const brand = await findBrandById(brandId);
+  if (!brand) {
+    throw new HandleError("Brand not found", 404, {
+      brand: "Brand not found",
+    });
+  };
+
+  const productCount = await productCounts({brandId});
+
+
+  console.log(productCount)
+  if(productCount > 0 ) {
+    throw new HandleError(
+      "Brand cannot be deleted",
+      409,
+      {
+        brand: `This brand is being used by ${productCount} ${productCount === 1 ? "Product" :"Products" } `
+      }
+
+    )
+  }
+
+  const logoPublicId = brand.logo?.publicId;
+  const bannerPublicId = brand.banner?.publicId;    
+  
+  await deleteBrand({brand: brandId});
+
+  // Cloudinary cleanup should not undo a successful DB deletion.
+  const cleanupErrors = [];
+
+   if (logoPublicId) {
+    try {
+      await deleteImageFromCloudinary(logoPublicId);
+    } catch (error) {
+      console.error(
+        `Failed to delete brand logo from Cloudinary: ${logoPublicId}`,
+        error
+      );
+
+      cleanupErrors.push({
+        type: "logo",
+        publicId: logoPublicId,
+      });
+    }
+  }
+
+  if (bannerPublicId) {
+    try {
+      await deleteImageFromCloudinary(bannerPublicId);
+    } catch (error) {
+      console.error(
+        `Failed to delete brand banner from Cloudinary: ${bannerPublicId}`,
+        error
+      );
+
+      cleanupErrors.push({
+        type: "banner",
+        publicId: bannerPublicId,
+      });
+    }
+  }
+  return {
+    deletedBrandId: brand._id,
+    cleanupErrors
+  }
+
+}

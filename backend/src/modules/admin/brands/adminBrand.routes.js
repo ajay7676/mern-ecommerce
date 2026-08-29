@@ -2,6 +2,7 @@ import express from "express";
 
 import {
   createAdminBrand,
+  deleteAdminBrand,
   deleteTemporaryBrandUploads,
   getAdminBrand,
   getAdminBrands,
@@ -46,10 +47,11 @@ router.delete(
 // GET ALL BRANDS
 
 router.get("/admin/brands", userAuth,getAdminBrands);
+
+
 router.get("/admin/brands/:brandId", userAuth, getAdminBrand );
 
-
-
 router.patch("/admin/brands/:brandId", userAuth, adminOnly, updateAdminBrand);
+router.delete("/admin/brands/:brandId", userAuth, adminOnly, deleteAdminBrand);
 
 export default router;

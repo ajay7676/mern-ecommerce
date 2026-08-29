@@ -44,3 +44,39 @@ export const buildCreateBrandPayload = (values) => {
     },
   };
 };
+
+export const getBrandFormValues = (brand = null) => {
+  const safe = brand ?? {};
+
+  console.log(safe)
+  const exitingInfo = {
+    name: brand?.name ?? "",
+    slug: brand?.slug ?? "",
+    description: brand?.description ?? "",
+
+    logo: brand?.logo
+      ? {
+          publicId: brand.logo.publicId ?? "",
+          url: brand.logo.url ?? "",
+        }
+      : null,
+
+    banner: brand?.banner
+      ? {
+          publicId: brand.banner.publicId ?? "",
+          url: brand.banner.url ?? "",
+        }
+      : null,
+
+    metaTitle: brand?.seo?.metaTitle ?? "",
+    metaDescription: brand?.seo?.metaDescription ?? "",
+    metaKeywords: brand?.seo?.metaKeywords ?? "",
+
+    status: brand?.status ?? "active",
+    isFeatured: Boolean(brand?.isFeatured),
+    sortOrder: brand?.sortOrder ?? 0,
+  };
+  console.log(exitingInfo);
+
+  return exitingInfo;
+};

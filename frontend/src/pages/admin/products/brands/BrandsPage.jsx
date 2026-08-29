@@ -16,6 +16,7 @@ import {
 import useDebounce from "../../../../hooks/useDebounce";
 import useBrands from "../../../../hooks/admin/queries/products/brands/useBrands";
 import AddNewBrandModal from "../../../../components/admin/products/brands/modal/addnew/AddNewBrandModal";
+import EditBrandModal from "../../../../components/admin/products/brands/modal/edit/EditBrandModal";
 
 const BrandsPage = () => {
   const [page, setPage] = useState(1);
@@ -29,6 +30,8 @@ const BrandsPage = () => {
   const debouncedSearch = useDebounce(search, 400);
 
   const [isAddBrandOpen, setIsAddBrandOpen] = useState(false);
+  const [isEditBrandOpen, setIsEditBrandOpen] = useState(false);
+  const [isBrand, setIsBrand] = useState(null);
 
   const { data, isLoading, isFetching, isError, error } = useBrands({
     page,
@@ -47,19 +50,26 @@ const BrandsPage = () => {
 
   const pagination = data?.data?.pagination ?? {};
 
-
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch, status]);
 
   const hasFilters = Boolean(search.trim() || status);
 
-   const handleOpenAddBrand = () => {
+  const handleOpenAddBrand = () => {
     setIsAddBrandOpen(true);
   };
 
   const handleCloseAddBrand = () => {
     setIsAddBrandOpen(false);
+  };
+  const handleOpenEditBrand = (brand) => {
+    setIsBrand(brand)
+    setIsEditBrandOpen(true);
+  };
+
+  const handleCloseEditBrand = () => {
+    setIsEditBrandOpen(false);
   };
 
   const handleReset = () => {};
@@ -117,9 +127,7 @@ const BrandsPage = () => {
                   setLimit(newLimit);
                   setPage(1);
                 }}
-                onEdit={(brand) => {
-                  console.log("Edit brand", brand);
-                }}
+                onEdit={(brand) => handleOpenEditBrand(brand)}
                 onDelete={(brand) => {
                   console.log("Delete brand", brand);
                 }}
@@ -149,9 +157,12 @@ const BrandsPage = () => {
         </div>
       </main>
       <AddNewBrandModal
-          isOpen={isAddBrandOpen}
-          onClose={handleCloseAddBrand}
-      
+       isOpen={isAddBrandOpen}
+       onClose={handleCloseAddBrand} />
+      <EditBrandModal 
+      isOpen={isEditBrandOpen} 
+      onClose={handleCloseEditBrand}
+        brand={isBrand}
       />
     </>
   );

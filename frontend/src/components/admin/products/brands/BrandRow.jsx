@@ -81,6 +81,7 @@ const BrandRow = ({ brand, rowNumber, onEdit, onDelete, onToggleFeatured }) => {
               text-slate-700
               transition
               hover:text-violet-600
+              cursor-pointer
             "
           >
             <FiEdit2 size={15} />

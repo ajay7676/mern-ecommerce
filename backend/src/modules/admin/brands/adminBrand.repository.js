@@ -1,4 +1,5 @@
 import Brand from "../../catalog/models/brand.model.js";
+import Product from "../../product/models/product.model.js";
 
 export const findBrandBySlug = (slug) => {
   return Brand.findOne({
@@ -70,12 +71,7 @@ export const countBrands = (filter) => {
   return Brand.countDocuments(filter);
 };
 
-export const findBrands = async ({
-  filter,
-  skip,
-  limit,
-  sort,
-}) => {
+export const findBrands = async ({ filter, skip, limit, sort }) => {
   return Brand.aggregate([
     {
       $match: filter,
@@ -93,10 +89,7 @@ export const findBrands = async ({
           {
             $match: {
               $expr: {
-                $eq: [
-                  "$brand",
-                  "$$brandId",
-                ],
+                $eq: ["$brand", "$$brandId"],
               },
             },
           },
@@ -115,10 +108,7 @@ export const findBrands = async ({
         productCount: {
           $ifNull: [
             {
-              $arrayElemAt: [
-                "$productStats.count",
-                0,
-              ],
+              $arrayElemAt: ["$productStats.count", 0],
             },
             0,
           ],
@@ -155,4 +145,11 @@ export const findBrands = async ({
       $limit: limit,
     },
   ]);
+};
+export const productCounts = ({brandId}) => {
+
+   return Product.countDocuments({brand:brandId})
+}
+export const deleteBrand = ({ brand }) => {
+  return  Brand.deleteOne({ _id: brand});
 };
