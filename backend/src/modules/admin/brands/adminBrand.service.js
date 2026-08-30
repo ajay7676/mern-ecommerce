@@ -280,9 +280,6 @@ export const deleteAdminBrandService = async({brandId , adminId}) => {
   };
 
   const productCount = await productCounts({brandId});
-
-
-  console.log(productCount)
   if(productCount > 0 ) {
     throw new HandleError(
       "Brand cannot be deleted",

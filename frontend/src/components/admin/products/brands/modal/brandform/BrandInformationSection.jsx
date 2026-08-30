@@ -23,7 +23,7 @@ const BrandInformationSection = ({ values, errors, onChange }) => {
           </label>
 
           <input
-            value={values.name}
+            value={values?.name}
             onChange={(event) => onChange("name", event.target.value)}
             placeholder="Enter brand name"
             className={inputClass}
@@ -43,7 +43,7 @@ const BrandInformationSection = ({ values, errors, onChange }) => {
           </label>
 
           <input
-            value={values.slug}
+            value={values?.slug}
             onChange={(event) => onChange("slug", event.target.value)}
             placeholder="brand-slug"
             className={inputClass}
@@ -63,7 +63,7 @@ const BrandInformationSection = ({ values, errors, onChange }) => {
 
           <textarea
             rows={5}
-            value={values.description}
+            value={values?.description}
             onChange={(event) => onChange("description", event.target.value)}
             maxLength={500}
             placeholder="Enter brand description..."
@@ -93,7 +93,7 @@ const BrandInformationSection = ({ values, errors, onChange }) => {
             <BrandFieldError message={errors.description} />
 
             <span className="ml-auto text-xs text-slate-400">
-              {values.description?.length ?? 0}/500
+              {values?.description?.length ?? 0}/500
             </span>
           </div>
         </div>

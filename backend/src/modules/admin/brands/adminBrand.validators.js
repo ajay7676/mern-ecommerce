@@ -295,7 +295,7 @@ export const validateUpdateBrandPayload = (payload = {}) => {
   if (Object.prototype.hasOwnProperty.call(payload, "banner")) {
     const banner = payload.banner;
 
-    if (banner === null) {
+    if (banner == null || banner?.publicId === null) {
       update.banner = {
         publicId: null,
         url: null,

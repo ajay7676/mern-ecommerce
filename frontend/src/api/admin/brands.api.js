@@ -28,7 +28,7 @@ export const getBrands = async ({
 export const getBrand = async (brandId) => {
   const response = await api.get(`/admin/brands/${brandId}`);
   return response.data;
-}
+};
 
 export const uploadBrandLogo = async (file) => {
   const formData = new FormData();
@@ -65,24 +65,14 @@ export const deleteTemporaryBrandAsset = async (publicId) => {
   return response.data;
 };
 
-export const updateBrand = async({
-  brandId,
-  payload
-}) => {
-
-  const response = await api.patch(
-    `/admin/brands/${brandId}` ,
-    payload
-  )
-
+export const updateBrand = async (brandId, payload) => {
+  
+  const response = await api.patch(`/admin/brands/${brandId}`, payload);
   return response.data.data;
 };
 
-
-export const deleteBrand = async(brandId) => {
-
+export const deleteBrand = async (brandId) => {
   const response = await api.delete(`/admin/brands/${brandId}`);
 
   return response.data;
-
-}
+};

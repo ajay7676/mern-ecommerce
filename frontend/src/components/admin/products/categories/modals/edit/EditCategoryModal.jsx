@@ -21,6 +21,7 @@ const EditCategoryModal = ({
   onClose,
   mode = "edit",
 }) => {
+
   const [values, setValues] = useState(() => getCategoryFormValues());
 
   const [errors, setErrors] = useState({});

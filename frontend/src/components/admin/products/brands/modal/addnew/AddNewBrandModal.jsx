@@ -2,13 +2,6 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import AddBrandHeader from "./AddBrandHeader";
 import BrandFooter from "./BrandFooter";
-import BrandInformationSection from "../brandform/BrandInformationSection";
-import BrandLogoSection from "../brandform/BrandLogoSection";
-import BrandBannerSection from "../brandform/BrandBannerSection";
-import BrandVisibilitySection from "../brandform/BrandVisibilitySection";
-import BrandPreview from "../brandform/BrandPreview";
-import BrandSeoSection from "../brandform/BrandSeoSection";
-
 import { INITIAL_BRAND_FORM } from "../../../../../../constants/admin/products/brandForm.constants";
 import { useUploadBrandLogo } from "../../../../../../hooks/admin/mutations/products/brands/useUploadBrandLogo";
 import { useUploadBrandBanner } from "../../../../../../hooks/admin/mutations/products/brands/useUploadBrandBanner";
@@ -18,6 +11,7 @@ import { generateSlug } from "../../../../../../utils/generateSlug";
 import { validateBrandForm } from "../../../../../../validation/admin/brand/brandForm.validators";
 import { buildCreateBrandPayload } from "../../../../../../utils/admin/products/brand/brandForm.helpers";
 import { deleteTemporaryBrandAsset } from "../../../../../../api/admin/brands.api";
+import BrandForm from "../brandform/BrandForm";
 
 const AddNewBrandModal = ({ isOpen, onClose }) => {
   const [values, setValues] = useState(INITIAL_BRAND_FORM);
@@ -172,6 +166,7 @@ const AddNewBrandModal = ({ isOpen, onClose }) => {
   };
 
   const handleChange = (field, value) => {
+     console.log("onChange")
     setValues((current) => {
       const next = {
         ...current,
@@ -298,49 +293,23 @@ const AddNewBrandModal = ({ isOpen, onClose }) => {
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-6">
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_330px]">
               {/* LEFT SIDE */}
-
-              <main className="space-y-5">
-                <BrandInformationSection
+              <BrandForm
+                  mode = "create"
                   values={values}
                   errors={errors}
-                  onChange={handleChange}
-                />
-                <BrandLogoSection
-                  logo={values?.logo}
-                  error={errors.logo}
-                  isUploading={logoUpload.isPending}
-                  onUpload={handleLogoUpload}
-                  onRemove={handleRemoveLogo}
-                />
-                <BrandBannerSection
-                  banner={values?.banner}
-                  error={errors.banner}
-                  isUploading={bannerUpload.isPending}
-                  onUpload={handleBannerUpload}
-                  onRemove={handleRemoveBanner}
-                />
-                <BrandVisibilitySection
-                  values={values}
-                  onChange={handleChange}
-                />
-              </main>
-              {/* RIGHT SIDE */}
+                  handleChange={handleChange}
 
-              <aside
-                className="
-              space-y-5
-              xl:sticky
-              xl:top-0
-              xl:self-start
-            "
-              >
-                <BrandPreview values={values} />
-                <BrandSeoSection
-                  seo={values.seo}
-                  errors={errors}
-                  onChange={handleSeoChange}
-                />
-              </aside>
+                  islogoUploading={logoUpload.isPending}
+                  handleLogoUpload={handleLogoUpload}
+                  onRemoveLogo={handleRemoveLogo}
+
+                  isbannerUploading={bannerUpload.isPending}
+                  onUploadBanner={handleBannerUpload}
+                  onRemoveBanner={handleRemoveBanner}
+
+                   onSeoChange={handleSeoChange}
+              
+              />
             </div>
           </div>
           {/* Footer */}

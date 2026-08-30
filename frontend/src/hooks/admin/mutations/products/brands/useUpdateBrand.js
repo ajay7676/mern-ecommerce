@@ -12,9 +12,12 @@ export const useUpdateBrand = () => {
        onSuccess: (_,variables) => {
 
         queryClient.invalidateQueries({
-            queryKey: brandQueryKeys.list()
+            queryKey: brandQueryKeys.lists()
         });
 
+        queryClient.invalidateQueries({
+            queryKey: brandQueryKeys.list()
+        });
         queryClient.invalidateQueries({
             queryKey: brandQueryKeys.detail(variables.brandId)
         });

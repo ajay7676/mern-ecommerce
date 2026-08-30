@@ -163,7 +163,7 @@ const BrandsPage = () => {
       <EditBrandModal 
       isOpen={isEditBrandOpen} 
       onClose={handleCloseEditBrand}
-        brand={isBrand}
+      brand={isBrand}
       />
     </>
   );
