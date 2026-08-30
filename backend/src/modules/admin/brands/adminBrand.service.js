@@ -16,7 +16,8 @@ import {
   findBrandDetailById,
   findBrands,
   deleteBrand,
-  productCounts
+  productCounts,
+  getBrandStatsRepository
 } from "./adminBrand.repository.js";
 
 import {
@@ -336,3 +337,7 @@ export const deleteAdminBrandService = async({brandId , adminId}) => {
   }
 
 }
+
+export const getBrandStatsService = async () => {
+  return await getBrandStatsRepository();
+};

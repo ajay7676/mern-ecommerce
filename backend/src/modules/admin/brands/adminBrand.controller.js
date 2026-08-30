@@ -4,6 +4,7 @@ import {
   getAdminBrandService,
   getAdminBrandsService,
   updateAdminBrandService,
+  getBrandStatsService,
 } from "./adminBrand.service.js";
 
 import {
@@ -158,15 +159,29 @@ export const getAdminBrand = async (req, res, next) => {
 
 export const deleteAdminBrand = async (req, res, next) => {
   try {
-    const {brandId} = req.params;
+    const { brandId } = req.params;
 
     await deleteAdminBrandService({
       brandId,
-      adminId: req.user?._id
-    })
+      adminId: req.user?._id,
+    });
     res.status(200).json({
       success: true,
       message: "Brand Delele successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdminBrandsStats = async (req, res, next) => {
+  try {
+    const stats = await getBrandStatsService();
+
+    return res.status(200).json({
+      success: true,
+      message: "Brand stats fetched successfully",
+      data: stats,
     });
   } catch (error) {
     next(error);

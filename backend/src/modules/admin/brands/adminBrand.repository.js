@@ -146,10 +146,42 @@ export const findBrands = async ({ filter, skip, limit, sort }) => {
     },
   ]);
 };
-export const productCounts = ({brandId}) => {
-
-   return Product.countDocuments({brand:brandId})
-}
+export const productCounts = ({ brandId }) => {
+  return Product.countDocuments({ brand: brandId });
+};
 export const deleteBrand = ({ brand }) => {
-  return  Brand.deleteOne({ _id: brand});
+  return Brand.deleteOne({ _id: brand });
+};
+
+export const getBrandStatsRepository = async () => {
+  const [totalBrands, activeBrands, inactiveBrands, productsUsingBrands] =
+    await Promise.all([
+      // Total non-delete brands
+      Brand.countDocuments({
+        isDeleted: false,
+      }),
+
+      // Active non-deleted brands
+      Brand.countDocuments({
+        status: "active",
+        isDeleted: false,
+      }),
+      // Inactive non-deleted brands
+      Brand.countDocuments({
+        status: "inactive",
+        isDeleted: false,
+      }),
+
+      // Non-deleted products having a brand
+      Product.countDocuments({
+        brand: { $exists: true, $ne: null },
+        isDeleted: false,
+      }),
+    ]);
+    return{
+      totalBrands,
+      activeBrands,
+      inactiveBrands,
+      productsUsingBrands,
+    }
 };

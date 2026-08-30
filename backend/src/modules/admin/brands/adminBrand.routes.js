@@ -6,6 +6,7 @@ import {
   deleteTemporaryBrandUploads,
   getAdminBrand,
   getAdminBrands,
+  getAdminBrandsStats,
   updateAdminBrand,
   uploadBrandBanner,
   uploadBrandLogo,
@@ -47,6 +48,7 @@ router.delete(
 // GET ALL BRANDS
 
 router.get("/admin/brands", userAuth,getAdminBrands);
+router.get("/admin/brands/stats", userAuth, adminOnly,getAdminBrandsStats);
 
 
 router.get("/admin/brands/:brandId", userAuth, getAdminBrand );
