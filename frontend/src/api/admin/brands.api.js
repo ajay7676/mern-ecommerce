@@ -76,3 +76,9 @@ export const deleteBrand = async (brandId) => {
 
   return response.data;
 };
+
+export const  getbrandsStats = async() => {
+    const response = await api.get("/admin/brands/stats");
+
+    return response.data;
+}

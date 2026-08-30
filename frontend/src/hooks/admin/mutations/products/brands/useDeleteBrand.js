@@ -13,6 +13,9 @@ const useDeleteBrand = () => {
       queryClient.invalidateQueries({
         queryKey: brandQueryKeys.lists(),
       });
+      queryClient.invalidateQueries({
+        queryKey: brandQueryKeys.stats(),
+      });
       toast.success(response?.message || "Brand deleted successfully");
     },
     onError: (error) => {

@@ -46,16 +46,12 @@
 // };
 
 export const buildCreateBrandPayload = (values) => {
-
-
   const keywords = values.seo?.keywords;
   const normalizedTitle = values.seo?.title ?? "";
   const normalizeddescription = values.seo?.description ?? "";
 
   const normalizedKeywords = Array.isArray(keywords)
-    ? keywords
-        .map((keyword) => String(keyword).trim())
-        .filter(Boolean)
+    ? keywords.map((keyword) => String(keyword).trim()).filter(Boolean)
     : String(keywords ?? "")
         .split(",")
         .map((keyword) => keyword.trim())
@@ -100,7 +96,6 @@ export const buildCreateBrandPayload = (values) => {
   };
 };
 export const getBrandFormValues = (brand = null) => {
-
   const safe = brand ?? {};
 
   const exitingInfo = {
@@ -134,49 +129,59 @@ export const getBrandFormValues = (brand = null) => {
   return exitingInfo;
 };
 
-export const getInitialBrandFormValues = (
-  brand = null
-) => ({
+export const getInitialBrandFormValues = (brand = null) => ({
   name: brand?.name ?? "",
 
   slug: brand?.slug ?? "",
 
-  description:
-    brand?.description ?? "",
+  description: brand?.description ?? "",
 
   logo: brand?.logo
     ? {
-        publicId:
-          brand.logo.publicId ?? "",
-        url:
-          brand.logo.url ?? "",
+        publicId: brand.logo.publicId ?? "",
+        url: brand.logo.url ?? "",
       }
     : null,
 
   banner: brand?.banner
     ? {
-        publicId:
-          brand.banner.publicId ?? "",
-        url:
-          brand.banner.url ?? "",
+        publicId: brand.banner.publicId ?? "",
+        url: brand.banner.url ?? "",
       }
     : null,
 
-  status:
-    brand?.status ?? "active",
+  status: brand?.status ?? "active",
 
-  isFeatured:
-    Boolean(brand?.isFeatured),
+  isFeatured: Boolean(brand?.isFeatured),
 
-  sortOrder:
-    brand?.sortOrder ?? 0,
+  sortOrder: brand?.sortOrder ?? 0,
 
-  metaTitle:
-    brand?.seo?.metaTitle ?? "",
+  metaTitle: brand?.seo?.metaTitle ?? "",
 
-  metaDescription:
-    brand?.seo?.metaDescription ?? "",
+  metaDescription: brand?.seo?.metaDescription ?? "",
 
-  metaKeywords:
-    brand?.seo?.metaKeywords ?? "",
+  metaKeywords: brand?.seo?.metaKeywords ?? "",
 });
+
+export const normalizeBrandListQuery = (query = {}) => {
+  const search = typeof query.search === "string" ? query.search.trim() : "";
+
+  const status =
+    typeof query.status === "string"
+      ? query.status.trim().toLowerCase()
+      : "all";
+
+  const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
+
+  const limit = Math.min(
+    Math.max(Number.parseInt(query.limit, 10) || 10, 1),
+    100,
+  );
+
+  return {
+    search,
+    status,
+    page,
+    limit,
+  };
+};

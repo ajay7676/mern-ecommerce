@@ -17,6 +17,7 @@ import useDebounce from "../../../../hooks/useDebounce";
 import useBrands from "../../../../hooks/admin/queries/products/brands/useBrands";
 import AddNewBrandModal from "../../../../components/admin/products/brands/modal/addnew/AddNewBrandModal";
 import EditBrandModal from "../../../../components/admin/products/brands/modal/edit/EditBrandModal";
+import useBrandStats from "../../../../hooks/admin/queries/products/brands/useBrandStats";
 // import DeleteBrandModal from '../../../../components/admin/products/brands/modal/delete/DeleteBrandModal'
 
 const BrandsPage = () => {
@@ -47,6 +48,10 @@ const BrandsPage = () => {
     sortOrder: "asc",
   });
 
+  const { data:statsData, isLoading:isStatsLoading, isError:isStatsError , refetch } = useBrandStats();
+
+  const stats = statsData?.data;
+
   const brands = data?.data?.brands ?? [];
 
   const pagination = data?.data?.pagination ?? {};
@@ -65,7 +70,7 @@ const BrandsPage = () => {
     setIsAddBrandOpen(false);
   };
   const handleOpenEditBrand = (brand) => {
-    setIsBrand(brand)
+    setIsBrand(brand);
     setIsEditBrandOpen(true);
   };
 
@@ -73,7 +78,11 @@ const BrandsPage = () => {
     setIsEditBrandOpen(false);
   };
 
-  const handleReset = () => {};
+  const handleReset = () => {
+    setSearch("");
+    setStatus("");
+    setPage(1);
+  };
 
   return (
     <>
@@ -94,10 +103,11 @@ const BrandsPage = () => {
           />
 
           <BrandFilters
-            search=""
-            status="active"
-            onSearchChange=""
+            search={search}
+            onSearchChange={setSearch}
+            status={status}
             onStatusChange={setStatus}
+            onFilter={() => setPage(1)}
             onReset={handleReset}
           />
 
@@ -111,7 +121,13 @@ const BrandsPage = () => {
           "
           >
             <div className="min-w-0 space-y-4">
-              <BrandStats stats={brandStats} />
+              <BrandStats 
+              
+              stats={stats}
+               isStatsLoading={isStatsLoading}
+               isStatsError={isStatsError}
+               refetch={refetch}
+              />
               <BrandTableCard
                 brands={brands}
                 page={pagination.currentPage ?? page}
@@ -129,9 +145,7 @@ const BrandsPage = () => {
                   setPage(1);
                 }}
                 onEdit={(brand) => handleOpenEditBrand(brand)}
-                onDelete={(brand) => {
-                  console.log("Delete brand", brand);
-                }}
+                onResetFilters={handleReset}
                 onToggleFeatured={(brand) => {
                   console.log("Toggle featured", brand);
                 }}
@@ -157,13 +171,11 @@ const BrandsPage = () => {
           </div>
         </div>
       </main>
-      <AddNewBrandModal
-       isOpen={isAddBrandOpen}
-       onClose={handleCloseAddBrand} />
-      <EditBrandModal 
-      isOpen={isEditBrandOpen} 
-      onClose={handleCloseEditBrand}
-      brand={isBrand}
+      <AddNewBrandModal isOpen={isAddBrandOpen} onClose={handleCloseAddBrand} />
+      <EditBrandModal
+        isOpen={isEditBrandOpen}
+        onClose={handleCloseEditBrand}
+        brand={isBrand}
       />
     </>
   );
