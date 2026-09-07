@@ -15,22 +15,22 @@ const ProfileHeaderCard = ({ profile, onEdit, onChangeImage }) => {
       >
         <ProfileAvatar
           src={profile?.avatar?.url ?? UserPlaceHolder}
-          name={profile.name}
+          name={profile?.name}
           onChangeImage={onChangeImage}
         />
 
         <div className="min-w-0 flex-1 text-center md:text-left">
           <h2 className="text-2xl font-bold text-slate-950 sm:text-[26px]">
-            {profile.name}
+            {profile?.name}
           </h2>
 
           <div className="mt-5 space-y-4">
-            <ProfileMetaItem icon={FiMail}>{profile.email}</ProfileMetaItem>
+            <ProfileMetaItem icon={FiMail}>{profile?.email}</ProfileMetaItem>
 
             {/* {profile?.phone && (
               <ProfileMetaItem icon={FiPhone}>{profile.phone}</ProfileMetaItem>
             )} */}
-             <ProfileMetaItem icon={FiPhone}>{profile.phone  || "Not added"}</ProfileMetaItem>
+             <ProfileMetaItem icon={FiPhone}>{profile?.phone  || "Not added"}</ProfileMetaItem>
             <ProfileMetaItem icon={FiCalendar}>
               Joined on{` ${formatDate(profile?.createdAt)}`}
             </ProfileMetaItem>
@@ -45,6 +45,7 @@ const ProfileHeaderCard = ({ profile, onEdit, onChangeImage }) => {
             bg-white px-4 py-2 text-sm font-medium
             text-indigo-600 transition-colors
             hover:border-indigo-200 hover:bg-indigo-50
+            cursor-pointer
             md:self-start
           "
         >
