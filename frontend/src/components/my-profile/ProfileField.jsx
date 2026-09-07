@@ -6,6 +6,7 @@ const ProfileField = ({
   value,
   className = "",
   type = "text",
+  readOnly
 }) => {
   return (
     <div className={clsx("min-w-0", className)}>
@@ -20,7 +21,7 @@ const ProfileField = ({
         id={id}
         type={type}
         value={value}
-        readOnly
+        readOnly={readOnly}
         className="
           h-10 w-full rounded-md border border-slate-200
           bg-white px-3 text-sm text-slate-700

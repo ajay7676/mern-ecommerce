@@ -15,26 +15,26 @@ import { generateSlug } from "../../../../../../utils/generateSlug";
 import { useUploadBrandLogo } from "../../../../../../hooks/admin/mutations/products/brands/useUploadBrandLogo";
 import { useUploadBrandBanner } from "../../../../../../hooks/admin/mutations/products/brands/useUploadBrandBanner";
 import { useDeleteTemporaryBrandAsset } from "../../../../../../hooks/admin/mutations/products/brands/useDeleteTemporaryBrandAsset";
-import { useCreateBrand } from "../../../../../../hooks/admin/mutations/products/brands/useCreateBrand";
 import EditBrandFooter from './EditBrandFooter';
 import {useUpdateBrand} from '../../../../../../hooks/admin/mutations/products/brands/useUpdateBrand'
+import useModalScroller from "../../../../../../utils/useModalScroller";
 
 
-const EditBrandModal = ({ isOpen, brand, mode = "edit", onClose }) => {
+const EditBrandModal = ({ isOpen, brand, onClose }) => {
   const [values, setValues] = useState((brand) => getBrandFormValues(brand));
   const [errors, setErrors] = useState({});
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const logoUpload = useUploadBrandLogo();
   const bannerUpload = useUploadBrandBanner();
   const deleteTemporaryAsset = useDeleteTemporaryBrandAsset();
-  const createBrandMutation = useCreateBrand();
   const updateBrandMutation = useUpdateBrand();
-
 
   useEffect(() => {
     if (!brand) return;
     setValues(brand);
   }, [brand]);
+    useModalScroller({isOpen,onClose})
+
   const {
     data: brandData,
     isLoading,
@@ -249,7 +249,7 @@ const EditBrandModal = ({ isOpen, brand, mode = "edit", onClose }) => {
 
       <button
         type="button"
-        aria-label="Close add brand drawer"
+        aria-label="Close Edit brand drawer"
         onClick={onClose}
         className={`
           absolute inset-0 bg-slate-950/35 backdrop-blur-[1px] transition-opacity duration-300

@@ -5,7 +5,7 @@ export const profileData = {
   dateOfBirth: "12 May 1998",
   gender: "Male",
   joinedAt: "15 March, 2023",
-  avatar: "/profile-avatar.webp",
+  avatar: "/images/user-placeholder.png",
 };
 
 export const emailPreferences = [

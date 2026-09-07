@@ -1,6 +1,8 @@
 import { FiCalendar, FiMail, FiPhone } from "react-icons/fi";
 import SectionCard from "../ui/SectionCard";
 import ProfileAvatar from "./ProfileAvatar";
+import UserPlaceHolder from "../../../public/images/user-placeholder.png";
+import { formatDate } from "../../utils/formatDate";
 
 const ProfileHeaderCard = ({ profile, onEdit, onChangeImage }) => {
   return (
@@ -12,27 +14,25 @@ const ProfileHeaderCard = ({ profile, onEdit, onChangeImage }) => {
         "
       >
         <ProfileAvatar
-          src={profile.avatar}
-          name={profile.fullName}
+          src={profile?.avatar?.url ?? UserPlaceHolder}
+          name={profile.name}
           onChangeImage={onChangeImage}
         />
 
         <div className="min-w-0 flex-1 text-center md:text-left">
           <h2 className="text-2xl font-bold text-slate-950 sm:text-[26px]">
-            {profile.fullName}
+            {profile.name}
           </h2>
 
           <div className="mt-5 space-y-4">
-            <ProfileMetaItem icon={FiMail}>
-              {profile.email}
-            </ProfileMetaItem>
+            <ProfileMetaItem icon={FiMail}>{profile.email}</ProfileMetaItem>
 
-            <ProfileMetaItem icon={FiPhone}>
-              {profile.phone}
-            </ProfileMetaItem>
-
+            {/* {profile?.phone && (
+              <ProfileMetaItem icon={FiPhone}>{profile.phone}</ProfileMetaItem>
+            )} */}
+             <ProfileMetaItem icon={FiPhone}>{profile.phone  || "Not added"}</ProfileMetaItem>
             <ProfileMetaItem icon={FiCalendar}>
-              Joined on {profile.joinedAt}
+              Joined on{` ${formatDate(profile?.createdAt)}`}
             </ProfileMetaItem>
           </div>
         </div>

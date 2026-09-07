@@ -1,19 +1,22 @@
-import profileAvatar from '../../../assets/images/profile-avatar.webp'
+// import profileAvatar from '../../../assets/images/profile-avatar.webp';
 import AccountLayout from '../../../components/my-profile/AccountLayout'
 import EmailPreferencesCard from "../../../components/my-profile/EmailPreferencesCard";
 import PersonalInformationCard from "../../../components/my-profile/PersonalInformationCard";
 import ProfileHeaderCard from "../../../components/my-profile/ProfileHeaderCard";
 
+import useAuthProfile from '../../../hooks/queries/useAuthProfile'
+
 import {
   emailPreferences,
-  profileData,
 } from '../../../components/my-profile/data/profileData'
 
 const Profile = () => {
-  const profile = {
-    ...profileData,
-    avatar: profileAvatar,
-  };
+
+  const {data , isLoading, isPending} = useAuthProfile();
+
+  console.log(data)
+
+   const profileData = data?.user;
 
   const handleEditProfile = () => {
     console.log("Open edit profile form");
@@ -38,12 +41,12 @@ const Profile = () => {
 
         <div className="mt-0 space-y-5 lg:mt-5">
           <ProfileHeaderCard
-            profile={profile}
+            profile={profileData}
             onEdit={handleEditProfile}
             onChangeImage={handleChangeImage}
           />
 
-          <PersonalInformationCard profile={profile} />
+          <PersonalInformationCard profile={profileData} />
 
           <EmailPreferencesCard preferences={emailPreferences} />
         </div>

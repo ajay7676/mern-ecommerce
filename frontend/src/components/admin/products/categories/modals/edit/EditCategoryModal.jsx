@@ -13,6 +13,7 @@ import {
   getCategoryFieldErrors,
 } from "../../../../../../utils/admin/products/category/categoryApiError";
 import useUpdateCategory from "../../../../../../hooks/admin/mutations/products/categories/useUpdateCategory";
+import useModalScroller from "../../../../../../utils/useModalScroller";
 
 const EditCategoryModal = ({
   open,
@@ -34,7 +35,6 @@ const EditCategoryModal = ({
 
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(true);
 
-
   const { data, isLoading, isError, error, refetch } = useCategory(categoryId, {
     enabled: open && Boolean(categoryId),
   });
@@ -47,6 +47,8 @@ const EditCategoryModal = ({
 
     isPending,
   } = useUpdateCategory();
+
+  useModalScroller({open,onClose})
 
   useEffect(() => {
     if (!open || !category) {
@@ -138,38 +140,43 @@ const EditCategoryModal = ({
 
   return (
     <div
-      className="
+        className={`
         fixed
         inset-0
-        z-70
-        flex
-        items-center
-        justify-center
-        bg-slate-950/40
-        p-3
-        backdrop-blur-[2px]
-        sm:p-5
-      "
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="edit-category-title"
-    >
-      <button
-        type="button"
-        aria-label="Close modal"
-        onClick={
-          isPending
-            ? undefined
-            : onClose
-        }
-        className="
-          absolute
-          inset-0
-          cursor-default
-        "
-      />
+        z-50
+        ${open ? "pointer-events-auto" : "pointer-events-none"}
+      `}
+        aria-hidden={!open}
+      >
+        {/* Overlay */}
 
-      <form
+        <button
+          type="button"
+          aria-label="Close add category drawer"
+          onClick={onClose}
+          className={`
+          absolute inset-0 bg-slate-950/35 backdrop-blur-[1px] transition-opacity duration-300
+          ${open ? "opacity-100" : "opacity-0"}
+        `}
+        />
+
+        {/* Drawer */}
+
+        <aside
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-category-title"
+          className={`
+    absolute right-0 top-0
+    flex h-dvh w-full max-w-7xl flex-col
+    overflow-hidden
+    bg-white
+    shadow-[-12px_0_40px_rgba(15,23,42,0.12)]
+    transition-transform duration-300 ease-out
+    ${open ? "translate-x-0" : "translate-x-full"}
+  `}>
+
+     <form
         onSubmit={
           handleSubmit
         }
@@ -177,9 +184,7 @@ const EditCategoryModal = ({
           relative
           z-10
           flex
-          max-h-[94vh]
           w-full
-          max-w-205
           flex-col
           overflow-hidden
           rounded-2xl
@@ -202,7 +207,8 @@ const EditCategoryModal = ({
             <div
               className="
                 flex
-                min-h-105
+                h-full
+                min-h-180
                 items-center
                 justify-center
               "
@@ -323,6 +329,7 @@ const EditCategoryModal = ({
 
           )}
       </form>
+   </aside>
     </div>
   );
 };

@@ -4,6 +4,7 @@ import NavLinks from "./NavLinks";
 import SearchBar from "./SearchBar";
 import UserMenu from "./UserMenu";
 import MobileMenu from "./MobileMenu";
+import { Link } from "react-router";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,9 +49,11 @@ const Navbar = () => {
               <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center text-white">
                 <FiBox className="text-2xl" />
               </div>
-              <h1 className="text-2xl font-bold text-slate-900">
+              <Link to="/">
+                 <h1 className="text-2xl font-bold text-slate-900">
                 Valid Super Store
               </h1>
+              </Link>
             </div>
           </div>
 

@@ -1,7 +1,10 @@
+import SimpleUserForm from './SimpleUserForm';
 
 const ProductVariation = () => {
   return (
-    <div>ProductVariation</div>
+    <>
+      <SimpleUserForm />
+    </>
   )
 }
 

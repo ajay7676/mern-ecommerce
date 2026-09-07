@@ -2,6 +2,7 @@ import SectionCard from "../ui/SectionCard";
 import ProfileField from "./ProfileField";
 
 const PersonalInformationCard = ({ profile }) => {
+   console.log(profile)
   return (
     <SectionCard className="p-5 sm:p-6">
       <h2 className="text-base font-semibold text-slate-950">
@@ -18,7 +19,7 @@ const PersonalInformationCard = ({ profile }) => {
         <ProfileField
           id="fullName"
           label="Full Name"
-          value={profile.fullName}
+          value={profile.name}
           className="xl:col-span-2"
         />
 
@@ -26,6 +27,7 @@ const PersonalInformationCard = ({ profile }) => {
           id="email"
           label="Email Address"
           value={profile.email}
+          readOnly="readOnly"
           type="email"
           className="xl:col-span-2"
         />

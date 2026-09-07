@@ -23,6 +23,20 @@ const userSchema = new mongoose.Schema(
         message: "Please enter a valid email",
       },
     },
+    phone: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    dateOfBirth: {
+      type: Date,
+      default: null,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+      default: null,
+    },
     password: {
       type: String,
       required: [true, "Password is required"],
