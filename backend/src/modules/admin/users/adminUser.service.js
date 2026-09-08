@@ -1,4 +1,5 @@
 import HandleError from "../../../utils/handleError.js";
+import User from '../../../model/userModel.js'
 
 import {
   createAdminUser,
@@ -24,6 +25,7 @@ import cloudinary, {
   verifyCloudinaryConfiguration,
 } from "../../../config/cloudinary.js";
 import { deleteUserAvatarFromCloudinary } from "../../../services/userAvatarCleanup.service.js";
+import User from "../../../model/userModel.js";
 
 const escapeRegex = (value) => {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

@@ -5,19 +5,14 @@ import EmailPreferencesCard from "../../../components/my-profile/EmailPreference
 import PersonalInformationCard from "../../../components/my-profile/PersonalInformationCard";
 import ProfileHeaderCard from "../../../components/my-profile/ProfileHeaderCard";
 
-import useAuthProfile from "../../../hooks/queries/useAuthProfile";
-
 import { emailPreferences } from "../../../components/my-profile/data/profileData";
 import EditProfileModal from "../../../components/my-profile/modal/EditProfileModal";
+import useProfile from "../../../hooks/queries/user/useProfile";
+import ProfileSkeleton from "./ProfileSkeleton";
 
 const Profile = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const { data, isLoading, isPending } = useAuthProfile();
-
-  console.log(data);
-
-  const profileData = data?.user;
-
+  const { data:profileData, isLoading, isError, error, refetch } = useProfile();
   const handleEditProfile = () => {
     console.log("Open edit profile form");
     setIsEditModalOpen(true);
@@ -26,6 +21,29 @@ const Profile = () => {
   const handleChangeImage = () => {
     console.log("Open profile image uploader");
   };
+  if (isLoading) {
+    return <ProfileSkeleton />;
+  }
+  if (isError) {
+    return (
+      <div className="rounded-xl border border-error/20 bg-error/5 p-6">
+        <h2 className="font-semibold text-error">Failed to load profile</h2>
+
+        <p className="mt-1 text-sm text-base-content/70">
+          {error?.response?.data?.message ||
+            "Something went wrong while loading your profile."}
+        </p>
+
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="btn btn-sm btn-error mt-4"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>

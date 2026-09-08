@@ -20,7 +20,13 @@ export const logoutUser = async () => {
   return response.data;
 };
 
+export const getUserProfile = async () => {
+  const response = await  api.get("/user/profile");
+
+  return response.data.data;
+
+} 
 export const updateProfile = async (payload) => {
-  const response = await api.patch("/users/profile", payload);
-  return response.data;
+  const response = await api.patch("/user/profile", payload);
+  return response.data.data;
 };

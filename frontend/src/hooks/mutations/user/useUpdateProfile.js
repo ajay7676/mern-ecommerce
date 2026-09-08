@@ -1,14 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProfile } from "../../../api/authApi";
+import { profileQueryKeys } from "../../profileQueryKeys";
 
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: updateProfile,
-
-    onSuccess: (response) => {
-      queryClient.setQueryData(["user-profile"], response.data);
+     onSuccess: (updatedProfile) => {
+      queryClient.setQueryData(
+        profileQueryKeys.detail(),
+        updatedProfile
+      );
     },
   });
 };

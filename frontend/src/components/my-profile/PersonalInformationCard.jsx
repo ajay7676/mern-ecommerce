@@ -3,7 +3,8 @@ import SectionCard from "../ui/SectionCard";
 import ProfileField from "./ProfileField";
 
 const PersonalInformationCard = ({ profile }) => {
-   const genderCaptlize = profile?.gender.charAt(0).toUpperCase() + profile?.gender.slice(1) ;
+   console.log(profile)
+  //  const genderCaptlize = profile?.gender.charAt(0).toUpperCase() + profile?.gender.slice(1) ?? "";
   return (
     <SectionCard className="p-5 sm:p-6">
       <h2 className="text-base font-semibold text-slate-950">
@@ -49,7 +50,7 @@ const PersonalInformationCard = ({ profile }) => {
         <ProfileField
           id="gender"
           label="Gender"
-          value={genderCaptlize}
+          value={profile?.genderLabel}
         />
       </div>
     </SectionCard>

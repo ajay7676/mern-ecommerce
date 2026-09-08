@@ -14,17 +14,17 @@ export const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-const isValidDateOnly = (value) => {
-  const [year, month, day] = value.split("-").map(Number);
+// const isValidDateOnly = (value) => {
+//   const [year, month, day] = value.split("-").map(Number);
 
-  const date = new Date(Date.UTC(year, month - 1, day));
+//   const date = new Date(Date.UTC(year, month - 1, day));
 
-  return (
-    date.getUTCFullYear() === year &&
-    date.getUTCMonth() === month - 1 &&
-    date.getUTCDate() === day
-  );
-};
+//   return (
+//     date.getUTCFullYear() === year &&
+//     date.getUTCMonth() === month - 1 &&
+//     date.getUTCDate() === day
+//   );
+// };
 
 export const updateProfileSchema = z
   .object({
@@ -42,17 +42,24 @@ export const updateProfileSchema = z
       .optional()
       .nullable(),
 
-    dateOfBirth: z
-      .string()
-      .refine(isValidDateOnly, {
-        message: "Please provide a valid date of birth",
-      })
-      .refine((date) => new Date(`${date}T00:00:00.000Z`) <= new Date(), {
-        message: "Date of birth cannot be in the future",
-      })
-      .optional()
-      .nullable(),
+    dateOfBirth: z.string().refine(
+      (value) => {
+        if (!value) return true;
 
-    gender: z.enum(["male", "female", "other"]).optional().nullable(),
+        const date = new Date(value);
+
+        return !Number.isNaN(date.getTime()) && date <= new Date();
+      },
+      {
+        message: "Date of birth cannot be in the future",
+      },
+    ),
+
+    gender: z
+      .string()
+      .refine(
+        (value) => ["", "male", "female", "other"].includes(value),
+        "Please select a valid gender",
+      ),
   })
   .strict();
