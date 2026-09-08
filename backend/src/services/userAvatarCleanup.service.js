@@ -4,7 +4,7 @@ import cloudinary, {
 
 import HandleError from "../utils/handleError.js";
 
-const TEMP_AVATAR_FOLDER = "valid-super-store/users/avatars/temp";
+const TEMP_AVATAR_FOLDER = process.env.CLOUDINARY_USER_TEMP_FOLDER;
 
 export const deleteTemporaryUserAvatarService = async ({ publicId }) => {
   verifyCloudinaryConfiguration();

@@ -1,4 +1,4 @@
-import cloudinary from "../../config/cloudinary.js";
+import cloudinary,{verifyCloudinaryConfiguration} from "../../config/cloudinary.js";
 
 // This is useful for ownership verification.
 export const getCloudinaryAsset = async ({

@@ -1,6 +1,7 @@
+import {env} from '../../../config/env.js'
 export const USER_AVATAR_CONFIG = {
   folder:
-    "valid-super-store/users/avatars/temp",
+    env.cloudinary.userTempFolder,
 
   tags: [
     "user-avatar",
@@ -29,3 +30,5 @@ export const USER_AVATAR_CONFIG = {
     },
   ],
 };
+
+

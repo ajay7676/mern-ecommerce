@@ -25,7 +25,6 @@ import cloudinary, {
   verifyCloudinaryConfiguration,
 } from "../../../config/cloudinary.js";
 import { deleteUserAvatarFromCloudinary } from "../../../services/userAvatarCleanup.service.js";
-import User from "../../../model/userModel.js";
 
 const escapeRegex = (value) => {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

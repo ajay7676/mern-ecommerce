@@ -43,3 +43,27 @@ export const DEFAULT_BRAND_PAGE = 1;
 export const DEFAULT_BRAND_LIMIT = 10;
 
 export const MAX_BRAND_LIMIT = 100;
+
+
+export const BRAND_LOGO_CONFIG = {
+  folder:
+    "valid-super-store/brands/logos/temp",
+
+  tags: [
+    "brand-image",
+    "brand-logo",
+    "temporary",
+  ],
+
+  transformation: [
+    {
+      width: 600,
+      height: 600,
+      crop: "fit",
+    },
+    {
+      quality: "auto",
+      fetch_format: "auto",
+    },
+  ],
+}

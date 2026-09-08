@@ -10,7 +10,7 @@ const uploadBufferToCloudinary = ({ buffer, adminId }) => {
     const config = cloudinary.config();
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: "valid-super-store/users/avatars/temp",
+        folder: process.env.CLOUDINARY_USER_TEMP_FOLDER,
 
         resource_type: "image",
 

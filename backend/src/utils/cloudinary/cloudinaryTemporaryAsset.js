@@ -15,6 +15,7 @@ export const verifyTemporaryCloudinaryAsset =
       resourceType,
     });
 
+
     const tags = asset.tags ?? [];
 
     if (!tags.includes(temporaryTag)) {

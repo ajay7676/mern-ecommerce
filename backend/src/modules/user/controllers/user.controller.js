@@ -1,4 +1,7 @@
-import { getUserProfileService, updateUserProfileService  } from "../services/user.service.js";
+import { getUserProfileService, 
+  updateUserProfileService, 
+  uploadTemporaryAvatarService 
+ } from "../services/user.service.js";
 
 export const getProfile = async (req, res, next) => {
   try {
@@ -13,8 +16,27 @@ export const getProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+export const uploadProfileAvatar = async (req, res, next) => {
+  try {
+    const avatar = await uploadTemporaryAvatarService({
+      file: req.file,
+      userId: req.user._id,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Profile image uploaded successfully",
+      data: avatar,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateProfile = async (req, res, next) => {
   try {
+
     const profile =
       await updateUserProfileService(
         req.user._id,

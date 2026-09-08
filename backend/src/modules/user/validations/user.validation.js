@@ -12,6 +12,18 @@ const isValidDateOnly = (value) => {
   );
 };
 
+
+const avatarSchema = z.object({
+  publicId: z
+    .string()
+    .trim()
+    .min(1, "Avatar publicId is required"),
+
+  url: z
+    .string()
+    .url("Please provide a valid avatar URL"),
+});
+
 export const updateProfileSchema = z
   .object({
     name: z
@@ -46,5 +58,6 @@ export const updateProfileSchema = z
       .enum(["male", "female", "other"])
       .optional()
       .nullable(),
+     avatar: avatarSchema.optional(),  
   })
   .strict();
