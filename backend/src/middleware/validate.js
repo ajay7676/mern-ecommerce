@@ -1,32 +1,28 @@
 import { ZodError } from "zod";
+import HandleError from "../utils/handleError.js";
 
 export const validate = (schema) => {
   return (req, res, next) => {
-    try {
-      req.body = schema.parse(req.body);
+    const result = schema.safeParse(req.body ?? {});
+    
+    if (!result.success) {
+      const errors = {};
 
-      next();
-    } catch (error) {
-      if (error instanceof ZodError) {
-        const fieldErrors = {};
+      result.error.issues.forEach((issue) => {
+        const field = issue.path.join(".") || "body";
+        errors[field] = issue.message;
+      });
 
-        error.issues.forEach((issue) => {
-          const field = issue.path[0];
-
-          if (field) {
-            fieldErrors[field] = issue.message;
-          }
-        });
-
-        return res.status(400).json({
-          success: false,
-          message: "Validation failed",
-          errors: fieldErrors,
-          statusCode: 400,
-        });
-      }
-
-      next(error);
+      return next(
+        new HandleError(
+          "Validation failed",
+          400,
+          errors
+        )
+      );
     }
+
+    req.body = result.data;
+    next();
   };
 };

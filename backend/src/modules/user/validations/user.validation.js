@@ -12,16 +12,10 @@ const isValidDateOnly = (value) => {
   );
 };
 
-
 const avatarSchema = z.object({
-  publicId: z
-    .string()
-    .trim()
-    .min(1, "Avatar publicId is required"),
+  publicId: z.string().trim().min(1, "Avatar publicId is required"),
 
-  url: z
-    .string()
-    .url("Please provide a valid avatar URL"),
+  url: z.string().url("Please provide a valid avatar URL"),
 });
 
 export const updateProfileSchema = z
@@ -45,19 +39,27 @@ export const updateProfileSchema = z
       .refine(isValidDateOnly, {
         message: "Please provide a valid date of birth",
       })
-      .refine(
-        (date) => new Date(`${date}T00:00:00.000Z`) <= new Date(),
-        {
-          message: "Date of birth cannot be in the future",
-        }
-      )
+      .refine((date) => new Date(`${date}T00:00:00.000Z`) <= new Date(), {
+        message: "Date of birth cannot be in the future",
+      })
       .optional()
       .nullable(),
 
-    gender: z
-      .enum(["male", "female", "other"])
-      .optional()
-      .nullable(),
-     avatar: avatarSchema.optional(),  
+    gender: z.enum(["male", "female", "other"]).optional().nullable(),
+    avatar: avatarSchema.optional().nullable(),
+  })
+  .strict();
+
+export const deleteTemporaryAvatarSchema = z
+  .object({
+    publicIds: z
+      .array(
+        z
+          .string()
+          .trim()
+          .min(1, "Avatar publicId is required")
+      )
+      .min(1, "Please provide at least one avatar publicId")
+      .max(5, "You can delete maximum 5 temporary avatars at once"),
   })
   .strict();

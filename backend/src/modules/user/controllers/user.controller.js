@@ -1,4 +1,6 @@
-import { getUserProfileService, 
+import { 
+  deleteTemporaryProfileAvatarService,
+  getUserProfileService, 
   updateUserProfileService, 
   uploadTemporaryAvatarService 
  } from "../services/user.service.js";
@@ -47,6 +49,25 @@ export const updateProfile = async (req, res, next) => {
       success: true,
       message: "Profile updated successfully",
       data: profile,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteTemporaryProfileAvatar = async (req, res, next) => {
+
+   console.log("Temporary API COntroller")
+  try {
+    const result = await deleteTemporaryProfileAvatarService({
+      userId: req.user._id,
+      publicIds: req.body.publicIds,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Temporary profile image deleted successfully",
+      data: result,
     });
   } catch (error) {
     next(error);

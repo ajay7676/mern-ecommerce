@@ -8,8 +8,12 @@ import {
   updateProfile,
   getProfile,
   uploadProfileAvatar,
+  deleteTemporaryProfileAvatar,
 } from "../controllers/user.controller.js";
-import { updateProfileSchema } from "../validations/user.validation.js";
+import {
+  deleteTemporaryAvatarSchema, 
+  updateProfileSchema
+  } from "../validations/user.validation.js";
 import { uploadImage } from "../../../middleware/upload.middleware.js";
 
 const router = express.Router();
@@ -29,6 +33,13 @@ router.post(
   userAuth,
   uploadImage.single("avatar"),
   uploadProfileAvatar,
+);
+
+router.delete(
+  "/user/profile/avatar/temp",
+  userAuth,
+  validate(deleteTemporaryAvatarSchema),
+  deleteTemporaryProfileAvatar
 );
 
 export default router;

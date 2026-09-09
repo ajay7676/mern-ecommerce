@@ -12,39 +12,20 @@ import ProfileSkeleton from "./ProfileSkeleton";
 
 const Profile = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const { data:profileData, isLoading, isError, error, refetch } = useProfile();
+  const {
+    data: profileData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useProfile();
   const handleEditProfile = () => {
-    console.log("Open edit profile form");
     setIsEditModalOpen(true);
   };
 
   const handleChangeImage = () => {
     console.log("Open profile image uploader");
   };
-  if (isLoading) {
-    return <ProfileSkeleton />;
-  }
-  if (isError) {
-    return (
-      <div className="rounded-xl border border-error/20 bg-error/5 p-6">
-        <h2 className="font-semibold text-error">Failed to load profile</h2>
-
-        <p className="mt-1 text-sm text-base-content/70">
-          {error?.response?.data?.message ||
-            "Something went wrong while loading your profile."}
-        </p>
-
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="btn btn-sm btn-error mt-4"
-        >
-          Try Again
-        </button>
-      </div>
-    );
-  }
-
   return (
     <>
       {isEditModalOpen && (
@@ -67,15 +48,40 @@ const Profile = () => {
           </h1>
 
           <div className="mt-0 space-y-5 lg:mt-5">
-            <ProfileHeaderCard
-              profile={profileData}
-              onEdit={handleEditProfile}
-              onChangeImage={handleChangeImage}
-            />
+            {isLoading ? (
+              <ProfileSkeleton />
+            ) : isError ? (
+              <div className="rounded-xl border border-error/20 bg-error/5 p-6">
+                <h2 className="font-semibold text-error">
+                  Failed to load profile
+                </h2>
 
-            <PersonalInformationCard profile={profileData} />
+                <p className="mt-1 text-sm text-base-content/70">
+                  {error?.response?.data?.message ||
+                    "Something went wrong while loading your profile."}
+                </p>
 
-            <EmailPreferencesCard preferences={emailPreferences} />
+                <button
+                  type="button"
+                  onClick={() => refetch()}
+                  className="btn btn-sm btn-error mt-4"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : (
+              <>
+                <ProfileHeaderCard
+                  profile={profileData}
+                  onEdit={handleEditProfile}
+                  onChangeImage={handleChangeImage}
+                />
+
+                <PersonalInformationCard profile={profileData} />
+
+                <EmailPreferencesCard preferences={emailPreferences} />
+              </>
+            )}
           </div>
         </div>
       </AccountLayout>

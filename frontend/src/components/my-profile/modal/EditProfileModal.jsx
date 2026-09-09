@@ -1,20 +1,31 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useUpdateProfile } from "../../../hooks/mutations/user/useUpdateProfile";
 import { profileSchema } from "../../../schemas/profile.schema";
+import userPlaceholder from "../../../../public/images/user-placeholder.png";
+import { useUploadProfileAvatar } from "../../../hooks/mutations/user/useUploadProfileAvatar";
+import { useDeleteTemporaryAvatar } from "../../../hooks/mutations/user/useDeleteTemporaryAvatar";
 
 const EditProfileModal = ({ isOpen, onClose, user }) => {
-  console.log(isOpen);
+  const [temporaryAvatar, setTemporaryAvatar] = useState(null);
+
+  const [shouldRemoveAvatar, setShouldRemoveAvatar] = useState(false);
+
+  const uploadAvatarMutation = useUploadProfileAvatar();
+
   const updateProfileMutation = useUpdateProfile();
+
+  const deleteTemporaryAvatarMutation = useDeleteTemporaryAvatar();
+
   const isSaving = updateProfileMutation.isPending;
   const {
     register,
     handleSubmit,
     reset,
     setError,
-    formState: { errors, isDirty },
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(profileSchema),
 
@@ -48,34 +59,113 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
     });
   }, [user, isOpen, reset]);
 
-  const onSubmit = async (values) => {
-    try {
-      const payload = {
-        name: values.name.trim(),
-        phone: values.phone.trim() || null,
-        dateOfBirth: values.dateOfBirth || null,
-        gender: values.gender || null,
-      };
+  const avatarPreview = shouldRemoveAvatar
+    ? userPlaceholder
+    : temporaryAvatar?.url || user?.avatar?.url || userPlaceholder;
 
+  const handleAvatarChange = async (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const oldTemp = temporaryAvatar;
+
+    try {
+      const uploaded = await uploadAvatarMutation.mutateAsync(file);
+
+      setTemporaryAvatar(uploaded);
+
+      setShouldRemoveAvatar(false);
+
+      /*
+       * User selected A,
+       * then selected B.
+       *
+       * Delete old temporary A.
+       */
+      if (oldTemp) {
+        try {
+          await deleteTemporaryAvatarMutation.mutateAsync({
+            publicIds: [oldTemp.publicId],
+          });
+        } catch (cleanupError) {
+          console.error("Old temporary avatar cleanup failed", cleanupError);
+        }
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to upload profile image",
+      );
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    /*
+     * If there is a temporary
+     * uploaded image,
+     * we can delete that now.
+     */
+    if (temporaryAvatar) {
+      try {
+        await deleteTemporaryAvatarMutation.mutateAsync({
+          publicIds: [temporaryAvatar.publicId],
+        });
+      } catch (error) {
+        console.error("Temporary avatar cleanup failed", error);
+      }
+    }
+
+    setTemporaryAvatar(null);
+
+    setShouldRemoveAvatar(true);
+  };
+
+  const onSubmit = async (values) => {
+    const payload = {
+      name: values.name.trim(),
+
+      phone: values.phone?.trim() || null,
+
+      dateOfBirth: values.dateOfBirth || null,
+
+      gender: values.gender || null,
+    };
+
+    /*
+     * New / replacement avatar
+     */
+    if (temporaryAvatar) {
+      payload.avatar = {
+        publicId: temporaryAvatar.publicId,
+
+        url: temporaryAvatar.url,
+      };
+    } else if (shouldRemoveAvatar) {
+      /*
+       * Remove existing avatar
+       */
+      payload.avatar = null;
+    }
+
+    try {
       await updateProfileMutation.mutateAsync(payload);
+
+      /*
+       * Important:
+       * image has now been saved.
+       */
+      setTemporaryAvatar(null);
+
+      setShouldRemoveAvatar(false);
 
       toast.success("Profile updated successfully");
 
-      handleClose();
+      onClose();
     } catch (error) {
-      const apiErrors = error?.response?.data?.errors;
-
-      if (apiErrors) {
-        Object.entries(apiErrors).forEach(([field, message]) => {
-          setError(field, {
-            type: "server",
-            message,
-          });
-        });
-
-        return;
-      }
-
       toast.error(error?.response?.data?.message || "Failed to update profile");
     }
   };
@@ -118,25 +208,66 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
             {/* Avatar */}
             <div className="mb-6 flex items-center gap-4">
               <div className="avatar">
-                <div className="w-20 rounded-full ring ring-primary ring-offset-2 ring-offset-base-100">
+                <div className="h-20 w-20 overflow-hidden rounded-full">
                   <img
-                    src={
-                      user?.avatar || "https://ui-avatars.com/api/?name=User"
-                    }
-                    alt={user?.name || "User"}
-                  />
+                    src={avatarPreview}
+                    alt="Profile"
+                    className="h-full w-full object-cover"/>
                 </div>
               </div>
-
               <div>
-                <h3 className="font-semibold">Profile Photo</h3>
-
-                <p className="text-sm text-base-content/60">
-                  Your profile photo
+                <p className="font-semibold">Profile Photo</p>
+                <p className="mb-3 text-sm text-base-content/60">
+                  JPG, PNG or WEBP. Maximum 2MB.
                 </p>
+
+                <div className=" flex flex-wrap gap-2"
+                >
+                  <input
+                    id="avatar"
+                    type="file"
+                    accept="
+                      image/jpeg,
+                      image/png,
+                      image/webp
+                    "
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
+
+                  <label
+                    htmlFor="avatar"
+                    className="
+                      btn
+                      btn-sm
+                      btn-outline
+                    "
+                  >
+                    {uploadAvatarMutation.isPending
+                      ? "Uploading..."
+                      : user?.avatar?.url || temporaryAvatar
+                        ? "Change Photo"
+                        : "Add Photo"}
+                  </label>
+
+                  {(user?.avatar?.url || temporaryAvatar) &&
+                    !shouldRemoveAvatar && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveAvatar}
+                        className="
+                          btn
+                          btn-sm
+                          btn-ghost
+                          text-error
+                        "
+                       >
+                        Remove
+                      </button>
+                    )}
+                </div>
               </div>
             </div>
-
             {/* Form fields */}
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               {/* Full Name */}
@@ -268,7 +399,7 @@ const EditProfileModal = ({ isOpen, onClose, user }) => {
 
             <button
               type="submit"
-              disabled={updateProfileMutation.isPending || !isDirty}
+              disabled={updateProfileMutation.isPending}
               className="btn btn-primary"
             >
               {updateProfileMutation.isPending ? (
