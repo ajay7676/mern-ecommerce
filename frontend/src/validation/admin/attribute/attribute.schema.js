@@ -33,16 +33,10 @@ export const attributeSchema = z
       .max(100, "Slug must be less than 100 characters")
       .regex(
         /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-        "Slug can only contain lowercase letters, numbers and hyphens"
+        "Slug can only contain lowercase letters, numbers and hyphens",
       ),
 
-    type: z.enum([
-      "dropdown",
-      "switch",
-      "text",
-      "boolean",
-      "number",
-    ]),
+    type: z.enum(["dropdown", "switch", "text", "boolean", "number"]),
 
     unit: z
       .string()
@@ -60,11 +54,7 @@ export const attributeSchema = z
 
     values: z.array(attributeValueSchema),
 
-    defaultValue: z
-      .string()
-      .trim()
-      .optional()
-      .or(z.literal("")),
+    defaultValue: z.string().trim().optional().or(z.literal("")),
 
     status: z.enum(["active", "inactive"]),
 
@@ -116,9 +106,7 @@ export const attributeSchema = z
         });
       }
 
-      const values = data.values.map((item) =>
-        item.value.toLowerCase()
-      );
+      const values = data.values.map((item) => item.value.toLowerCase());
 
       const uniqueValues = new Set(values);
 
@@ -130,9 +118,7 @@ export const attributeSchema = z
         });
       }
 
-      const defaultValues = data.values.filter(
-        (item) => item.isDefault
-      );
+      const defaultValues = data.values.filter((item) => item.isDefault);
 
       if (defaultValues.length > 1) {
         ctx.addIssue({
@@ -235,6 +221,191 @@ export const attributeSchema = z
           code: z.ZodIssueCode.custom,
           path: ["stepValue"],
           message: "Step value must be greater than 0",
+        });
+      }
+    }
+  });
+
+  
+const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const optionalNumber = z.preprocess(
+  (value) => {
+    if (value === "" || value === null || value === undefined) {
+      return null;
+    }
+
+    return Number(value);
+  },
+  z.number().nullable()
+);
+
+const valueSchema = z.object({
+  label: z
+    .string()
+    .trim()
+    .min(1, "Value label is required")
+    .max(50, "Value must not exceed 50 characters"),
+
+  value: z
+    .string()
+    .trim()
+    .optional(),
+
+  colorCode: z
+    .string()
+    .trim()
+    .optional()
+    .nullable(),
+});
+
+export const attributeFormSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, "Attribute name is required")
+      .max(80, "Attribute name must not exceed 80 characters"),
+
+    slug: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .min(2, "Slug is required")
+      .regex(
+        slugRegex,
+        "Use lowercase letters, numbers and hyphen only"
+      ),
+
+    type: z.enum([
+      "dropdown",
+      "switch",
+      "text",
+      "number",
+      "boolean",
+    ]),
+
+    values: z
+      .array(valueSchema)
+      .default([]),
+
+    placeholder: z
+      .string()
+      .trim()
+      .optional()
+      .nullable(),
+
+    defaultValue: z
+      .any()
+      .optional()
+      .nullable(),
+
+    minValue: optionalNumber.optional(),
+    maxValue: optionalNumber.optional(),
+    step: optionalNumber.optional(),
+
+    unit: z
+      .string()
+      .trim()
+      .optional()
+      .nullable(),
+
+    maxLength: optionalNumber.optional(),
+
+    trueLabel: z
+      .string()
+      .trim()
+      .optional()
+      .nullable(),
+
+    falseLabel: z
+      .string()
+      .trim()
+      .optional()
+      .nullable(),
+
+    isRequired: z.boolean(),
+    showInFilter: z.boolean(),
+    showOnProductPage: z.boolean(),
+
+    status: z.enum(["active", "inactive"]),
+    sortOrder: z.coerce.number().default(0),
+  })
+  .superRefine((data, ctx) => {
+    if (["dropdown", "switch"].includes(data.type)) {
+      if (!data.values || data.values.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["values"],
+          message: "Please add at least one value",
+        });
+      }
+
+      data.values.forEach((item, index) => {
+        if (!item.label?.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["values", index, "label"],
+            message: "Value is required",
+          });
+        }
+
+        if (data.type === "switch" && !item.colorCode) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["values", index, "colorCode"],
+            message: "Color is required",
+          });
+        }
+      });
+    }
+
+    if (data.type === "text") {
+      if (data.maxLength !== null && data.maxLength < 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["maxLength"],
+          message: "Max length must be greater than 0",
+        });
+      }
+    }
+
+    if (data.type === "number") {
+      if (
+        data.minValue !== null &&
+        data.maxValue !== null &&
+        data.minValue > data.maxValue
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["maxValue"],
+          message: "Max value must be greater than min value",
+        });
+      }
+
+      if (data.step !== null && data.step <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["step"],
+          message: "Step must be greater than 0",
+        });
+      }
+    }
+
+    if (data.type === "boolean") {
+      if (!data.trueLabel?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["trueLabel"],
+          message: "True label is required",
+        });
+      }
+
+      if (!data.falseLabel?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["falseLabel"],
+          message: "False label is required",
         });
       }
     }

@@ -7,14 +7,15 @@ import AttributeTypePanel from "../../../../components/admin/products/attributes
 import QuickTips from "../../../../components/admin/products/attributes/QuickTips";
 import RecentActivity from "../../../../components/admin/products/attributes/RecentActivity";
 import AttributeTableCard from "../../../../components/admin/products/attributes/AttributeTableCard";
-import AddAttributeModal from "../../../../components/admin/products/attributes/modal/add/AddAttributeModal";
+import AttributeFormModal from "../../../../components/admin/products/attributes/modal/add/AttributeFormModal";
 
 const AttributesPage = () => {
   const [search, setSearch] = useState("");
 
   const [status, setStatus] = useState("all");
   const [type, setType] = useState("all");
-  const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] =
+    useState(false);
 
   const isLoading = false;
 
@@ -38,9 +39,12 @@ const AttributesPage = () => {
   const hasFilters =
     Boolean(search.trim()) || status !== "all" || type !== "all";
 
-  const handleAddAttribute = () => {
-    // Open Add Attribute drawer/modal
-    setIsAddDrawerOpen(true);
+  
+  const handleAddOpenModal = () => {
+    setIsAddModalOpen(true);
+  };
+  const hideAddOpenModal = () => {
+    setIsAddModalOpen(false);
   };
 
   const handleClearFilters = () => {
@@ -49,18 +53,13 @@ const AttributesPage = () => {
     setType("all");
   };
 
-  const handleCreateAttribute = (formData) => {
-    console.log("ATTRIBUTE FORM:", formData);
-
-    // API will come in next phase.
-    setIsAddDrawerOpen(false);
-  };
+ 
   return (
     <>
       <div className="min-h-full bg-[#fcfcff]">
         <div className="mx-auto max-w-[1600px] space-y-5 p-4 sm:p-5 lg:p-6">
           {/* Header */}
-          <AttributesHeader onAddAttribute={handleAddAttribute} />
+          <AttributesHeader onAddAttribute={handleAddOpenModal} />
 
           {/* Filters */}
           <AttributeFilters
@@ -90,7 +89,7 @@ const AttributesPage = () => {
                   attributes={attributes}
                   isLoading={isLoading}
                   hasFilters={hasFilters}
-                  onAddAttribute={handleAddAttribute}
+                  onAddAttribute={handleAddOpenModal}
                   onClearFilters={handleClearFilters}
                 />
               </div>
@@ -104,10 +103,10 @@ const AttributesPage = () => {
           </div>
         </div>
       </div>
-      <AddAttributeModal
-        open={isAddDrawerOpen}
-        onClose={() => setIsAddDrawerOpen(false)}
-        onSubmit={handleCreateAttribute}
+     
+       <AttributeFormModal
+        isOpen={isAddModalOpen}
+        onClose={hideAddOpenModal}
       />
     </>
   );

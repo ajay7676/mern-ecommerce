@@ -198,3 +198,17 @@ Phase 9   Featured brand toggle
 Phase 10  Logo upload with Cloudinary
 Phase 11  Loading/empty/error states
 Phase 12  Export + polish + responsive testing            
+
+
+
+
+Phase 1  → Backend Attribute Model
+Phase 2  → Backend Zod Validation
+Phase 3  → Backend Repository + Service
+Phase 4  → Controller + Route
+Phase 5  → Postman Testing
+Phase 6  → Frontend API + TanStack Query
+Phase 7  → React Hook Form + Zod Form
+Phase 8  → Dynamic Values UI by Attribute Type
+Phase 9  → Save Attribute + Redirect/List Update
+Phase 10 → Later: Edit/Delete/Status/Sort Order   

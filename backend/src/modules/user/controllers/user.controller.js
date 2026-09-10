@@ -57,7 +57,6 @@ export const updateProfile = async (req, res, next) => {
 
 export const deleteTemporaryProfileAvatar = async (req, res, next) => {
 
-   console.log("Temporary API COntroller")
   try {
     const result = await deleteTemporaryProfileAvatarService({
       userId: req.user._id,
