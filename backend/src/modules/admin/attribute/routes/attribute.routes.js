@@ -2,8 +2,15 @@ import express from "express";
 import { userAuth } from "../../../../middleware/userAuthMIddleware.js";
 import adminOnly from "../../../../middleware/adminMddleware.js";
 import {validate} from "../../../../middleware/validate.js";
-import { createAttributeSchema } from "../validations/attribute.validation.js";
-import { createAttributeController } from "../controllers/attribute.controller.js";
+import {
+   createAttributeSchema, 
+   getAttributesQuerySchema
+ } from "../validations/attribute.validation.js";
+import { 
+  createAttributeController,
+   getAttributesController 
+  } from "../controllers/attribute.controller.js";
+import { validateQuery } from "../../../../middleware/validateQuery.js";
 
 
 
@@ -16,6 +23,14 @@ router.post(
   adminOnly,
   validate(createAttributeSchema),
   createAttributeController
+);
+
+router.get(
+  "/admin/attributes",
+  userAuth,
+  adminOnly,
+  validateQuery(getAttributesQuerySchema),
+  getAttributesController
 );
 
 

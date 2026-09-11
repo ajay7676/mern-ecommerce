@@ -1,9 +1,11 @@
 import HandleError from "../../../../utils/handleError.js";
+import { mapAttributeForTable } from "../mappers/attribute.mapper.js";
 
 import {
   createAttribute,
   findAttributeByName,
   findAttributeBySlug,
+  findAttributesWithFilters,
 } from "../repositories/attribute.repository.js";
 
 const normalizeAttributeValues = (values = []) => {
@@ -83,3 +85,50 @@ export const createAttributeService = async ({ payload, adminId }) => {
 
   return attribute;
 };
+
+export const getAttributesService = async (query) => {
+  const {
+    page,
+    limit,
+    search,
+    type,
+    status,
+    sortBy,
+    sortOrder,
+  } = query;
+
+  const { attributes, total } =
+    await findAttributesWithFilters({
+      page,
+      limit,
+      search,
+      type,
+      status,
+      sortBy,
+      sortOrder,
+    });
+
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    items: attributes.map(mapAttributeForTable),
+
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+
+    filters: {
+      search,
+      type,
+      status,
+      sortBy,
+      sortOrder,
+    },
+  };
+};
+

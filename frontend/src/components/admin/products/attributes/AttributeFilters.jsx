@@ -1,131 +1,97 @@
-import {
-  FiChevronDown,
-  FiFilter,
-  FiRotateCcw,
-  FiSearch,
-} from "react-icons/fi";
+// src/features/admin/attributes/components/AttributeFilters.jsx
 
-const selectClass = `
-  h-10 w-full rounded-lg
-  border border-slate-200
-  bg-white px-3 pr-9
-  text-sm text-slate-800
-  outline-none
-  transition
-  focus:border-violet-500
-  focus:ring-2 focus:ring-violet-100
-`;
+import {
+  RotateCcw,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 
 const AttributeFilters = ({
-  search,
-  type,
-  status,
-  onSearchChange,
-  onTypeChange,
-  onStatusChange,
-  onFilter,
-  onReset,
+  filters,
+  onFilterChange,
+  onApplyFilters,
+  onResetFilters,
+  isFetching,
 }) => {
   return (
-    <section className="rounded-lg border border-slate-100 bg-white p-3 shadow-sm sm:p-4">
-      <div className="grid gap-3 lg:grid-cols-[minmax(240px,1fr)_170px_170px_auto_auto]">
-        {/* Search */}
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="grid gap-3 lg:grid-cols-[1fr_170px_170px_auto_auto]">
         <div className="relative">
-          <FiSearch
-            size={17}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
-          />
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
           <input
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
+            type="text"
+            value={filters.search}
+            onChange={(event) =>
+              onFilterChange(
+                "search",
+                event.target.value
+              )
+            }
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                onApplyFilters();
+              }
+            }}
             placeholder="Search attributes..."
-            className="
-              h-10 w-full rounded-lg
-              border border-slate-200
-              bg-white pl-10 pr-3
-              text-sm text-slate-800
-              outline-none
-              placeholder:text-slate-400
-              focus:border-violet-500
-              focus:ring-2 focus:ring-violet-100
-            "
+            className="input input-bordered w-full bg-white pl-11"
           />
         </div>
 
-        {/* Type */}
-        <div className="relative">
-          <select
-            value={type}
-            onChange={(e) => onTypeChange(e.target.value)}
-            className={`${selectClass} appearance-none`}
-          >
-            <option value="">All Types</option>
-            <option value="Dropdown">Dropdown</option>
-            <option value="Switch">Switch</option>
-            <option value="Text">Text</option>
-            <option value="Number">Number</option>
-            <option value="Boolean">Boolean</option>
-          </select>
+        <select
+          value={filters.type}
+          onChange={(event) =>
+            onFilterChange(
+              "type",
+              event.target.value
+            )
+          }
+          className="select select-bordered w-full bg-white"
+        >
+          <option value="all">All Types</option>
+          <option value="dropdown">Dropdown</option>
+          <option value="switch">Switch</option>
+          <option value="text">Text</option>
+          <option value="number">Number</option>
+          <option value="boolean">Boolean</option>
+        </select>
 
-          <FiChevronDown
-            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
-            size={15}
-          />
-        </div>
+        <select
+          value={filters.status}
+          onChange={(event) =>
+            onFilterChange(
+              "status",
+              event.target.value
+            )
+          }
+          className="select select-bordered w-full bg-white"
+        >
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
 
-        {/* Status */}
-        <div className="relative">
-          <select
-            value={status}
-            onChange={(e) => onStatusChange(e.target.value)}
-            className={`${selectClass} appearance-none`}
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-
-          <FiChevronDown
-            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
-            size={15}
-          />
-        </div>
-
-        {/* Filter */}
         <button
           type="button"
-          onClick={onFilter}
-          className="
-            flex h-10 items-center justify-center
-            gap-2 rounded-lg
-            bg-violet-600 px-5
-            text-sm font-semibold text-white
-            transition hover:bg-violet-700
-          "
+          onClick={onApplyFilters}
+          disabled={isFetching}
+          className="btn btn-primary"
         >
-          <FiFilter size={16} />
+          <SlidersHorizontal className="h-4 w-4" />
           Filter
         </button>
 
-        {/* Reset */}
         <button
           type="button"
-          onClick={onReset}
-          className="
-            flex h-10 items-center justify-center
-            gap-2 rounded-lg
-            border border-slate-200
-            bg-white px-5
-            text-sm font-semibold text-slate-800
-            transition hover:bg-slate-50
-          "
+          onClick={onResetFilters}
+          disabled={isFetching}
+          className="btn btn-outline"
         >
-          <FiRotateCcw size={15} />
+          <RotateCcw className="h-4 w-4" />
           Reset
         </button>
       </div>
-    </section>
+    </div>
   );
 };
 

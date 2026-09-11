@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { ATTRIBUTE_DUMMY_DATA } from "../../../../data/admin/products/attributeDummyData";
 import AttributesHeader from "../../../../components/admin/products/attributes/AttributesHeader";
 import AttributeFilters from "../../../../components/admin/products/attributes/AttributeFilters";
 import AttributeStats from "../../../../components/admin/products/attributes/AttributeStats";
@@ -8,69 +7,115 @@ import QuickTips from "../../../../components/admin/products/attributes/QuickTip
 import RecentActivity from "../../../../components/admin/products/attributes/RecentActivity";
 import AttributeTableCard from "../../../../components/admin/products/attributes/AttributeTableCard";
 import AttributeFormModal from "../../../../components/admin/products/attributes/modal/add/AttributeFormModal";
+import { useAttributes } from "../../../../hooks/admin/queries/products/attributes/useAttributes";
+
+const DEFAULT_PARAMS = {
+  page: 1,
+  limit: 10,
+  search: "",
+  type: "all",
+  status: "all",
+  sortBy: "createdAt",
+  sortOrder: "desc",
+};
+
+const DEFAULT_FILTERS = {
+  search: "",
+  type: "all",
+  status: "all",
+};
 
 const AttributesPage = () => {
-  const [search, setSearch] = useState("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const [status, setStatus] = useState("all");
-  const [type, setType] = useState("all");
-  const [isAddModalOpen, setIsAddModalOpen] =
-    useState(false);
+  const [params, setParams] = useState({
+    page: 1,
+    limit: 10,
+    search: "",
+    type: "all",
+    status: "all",
+    sortBy: "createdAt",
+    sortOrder: "desc",
+  });
+  const [filters, setFilters] = useState({
+    search: "",
+    type: "all",
+    status: "all",
+  });
+  const { data, isLoading, isFetching, isError, error, refetch } =
+    useAttributes(params);
 
-  const isLoading = false;
+  const attributes = data?.items || [];
+  const pagination = data?.pagination;
 
-  const attributes = ATTRIBUTE_DUMMY_DATA;
-
-  const handleFilter = () => {
-    // API filtering will be connected later.
-    console.log("Apply filters", {
-      search,
-      type,
-      status,
-    });
+  const handleFilterChange = (name, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleReset = () => {
-    setSearch("");
-    setType("");
-    setStatus("");
+  const handleApplyFilters = () => {
+    setParams((prev) => ({
+      ...prev,
+      page: 1,
+      search: filters.search.trim(),
+      type: filters.type,
+      status: filters.status,
+    }));
   };
 
-  const hasFilters =
-    Boolean(search.trim()) || status !== "all" || type !== "all";
+  const handleResetFilters = () => {
+    setFilters(DEFAULT_FILTERS);
+    setParams(DEFAULT_PARAMS);
+  };
 
-  
-  const handleAddOpenModal = () => {
+  const handleSort = (nextSortBy) => {
+    setParams((prev) => ({
+      ...prev,
+      page: 1,
+      sortBy: nextSortBy,
+      sortOrder:
+        prev.sortBy === nextSortBy && prev.sortOrder === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  const handlePageChange = (page) => {
+    setParams((prev) => ({
+      ...prev,
+      page,
+    }));
+  };
+
+  const handleOpenAddModal = () => {
     setIsAddModalOpen(true);
   };
   const hideAddOpenModal = () => {
     setIsAddModalOpen(false);
   };
 
-  const handleClearFilters = () => {
-    setSearch("");
-    setStatus("all");
-    setType("all");
+  const handleEdit = (attribute) => {
+    console.log("Edit attribute:", attribute);
   };
 
- 
+  const handleDelete = (attribute) => {
+    console.log("Delete attribute:", attribute);
+  };
+
   return (
     <>
       <div className="min-h-full bg-[#fcfcff]">
         <div className="mx-auto max-w-[1600px] space-y-5 p-4 sm:p-5 lg:p-6">
           {/* Header */}
-          <AttributesHeader onAddAttribute={handleAddOpenModal} />
+          <AttributesHeader onAddAttribute={handleOpenAddModal} />
 
           {/* Filters */}
           <AttributeFilters
-            search={search}
-            type={type}
-            status={status}
-            onSearchChange={setSearch}
-            onTypeChange={setType}
-            onStatusChange={setStatus}
-            onFilter={handleFilter}
-            onReset={handleReset}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onApplyFilters={handleApplyFilters}
+            onResetFilters={handleResetFilters}
+            isFetching={isFetching}
           />
 
           {/* Main Content */}
@@ -88,9 +133,17 @@ const AttributesPage = () => {
                 <AttributeTableCard
                   attributes={attributes}
                   isLoading={isLoading}
-                  hasFilters={hasFilters}
-                  onAddAttribute={handleAddOpenModal}
-                  onClearFilters={handleClearFilters}
+                  hasFilters={handleApplyFilters}
+                  onAddAttribute={handleOpenAddModal}
+                  onClearFilters={handleResetFilters}
+                  sortBy={params.sortBy}
+                  sortOrder={params.sortOrder}
+                  onSort={handleSort}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  isFetching={isFetching}
+                  pagination={pagination}
+                  onPageChange={handlePageChange}
                 />
               </div>
             </div>
@@ -103,11 +156,10 @@ const AttributesPage = () => {
           </div>
         </div>
       </div>
-     
-       <AttributeFormModal
-        isOpen={isAddModalOpen}
-        onClose={hideAddOpenModal}
-      />
+
+      <AttributeFormModal
+       isOpen={isAddModalOpen}
+      onClose={hideAddOpenModal} />
     </>
   );
 };

@@ -41,6 +41,7 @@ const AttributesHeader = ({ onAddAttribute }) => {
             focus:outline-none focus:ring-2
             focus:ring-violet-200
             sm:flex-none
+            cursor-pointer
           "
         >
           <FiPlus size={18} />

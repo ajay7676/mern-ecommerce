@@ -43,6 +43,18 @@ const attributeTypes = [
     icon: CheckSquare,
   },
 ];
+const statusTypes = [
+  {
+    label: "Active",
+    value: "active",
+    icon: CheckSquare,
+  },
+  {
+    label: "Inactive",
+    value: "inactive",
+    icon: CheckSquare,
+  },
+];
 
 const AttributeFormModal = ({ isOpen, onClose }) => {
   const createAttributeMutation = useCreateAttribute();
@@ -131,6 +143,11 @@ const AttributeFormModal = ({ isOpen, onClose }) => {
     });
   };
 
+  const handleAttributeChange = (event) => {
+    const status = event.target.value;
+
+    console.log(status);
+  };
   const handleCancel = () => {
     reset(getAttributeDefaultValues());
     onClose();
@@ -193,297 +210,321 @@ const AttributeFormModal = ({ isOpen, onClose }) => {
           ${open ? "translate-x-0" : "translate-x-full"}
         `}
         >
-               
-                <div className="flex h-full min-h-0 flex-col">        {/* Header */}
-              <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4 sm:px-8">
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-950">
-                    Add New Attribute
-                  </h2>
+          <div className="flex h-full min-h-0 flex-col">
+            {" "}
+            {/* Header */}
+            <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4 sm:px-8">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-950">
+                  Add New Attribute
+                </h2>
 
-                  <p className="mt-1 text-sm text-slate-500">
-                    Create product attribute based on selected type.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="btn btn-ghost btn-sm btn-circle"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+                <p className="mt-1 text-sm text-slate-500">
+                  Create product attribute based on selected type.
+                </p>
               </div>
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="flex min-h-0 flex-1 flex-col"
+
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="btn btn-ghost btn-sm btn-circle"
               >
-                {/* Body */}
-                <div className="overflow-y-auto px-5 py-6 sm:px-8">
-                  <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
-                    {/* Left Form */}
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-                      <section>
-                        <div className="mb-5 flex items-start gap-3">
-                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
-                            1
-                          </span>
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex min-h-0 flex-1 flex-col"
+            >
+              {/* Body */}
+              <div className="overflow-y-auto px-5 py-6 sm:px-8">
+                <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
+                  {/* Left Form */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+                    <section>
+                      <div className="mb-5 flex items-start gap-3">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                          1
+                        </span>
 
-                          <div>
-                            <h3 className="text-lg font-bold text-slate-900">
-                              Basic Information
-                            </h3>
+                        <div>
+                          <h3 className="text-lg font-bold text-slate-900">
+                            Basic Information
+                          </h3>
 
-                            <p className="text-sm text-slate-500">
-                              Enter the basic details for this attribute.
+                          <p className="text-sm text-slate-500">
+                            Enter the basic details for this attribute.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-5 md:grid-cols-2">
+                        <div>
+                          <label className="label font-semibold">
+                            Attribute Name
+                            <span className="text-error">*</span>
+                          </label>
+
+                          <input
+                            type="text"
+                            value={formValues.name || ""}
+                            onChange={handleNameChange}
+                            placeholder="e.g. Size"
+                            className="input input-bordered w-full bg-white"
+                          />
+
+                          {errors.name && (
+                            <p className="mt-1 text-xs text-error">
+                              {errors.name.message}
                             </p>
-                          </div>
+                          )}
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            This name will be visible in your store.
+                          </p>
                         </div>
 
-                        <div className="grid gap-5 md:grid-cols-2">
-                          <div>
-                            <label className="label font-semibold">
-                              Attribute Name
-                              <span className="text-error">*</span>
-                            </label>
+                        <div>
+                          <label className="label font-semibold">
+                            Attribute Slug (URL)
+                            <span className="text-error">*</span>
+                          </label>
 
-                            <input
-                              type="text"
-                              value={formValues.name || ""}
-                              onChange={handleNameChange}
-                              placeholder="e.g. Size"
-                              className="input input-bordered w-full bg-white"
+                          <input
+                            type="text"
+                            {...register("slug")}
+                            placeholder="e.g. size"
+                            className="input input-bordered w-full bg-white"
+                          />
+
+                          {errors.slug && (
+                            <p className="mt-1 text-xs text-error">
+                              {errors.slug.message}
+                            </p>
+                          )}
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            Unique slug for the URL.
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="label font-semibold">
+                            Attribute Type
+                            <span className="text-error">*</span>
+                          </label>
+
+                          <div className="relative">
+                            <SelectedIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary" />
+                            <select
+                              value={attributeType}
+                              onChange={handleTypeChange}
+                              className="select select-bordered w-full bg-white pl-12 "
+                            >
+                              {attributeTypes.map((item) => (
+                                <option key={item.value} value={item.value}>
+                                  {item.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {errors.type && (
+                            <p className="mt-1 text-xs text-error">
+                              {errors.type.message}
+                            </p>
+                          )}
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            Choose how customers will select this attribute.
+                          </p>
+                        </div>
+                        <div>
+                          <label className="label font-semibold">
+                            Status
+                            <span className="text-error">*</span>
+                          </label>
+
+                          <select
+                            {...register("status")}
+                            className="select select-bordered w-full bg-white"
+                          >
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                          </select>
+
+                          {errors.status && (
+                            <p className="mt-1 text-xs text-error">
+                              {errors.status.message}
+                            </p>
+                          )}
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            Inactive attributes will not be shown in product
+                            forms.
+                          </p>
+                        </div>
+                      </div>
+                    </section>
+
+                    <AttributeTypeFields
+                      type={attributeType}
+                      fields={fields}
+                      append={append}
+                      remove={remove}
+                      register={register}
+                      errors={errors}
+                    />
+
+                    {/* Additional Settings */}
+                    <section className="mt-7 border-t border-slate-200 pt-6">
+                      <div className="mb-5 flex items-start gap-3">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                          3
+                        </span>
+
+                        <div>
+                          <h3 className="text-lg font-bold text-slate-900">
+                            Additional Settings
+                          </h3>
+
+                          <p className="text-sm text-slate-500">
+                            Configure how this attribute behaves in your store.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-5 md:grid-cols-3">
+                        <Controller
+                          name="isRequired"
+                          control={control}
+                          render={({ field }) => (
+                            <ToggleField
+                              label="Required"
+                              description="Make this attribute mandatory."
+                              checked={field.value}
+                              onChange={field.onChange}
                             />
+                          )}
+                        />
 
-                            {errors.name && (
-                              <p className="mt-1 text-xs text-error">
-                                {errors.name.message}
-                              </p>
-                            )}
-
-                            <p className="mt-1 text-xs text-slate-500">
-                              This name will be visible in your store.
-                            </p>
-                          </div>
-
-                          <div>
-                            <label className="label font-semibold">
-                              Attribute Slug (URL)
-                              <span className="text-error">*</span>
-                            </label>
-
-                            <input
-                              type="text"
-                              {...register("slug")}
-                              placeholder="e.g. size"
-                              className="input input-bordered w-full bg-white"
+                        <Controller
+                          name="showInFilter"
+                          control={control}
+                          render={({ field }) => (
+                            <ToggleField
+                              label="Show in Filter"
+                              description="Display in storefront filters."
+                              checked={field.value}
+                              onChange={field.onChange}
                             />
+                          )}
+                        />
 
-                            {errors.slug && (
-                              <p className="mt-1 text-xs text-error">
-                                {errors.slug.message}
-                              </p>
-                            )}
+                        <Controller
+                          name="showOnProductPage"
+                          control={control}
+                          render={({ field }) => (
+                            <ToggleField
+                              label="Show on Product Page"
+                              description="Display on product detail page."
+                              checked={field.value}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                    </section>
+                  </div>
 
-                            <p className="mt-1 text-xs text-slate-500">
-                              Unique slug for the URL.
-                            </p>
-                          </div>
+                  {/* Right Side */}
+                  <div className="space-y-5">
+                    <AttributePreview form={formValues} />
 
-                          <div>
-                            <label className="label font-semibold">
-                              Attribute Type
-                              <span className="text-error">*</span>
-                            </label>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                      <h3 className="text-lg font-bold text-slate-900">
+                        Attribute Type Guide
+                      </h3>
 
-                            <div className="relative">
-                              <SelectedIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary" />
+                      <div className="mt-4 space-y-3">
+                        {attributeTypes.map((item) => {
+                          const Icon = item.icon;
 
-                              <select
-                                value={attributeType}
-                                onChange={handleTypeChange}
-                                className="select select-bordered w-full bg-white pl-12 font-semibold"
-                              >
-                                {attributeTypes.map((item) => (
-                                  <option key={item.value} value={item.value}>
-                                    {item.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-
-                            {errors.type && (
-                              <p className="mt-1 text-xs text-error">
-                                {errors.type.message}
-                              </p>
-                            )}
-
-                            <p className="mt-1 text-xs text-slate-500">
-                              Choose how customers will select this attribute.
-                            </p>
-                          </div>
-                        </div>
-                      </section>
-
-                      <AttributeTypeFields
-                        type={attributeType}
-                        fields={fields}
-                        append={append}
-                        remove={remove}
-                        register={register}
-                        errors={errors}
-                      />
-
-                      {/* Additional Settings */}
-                      <section className="mt-7 border-t border-slate-200 pt-6">
-                        <div className="mb-5 flex items-start gap-3">
-                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
-                            3
-                          </span>
-
-                          <div>
-                            <h3 className="text-lg font-bold text-slate-900">
-                              Additional Settings
-                            </h3>
-
-                            <p className="text-sm text-slate-500">
-                              Configure how this attribute behaves in your
-                              store.
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="grid gap-5 md:grid-cols-3">
-                          <Controller
-                            name="isRequired"
-                            control={control}
-                            render={({ field }) => (
-                              <ToggleField
-                                label="Required"
-                                description="Make this attribute mandatory."
-                                checked={field.value}
-                                onChange={field.onChange}
-                              />
-                            )}
-                          />
-
-                          <Controller
-                            name="showInFilter"
-                            control={control}
-                            render={({ field }) => (
-                              <ToggleField
-                                label="Show in Filter"
-                                description="Display in storefront filters."
-                                checked={field.value}
-                                onChange={field.onChange}
-                              />
-                            )}
-                          />
-
-                          <Controller
-                            name="showOnProductPage"
-                            control={control}
-                            render={({ field }) => (
-                              <ToggleField
-                                label="Show on Product Page"
-                                description="Display on product detail page."
-                                checked={field.value}
-                                onChange={field.onChange}
-                              />
-                            )}
-                          />
-                        </div>
-                      </section>
-                    </div>
-
-                    {/* Right Side */}
-                    <div className="space-y-5">
-                      <AttributePreview form={formValues} />
-
-                      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="text-lg font-bold text-slate-900">
-                          Attribute Type Guide
-                        </h3>
-
-                        <div className="mt-4 space-y-3">
-                          {attributeTypes.map((item) => {
-                            const Icon = item.icon;
-
-                            return (
-                              <div
-                                key={item.value}
-                                className={`flex gap-3 rounded-xl p-3 ${
-                                  item.value === attributeType
-                                    ? "bg-primary/10"
-                                    : "bg-white"
-                                }`}
-                              >
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                                  <Icon className="h-5 w-5" />
-                                </div>
-
-                                <div>
-                                  <p className="font-bold text-slate-900">
-                                    {item.label}
-                                  </p>
-
-                                  <p className="text-sm text-slate-500">
-                                    {item.value === "dropdown" &&
-                                      "Best for predefined options like Size."}
-
-                                    {item.value === "switch" &&
-                                      "Best for color or visual selections."}
-
-                                    {item.value === "text" &&
-                                      "Best for custom text input."}
-
-                                    {item.value === "number" &&
-                                      "Best for numeric values."}
-
-                                    {item.value === "boolean" &&
-                                      "Best for true/false values."}
-                                  </p>
-                                </div>
+                          return (
+                            <div
+                              key={item.value}
+                              className={`flex gap-3 rounded-xl p-3 ${
+                                item.value === attributeType
+                                  ? "bg-primary/10"
+                                  : "bg-white"
+                              }`}
+                            >
+                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                <Icon className="h-5 w-5" />
                               </div>
-                            );
-                          })}
-                        </div>
+
+                              <div>
+                                <p className="font-bold text-slate-900">
+                                  {item.label}
+                                </p>
+
+                                <p className="text-sm text-slate-500">
+                                  {item.value === "dropdown" &&
+                                    "Best for predefined options like Size."}
+
+                                  {item.value === "switch" &&
+                                    "Best for color or visual selections."}
+
+                                  {item.value === "text" &&
+                                    "Best for custom text input."}
+
+                                  {item.value === "number" &&
+                                    "Best for numeric values."}
+
+                                  {item.value === "boolean" &&
+                                    "Best for true/false values."}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Footer */}
-                <div className="flex justify-end gap-3 border-t border-slate-200 px-5 py-4 sm:px-8">
-                  <button
-                    type="button"
-                    onClick={handleCancel}
-                    disabled={createAttributeMutation.isPending}
-                    className="btn btn-outline"
-                  >
-                    Cancel
-                  </button>
+              {/* Footer */}
+              <div className="flex justify-end gap-3 border-t border-slate-200 px-5 py-4 sm:px-8">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  disabled={createAttributeMutation.isPending}
+                  className="btn btn-outline"
+                >
+                  Cancel
+                </button>
 
-                  <button
-                    type="submit"
-                    disabled={createAttributeMutation.isPending || !isDirty}
-                    className="btn btn-primary"
-                  >
-                    {createAttributeMutation.isPending ? (
-                      <>
-                        <span className="loading loading-spinner loading-sm" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4" />
-                        Save Attribute
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
+                <button
+                  type="submit"
+                  disabled={createAttributeMutation.isPending || !isDirty}
+                  className="btn btn-primary"
+                >
+                  {createAttributeMutation.isPending ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Save Attribute
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </aside>
       </div>
     </>

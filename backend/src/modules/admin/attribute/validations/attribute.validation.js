@@ -22,11 +22,7 @@ const attributeValueSchema = z.object({
     .optional()
     .nullable(),
 
-  sortOrder: z
-    .number()
-    .int()
-    .min(0)
-    .optional(),
+  sortOrder: z.number().int().min(0).optional(),
 });
 
 export const createAttributeSchema = z
@@ -143,3 +139,26 @@ export const createAttributeSchema = z
       valueSet.add(key);
     });
   });
+
+// Backend Query Validation
+
+export const getAttributesQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+
+  search: z.string().trim().optional().default(""),
+
+  type: z
+    .enum(["dropdown", "switch", "text", "number", "boolean", "all"])
+    .optional()
+    .default("all"),
+
+  status: z.enum(["active", "inactive", "all"]).optional().default("all"),
+
+  sortBy: z
+    .enum(["createdAt", "name", "sortOrder"])
+    .optional()
+    .default("createdAt"),
+
+  sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
+});

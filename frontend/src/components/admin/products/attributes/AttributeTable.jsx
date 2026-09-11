@@ -1,115 +1,181 @@
-import {
-  FiEdit2,
-  FiTrash2,
-  FiGrid,
-} from "react-icons/fi";
 
-import AttributeStatusBadge from "./AttributeStatusBadge";
-import AttributeTableHeader from "./AttributeTableHeader";
 
-const AttributeTable = ({ attributes }) => {
+import { formatAttributeType } from "../../../../utils/admin/products/attribute/formatAttributeType";
+import { renderAttributeValues } from "../../../../utils/admin/products/attribute/renderAttributeValues";
+import { ArrowDown, ArrowUp, Edit, Trash2 } from "lucide-react";
+
+const SortIcon = ({
+  column,
+  sortBy,
+  sortOrder,
+}) => {
+  if (sortBy !== column) {
+    return null;
+  }
+
+  if (sortOrder === "asc") {
+    return <ArrowUp className="h-3 w-3" />;
+  }
+
+  return <ArrowDown className="h-3 w-3" />;
+};
+
+const AttributeTable = ({
+  attributes,
+  sortBy,
+  sortOrder,
+  onSort,
+  onEdit,
+  onDelete,
+  isFetching,
+}) => {
+
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-100 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-sm">
+      {isFetching && (
+        <div className="h-1 w-full overflow-hidden bg-primary/10">
+          <div className="h-full w-1/3 animate-pulse bg-primary" />
+        </div>
+      )}
+
       <div className="overflow-x-auto">
-        <table className="w-full min-w-225 border-collapse">
-         <AttributeTableHeader />
+        <table className="table">
+          <thead className="bg-slate-50 text-slate-700">
+            <tr>
+              <th>#</th>
+
+              <th>
+                <button
+                  type="button"
+                  onClick={() => onSort("name")}
+                  className="flex items-center gap-1 font-semibold"
+                >
+                  Attribute Name
+                  <SortIcon
+                    column="name"
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                  />
+                </button>
+              </th>
+
+              <th>Type</th>
+
+              <th>Values</th>
+
+              <th>Products Using</th>
+
+              <th>Status</th>
+
+              <th>
+                <button
+                  type="button"
+                  onClick={() => onSort("sortOrder")}
+                  className="flex items-center gap-1 font-semibold"
+                >
+                  Sort Order
+                  <SortIcon
+                    column="name"
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                  />
+                </button>
+              </th>
+
+              <th>
+                <button
+                  type="button"
+                  onClick={() => onSort("createdAt")}
+                  className="flex items-center gap-1 font-semibold"
+                >
+                  Created
+                   <SortIcon
+                    column="name"
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                  />
+                </button>
+              </th>
+
+              <th className="text-right">
+                Actions
+              </th>
+            </tr>
+          </thead>
+
           <tbody>
             {attributes.map((attribute, index) => (
-              <tr
-                key={attribute.id}
-                className="
-                  border-b border-slate-100
-                  last:border-b-0
-                  hover:bg-slate-50/50
-                "
-              >
-                {/* Number */}
-                <td className="px-3 py-4 text-xs text-slate-700">
-                  <div className="flex items-center gap-3">
-                    <FiGrid
-                      size={13}
-                      className="text-slate-400"
-                    />
-
-                    <span>{index + 1}</span>
-                  </div>
+              <tr key={attribute.id}>
+                <td className="text-slate-500">
+                  {index + 1}
                 </td>
 
-                {/* Name */}
-                <td className="px-4 py-4">
+                <td>
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">
+                    <p className="font-semibold text-slate-900">
                       {attribute.name}
                     </p>
 
-                    <p className="mt-0.5 text-xs text-slate-500">
+                    <p className="text-xs text-slate-500">
                       {attribute.slug}
                     </p>
                   </div>
                 </td>
 
-                {/* Type */}
-                <td className="px-4 py-4">
-                  <span className="inline-flex rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                    {attribute.type}
+                <td>
+                  <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                    {formatAttributeType(attribute.type)}
                   </span>
                 </td>
 
-                {/* Values */}
-                <td className="max-w-60 px-4 py-4">
-                  {attribute.type === "Switch" ? (
-                    <div className="flex items-center gap-1.5">
-                      {attribute.switches?.map((color, index) => (
-                        <span
-                          key={index}
-                          className="h-4 w-4 rounded-full border border-slate-200"
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-
-                      <span className="ml-1 text-xs text-slate-500">
-                        +8 more
-                      </span>
-                    </div>
-                  ) : (
-                    <p className="truncate text-sm text-[#253875]">
-                      {attribute.values.join(", ")}
-                    </p>
-                  )}
+                <td className="max-w-sm text-sm text-slate-700">
+                  {renderAttributeValues(attribute)}
                 </td>
 
-                {/* Products */}
-                <td className="px-4 py-4 text-center text-sm text-[#253875]">
-                  {attribute.productCount}
+                <td className="font-medium text-slate-700">
+                  {attribute.productCount ?? 0}
                 </td>
 
-                {/* Status */}
-                <td className="px-4 py-4 text-center">
-                  <AttributeStatusBadge status={attribute.status} />
+                <td>
+                  <span
+                    className={`rounded-lg px-3 py-1 text-xs font-semibold ${
+                      attribute.status === "active"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-rose-100 text-rose-700"
+                    }`}
+                  >
+                    {attribute.status === "active"
+                      ? "Active"
+                      : "Inactive"}
+                  </span>
                 </td>
 
-                {/* Sort */}
-                <td className="px-4 py-4 text-center text-sm text-[#253875]">
-                  {attribute.sortOrder}
+                <td className="font-medium text-slate-700">
+                  {attribute.sortOrder ?? 0}
                 </td>
 
-                {/* Actions */}
-                <td className="px-4 py-4">
-                  <div className="flex items-center justify-center gap-4">
+                <td className="text-sm text-slate-500">
+                  {attribute.createdAt
+                    ? new Date(attribute.createdAt).toLocaleDateString()
+                    : "—"}
+                </td>
+
+                <td>
+                  <div className="flex justify-end gap-2">
                     <button
                       type="button"
-                      className="text-slate-800 transition hover:text-violet-600"
-                      title="Edit attribute"
+                      onClick={() => onEdit(attribute)}
+                      className="btn btn-ghost btn-xs"
                     >
-                      <FiEdit2 size={16} />
+                      <Edit className="h-4 w-4" />
                     </button>
 
                     <button
                       type="button"
-                      className="text-slate-800 transition hover:text-red-500"
-                      title="Delete attribute"
+                      onClick={() => onDelete(attribute)}
+                      className="btn btn-ghost btn-xs text-error"
                     >
-                      <FiTrash2 size={16} />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </td>

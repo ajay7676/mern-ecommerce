@@ -12,6 +12,7 @@ const attributeValueSchema = new mongoose.Schema(
       type: String,
       trim: true,
       required: true,
+      lowercase: true,
     },
 
     colorCode: {
@@ -42,8 +43,6 @@ const attributeSchema = new mongoose.Schema(
       required: true,
       trim: true,
       lowercase: true,
-      unique: true,
-      index: true,
     },
 
     type: {

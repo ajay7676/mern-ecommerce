@@ -226,19 +226,15 @@ export const attributeSchema = z
     }
   });
 
-  
 const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-const optionalNumber = z.preprocess(
-  (value) => {
-    if (value === "" || value === null || value === undefined) {
-      return null;
-    }
+const optionalNumber = z.preprocess((value) => {
+  if (value === "" || value === null || value === undefined) {
+    return null;
+  }
 
-    return Number(value);
-  },
-  z.number().nullable()
-);
+  return Number(value);
+}, z.number().nullable());
 
 const valueSchema = z.object({
   label: z
@@ -247,16 +243,9 @@ const valueSchema = z.object({
     .min(1, "Value label is required")
     .max(50, "Value must not exceed 50 characters"),
 
-  value: z
-    .string()
-    .trim()
-    .optional(),
+  value: z.string().trim().optional(),
 
-  colorCode: z
-    .string()
-    .trim()
-    .optional()
-    .nullable(),
+  colorCode: z.string().trim().optional().nullable(),
 });
 
 export const attributeFormSchema = z
@@ -265,64 +254,35 @@ export const attributeFormSchema = z
       .string()
       .trim()
       .min(2, "Attribute name is required")
-      .max(80, "Attribute name must not exceed 80 characters"),
-
+      .max(80, "Attribute name must not exceed 80 characters"),      
+    status: z.enum(["active", "inactive"], {
+      message: "Please select valid status",
+    }),
     slug: z
       .string()
       .trim()
       .toLowerCase()
       .min(2, "Slug is required")
-      .regex(
-        slugRegex,
-        "Use lowercase letters, numbers and hyphen only"
-      ),
+      .regex(slugRegex, "Use lowercase letters, numbers and hyphen only"),
+    type: z.enum(["dropdown", "switch", "text", "number", "boolean"]),
 
-    type: z.enum([
-      "dropdown",
-      "switch",
-      "text",
-      "number",
-      "boolean",
-    ]),
+    values: z.array(valueSchema).default([]),
 
-    values: z
-      .array(valueSchema)
-      .default([]),
+    placeholder: z.string().trim().optional().nullable(),
 
-    placeholder: z
-      .string()
-      .trim()
-      .optional()
-      .nullable(),
-
-    defaultValue: z
-      .any()
-      .optional()
-      .nullable(),
+    defaultValue: z.any().optional().nullable(),
 
     minValue: optionalNumber.optional(),
     maxValue: optionalNumber.optional(),
     step: optionalNumber.optional(),
 
-    unit: z
-      .string()
-      .trim()
-      .optional()
-      .nullable(),
+    unit: z.string().trim().optional().nullable(),
 
     maxLength: optionalNumber.optional(),
 
-    trueLabel: z
-      .string()
-      .trim()
-      .optional()
-      .nullable(),
+    trueLabel: z.string().trim().optional().nullable(),
 
-    falseLabel: z
-      .string()
-      .trim()
-      .optional()
-      .nullable(),
+    falseLabel: z.string().trim().optional().nullable(),
 
     isRequired: z.boolean(),
     showInFilter: z.boolean(),

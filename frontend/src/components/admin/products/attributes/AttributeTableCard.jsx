@@ -5,10 +5,16 @@ import AttributeTableSkeleton from "./AttributeTableSkeleton";
 
 const AttributeTableCard = ({
   attributes,
+  sortBy,
+  sortOrder,
+  onSort,
+  onEdit,
+  onDelete,
+  isFetching,
   isLoading,
-  hasFilters,
   onAddAttribute,
-  onClearFilters,
+  pagination,
+  onPageChange
 }) => {
   return (
     <>
@@ -16,16 +22,27 @@ const AttributeTableCard = ({
         <AttributeTableSkeleton rows={6} />
       ) : attributes.length === 0 ? (
         <AttributeEmptyState
-          hasFilters={hasFilters}
           onAddAttribute={onAddAttribute}
-          onClearFilter={onClearFilters}
         />
       ) : (
         <>
-          <AttributeTable attributes={attributes} />
+          <AttributeTable
+            attributes={attributes}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={onSort}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            isFetching={isFetching}
+          />
 
           <div className="rounded-b-lg border-x border-b border-slate-100 bg-white">
-            <AttributePagination />
+            
+            <AttributePagination
+              pagination={pagination}
+              onPageChange={onPageChange}
+              isFetching={isFetching}
+            />
           </div>
         </>
       )}
