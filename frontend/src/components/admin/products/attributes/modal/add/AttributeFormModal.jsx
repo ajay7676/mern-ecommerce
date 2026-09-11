@@ -43,19 +43,6 @@ const attributeTypes = [
     icon: CheckSquare,
   },
 ];
-const statusTypes = [
-  {
-    label: "Active",
-    value: "active",
-    icon: CheckSquare,
-  },
-  {
-    label: "Inactive",
-    value: "inactive",
-    icon: CheckSquare,
-  },
-];
-
 const AttributeFormModal = ({ isOpen, onClose }) => {
   const createAttributeMutation = useCreateAttribute();
 
@@ -141,12 +128,6 @@ const AttributeFormModal = ({ isOpen, onClose }) => {
       shouldDirty: true,
       shouldValidate: true,
     });
-  };
-
-  const handleAttributeChange = (event) => {
-    const status = event.target.value;
-
-    console.log(status);
   };
   const handleCancel = () => {
     reset(getAttributeDefaultValues());
