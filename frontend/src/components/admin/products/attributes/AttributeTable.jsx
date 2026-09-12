@@ -1,14 +1,8 @@
-
-
 import { formatAttributeType } from "../../../../utils/admin/products/attribute/formatAttributeType";
 import { renderAttributeValues } from "../../../../utils/admin/products/attribute/renderAttributeValues";
 import { ArrowDown, ArrowUp, Edit, Trash2 } from "lucide-react";
 
-const SortIcon = ({
-  column,
-  sortBy,
-  sortOrder,
-}) => {
+const SortIcon = ({ column, sortBy, sortOrder }) => {
   if (sortBy !== column) {
     return null;
   }
@@ -28,8 +22,10 @@ const AttributeTable = ({
   onEdit,
   onDelete,
   isFetching,
+  onStatusChange,
+  statusChangingId,
+  isStatusChanging,
 }) => {
-
   return (
     <div className="overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-sm">
       {isFetching && (
@@ -89,7 +85,7 @@ const AttributeTable = ({
                   className="flex items-center gap-1 font-semibold"
                 >
                   Created
-                   <SortIcon
+                  <SortIcon
                     column="name"
                     sortBy={sortBy}
                     sortOrder={sortOrder}
@@ -97,18 +93,14 @@ const AttributeTable = ({
                 </button>
               </th>
 
-              <th className="text-right">
-                Actions
-              </th>
+              <th className="text-right">Actions</th>
             </tr>
           </thead>
 
           <tbody>
             {attributes.map((attribute, index) => (
               <tr key={attribute.id}>
-                <td className="text-slate-500">
-                  {index + 1}
-                </td>
+                <td className="text-slate-500">{index + 1}</td>
 
                 <td>
                   <div>
@@ -116,9 +108,7 @@ const AttributeTable = ({
                       {attribute.name}
                     </p>
 
-                    <p className="text-xs text-slate-500">
-                      {attribute.slug}
-                    </p>
+                    <p className="text-xs text-slate-500">{attribute.slug}</p>
                   </div>
                 </td>
 
@@ -136,7 +126,7 @@ const AttributeTable = ({
                   {attribute.productCount ?? 0}
                 </td>
 
-                <td>
+                {/* <td>
                   <span
                     className={`rounded-lg px-3 py-1 text-xs font-semibold ${
                       attribute.status === "active"
@@ -148,6 +138,33 @@ const AttributeTable = ({
                       ? "Active"
                       : "Inactive"}
                   </span>
+                </td> */}
+                <td>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      className="toggle toggle-success toggle-sm"
+                      checked={attribute.status === "active"}
+                      disabled={
+                        isStatusChanging && statusChangingId === attribute.id
+                      }
+                      onChange={() => onStatusChange(attribute)}
+                    />
+
+                    <span
+                      className={`rounded-lg px-3 py-1 text-xs font-semibold ${
+                        attribute.status === "active"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-rose-100 text-rose-700"
+                      }`}
+                    >
+                      {isStatusChanging && statusChangingId === attribute.id
+                        ? "Updating..."
+                        : attribute.status === "active"
+                          ? "Active"
+                          : "Inactive"}
+                    </span>
+                  </div>
                 </td>
 
                 <td className="font-medium text-slate-700">

@@ -8,7 +8,10 @@ import RecentActivity from "../../../../components/admin/products/attributes/Rec
 import AttributeTableCard from "../../../../components/admin/products/attributes/AttributeTableCard";
 import AttributeFormModal from "../../../../components/admin/products/attributes/modal/add/AttributeFormModal";
 import { useAttributes } from "../../../../hooks/admin/queries/products/attributes/useAttributes";
+import EditAttributeModal from "../../../../components/admin/products/attributes/modal/edit/EditAttributeModal";
+import { useDeleteAttribute } from "../../../../hooks/admin/mutations/attributes/useDeleteAttribute";
 
+import DeleteConfirmationModal from "../../../../components/admin/common/modal/DeleteConfirmationModal";
 const DEFAULT_PARAMS = {
   page: 1,
   limit: 10,
@@ -27,6 +30,14 @@ const DEFAULT_FILTERS = {
 
 const AttributesPage = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedAttributeId, setSelectedAttributeId] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    attribute: null,
+  });
+
 
   const [params, setParams] = useState({
     page: 1,
@@ -42,8 +53,13 @@ const AttributesPage = () => {
     type: "all",
     status: "all",
   });
-  const { data, isLoading, isFetching, isError, error, refetch } =
+  const { data, isLoading, isFetching } =
     useAttributes(params);
+
+  const deleteAttributeMutation = useDeleteAttribute();
+
+  const isDeleteBlocked =
+  Number(deleteModal.attribute?.productCount || 0) > 0;
 
   const attributes = data?.items || [];
   const pagination = data?.pagination;
@@ -95,11 +111,51 @@ const AttributesPage = () => {
   };
 
   const handleEdit = (attribute) => {
-    console.log("Edit attribute:", attribute);
+    setSelectedAttributeId(attribute.id);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedAttributeId(null);
   };
 
   const handleDelete = (attribute) => {
-    console.log("Delete attribute:", attribute);
+    setDeleteModal({
+      isOpen: true,
+      attribute,
+    });
+  };
+
+  const handleCloseDeleteModal = () => {
+    if (deleteAttributeMutation.isPending) {
+      return;
+    }
+
+    setDeleteModal({
+      isOpen: false,
+      attribute: null,
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    const attributeId = deleteModal.attribute?.id;
+
+    if (!attributeId) {
+      return;
+    }
+
+    try {
+      await deleteAttributeMutation.mutateAsync(attributeId);
+
+      setDeleteModal({
+        isOpen: false,
+        attribute: null,
+      });
+    } catch (error) {
+      // Toast already handled inside mutation hook
+      console.error("Delete attribute failed:", error);
+    }
   };
 
   return (
@@ -157,9 +213,29 @@ const AttributesPage = () => {
         </div>
       </div>
 
-      <AttributeFormModal
-       isOpen={isAddModalOpen}
-      onClose={hideAddOpenModal} />
+      <AttributeFormModal isOpen={isAddModalOpen} onClose={hideAddOpenModal} />
+
+      <EditAttributeModal
+        isOpen={isEditModalOpen}
+        attributeId={selectedAttributeId}
+        onClose={handleCloseEditModal}
+      />
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        title="Delete Attribute"
+        description="Are you sure you want to delete this attribute? This action cannot be undone."
+        itemName={deleteModal.attribute?.name}
+        warning="If this attribute is already used in products, deletion will be blocked by the server."
+         disabledReason={
+          isDeleteBlocked
+            ? `This attribute is used by ${deleteModal.attribute?.productCount} products. Please deactivate it instead of deleting.`
+            : ""
+        }
+        confirmText="Delete Attribute"
+        isLoading={deleteAttributeMutation.isPending}
+        onConfirm={handleConfirmDelete}
+        onClose={handleCloseDeleteModal}
+      />
     </>
   );
 };
