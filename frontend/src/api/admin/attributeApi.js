@@ -72,3 +72,11 @@ export const getAttributeStatsApi = async () => {
 
   return data.data;
 };
+
+export const getAttributeTypeSummaryApi = async () => {
+  const { data } = await api.get(
+    "/admin/attributes/type-summary"
+  );
+
+  return data.data;
+};

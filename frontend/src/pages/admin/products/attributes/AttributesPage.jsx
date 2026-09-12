@@ -13,6 +13,7 @@ import { useDeleteAttribute } from "../../../../hooks/admin/mutations/attributes
 
 import DeleteConfirmationModal from "../../../../components/admin/common/modal/DeleteConfirmationModal";
 import { useAttributeStats } from "../../../../hooks/admin/queries/products/attributes/useAttributeStats";
+import { useAttributeTypeSummary } from "../../../../hooks/admin/queries/products/attributes/useAttributeTypeSummary";
 const DEFAULT_PARAMS = {
   page: 1,
   limit: 10,
@@ -63,6 +64,13 @@ const AttributesPage = () => {
     isError: isStatsError,
     refetch: refetchStats,
   } = useAttributeStats();
+
+  const {
+    data: typeSummary,
+    isLoading: isTypeSummaryLoading,
+    isError: isTypeSummaryError,
+    refetch: refetchTypeSummary,
+  } = useAttributeTypeSummary();
 
   const isDeleteBlocked = Number(deleteModal.attribute?.productCount || 0) > 0;
 
@@ -215,7 +223,12 @@ const AttributesPage = () => {
             </div>
             {/* RIGHT */}
             <aside className="space-y-5">
-              <AttributeTypePanel />
+              <AttributeTypePanel
+                summary={typeSummary}
+                isLoading={isTypeSummaryLoading}
+                isError={isTypeSummaryError}
+                onRetry={refetchTypeSummary}
+              />
               <QuickTips />
               {/* <RecentActivity /> */}
             </aside>
