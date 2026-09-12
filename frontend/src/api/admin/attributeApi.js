@@ -63,3 +63,12 @@ export const updateAttributeStatusApi = async ({
 
   return data.data;
 };
+
+
+export const getAttributeStatsApi = async () => {
+  const { data } = await api.get(
+    "/admin/attributes/stats"
+  );
+
+  return data.data;
+};

@@ -4,7 +4,7 @@ import AttributeFilters from "../../../../components/admin/products/attributes/A
 import AttributeStats from "../../../../components/admin/products/attributes/AttributeStats";
 import AttributeTypePanel from "../../../../components/admin/products/attributes/AttributeTypePanel";
 import QuickTips from "../../../../components/admin/products/attributes/QuickTips";
-import RecentActivity from "../../../../components/admin/products/attributes/RecentActivity";
+// import RecentActivity from "../../../../components/admin/products/attributes/RecentActivity";
 import AttributeTableCard from "../../../../components/admin/products/attributes/AttributeTableCard";
 import AttributeFormModal from "../../../../components/admin/products/attributes/modal/add/AttributeFormModal";
 import { useAttributes } from "../../../../hooks/admin/queries/products/attributes/useAttributes";
@@ -12,6 +12,7 @@ import EditAttributeModal from "../../../../components/admin/products/attributes
 import { useDeleteAttribute } from "../../../../hooks/admin/mutations/attributes/useDeleteAttribute";
 
 import DeleteConfirmationModal from "../../../../components/admin/common/modal/DeleteConfirmationModal";
+import { useAttributeStats } from "../../../../hooks/admin/queries/products/attributes/useAttributeStats";
 const DEFAULT_PARAMS = {
   page: 1,
   limit: 10,
@@ -38,7 +39,6 @@ const AttributesPage = () => {
     attribute: null,
   });
 
-
   const [params, setParams] = useState({
     page: 1,
     limit: 10,
@@ -53,13 +53,18 @@ const AttributesPage = () => {
     type: "all",
     status: "all",
   });
-  const { data, isLoading, isFetching } =
-    useAttributes(params);
+  const { data, isLoading, isFetching } = useAttributes(params);
 
   const deleteAttributeMutation = useDeleteAttribute();
 
-  const isDeleteBlocked =
-  Number(deleteModal.attribute?.productCount || 0) > 0;
+  const {
+    data: stats,
+    isLoading: isStatsLoading,
+    isError: isStatsError,
+    refetch: refetchStats,
+  } = useAttributeStats();
+
+  const isDeleteBlocked = Number(deleteModal.attribute?.productCount || 0) > 0;
 
   const attributes = data?.items || [];
   const pagination = data?.pagination;
@@ -183,7 +188,12 @@ const AttributesPage = () => {
           >
             {/* LEFT */}
             <div className="min-w-0 space-y-5">
-              <AttributeStats />
+              <AttributeStats
+                stats={stats}
+                isLoading={isStatsLoading}
+                isError={isStatsError}
+                onRetry={refetchStats}
+              />
 
               <div className="overflow-hidden rounded-lg">
                 <AttributeTableCard
@@ -207,7 +217,7 @@ const AttributesPage = () => {
             <aside className="space-y-5">
               <AttributeTypePanel />
               <QuickTips />
-              <RecentActivity />
+              {/* <RecentActivity /> */}
             </aside>
           </div>
         </div>
@@ -226,7 +236,7 @@ const AttributesPage = () => {
         description="Are you sure you want to delete this attribute? This action cannot be undone."
         itemName={deleteModal.attribute?.name}
         warning="If this attribute is already used in products, deletion will be blocked by the server."
-         disabledReason={
+        disabledReason={
           isDeleteBlocked
             ? `This attribute is used by ${deleteModal.attribute?.productCount} products. Please deactivate it instead of deleting.`
             : ""

@@ -1,46 +1,114 @@
+
 import {
-  FiCheckCircle,
-  FiDatabase,
-  FiLayers,
-  FiSlash,
-} from "react-icons/fi";
+  Activity,
+  Boxes,
+  CheckCircle2,
+  PauseCircle,
+  RotateCcw,
+} from "lucide-react";
 
-import AttributeStatCard from "./AttributeStatCard";
+const statsConfig = [
+  {
+    key: "totalAttributes",
+    label: "Total Attributes",
+    icon: Boxes,
+    helper: "All created attributes",
+  },
+  {
+    key: "activeAttributes",
+    label: "Active Attributes",
+    icon: CheckCircle2,
+    helper: "Visible in product forms",
+  },
+  {
+    key: "inactiveAttributes",
+    label: "Inactive Attributes",
+    icon: PauseCircle,
+    helper: "Hidden from product forms",
+  },
+  {
+    key: "productsUsing",
+    label: "Products Using",
+    icon: Activity,
+    helper: "Total product usage",
+  },
+];
 
-const AttributeStats = () => {
+// import AttributeStatCard from "./AttributeStatCard";
+import AttributeStatsSkeleton from "./AttributeStatsSkeleton";
+
+const AttributeStats = (
+  {
+  stats,
+  isLoading,
+  isError,
+  onRetry,
+}
+) => {
+
+  if (isLoading) {
+    return <AttributeStatsSkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-2xl border border-error/20 bg-error/5 p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="font-bold text-error">
+              Failed to load stats
+            </h3>
+
+            <p className="text-sm text-slate-500">
+              Stats could not be fetched right now.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onRetry}
+            className="btn btn-error btn-sm"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <AttributeStatCard
-        icon={<FiLayers size={21} />}
-        value="24"
-        title="Total Attributes"
-        subtitle="Across 5 types"
-        iconClassName="bg-violet-100 text-violet-600"
-      />
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {statsConfig.map((item) => {
+        const Icon = item.icon;
 
-      <AttributeStatCard
-        icon={<FiCheckCircle size={21} />}
-        value="22"
-        title="Active Attributes"
-        subtitle="91.7% of total"
-        iconClassName="bg-emerald-100 text-emerald-600"
-      />
+        return (
+          <div
+            key={item.key}
+            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-slate-500">
+                  {item.label}
+                </p>
 
-      <AttributeStatCard
-        icon={<FiSlash size={21} />}
-        value="2"
-        title="Inactive Attributes"
-        subtitle="8.3% of total"
-        iconClassName="bg-orange-100 text-orange-500"
-      />
+                <h3 className="mt-2 text-3xl font-bold text-slate-950">
+                  {stats?.[item.key] ?? 0}
+                </h3>
 
-      <AttributeStatCard
-        icon={<FiDatabase size={21} />}
-        value="156"
-        title="Products Using"
-        subtitle="These attributes"
-        iconClassName="bg-blue-100 text-blue-600"
-      />
+                <p className="mt-1 text-xs text-slate-500">
+                  {item.helper}
+                </p>
+              </div>
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Icon className="h-5 w-5" />
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
