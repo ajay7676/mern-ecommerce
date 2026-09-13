@@ -23,6 +23,49 @@ export const getAddProductDefaultValues  = () => {
       mobileApp: true,
       pos: false,
     },
+    // Step 2: Pricing & Inventory
+    sellingPrice: "",
+    discountType: "percentage",
+    discountValue: "",
+    taxClass: "gst18",
+
+    costPrice: "",
+    mrp: "",
+    specialPrice: "",
+    specialPriceFrom: "",
+    specialPriceTo: "",
+
+    barcode: "",
+    trackInventory: true,
+    stockQuantity: "",
+    lowStockThreshold: "",
+    units: "pcs",
+    allowBackorders: false,
+    
+     // Later steps
+    images: [],
+    imageAltText: "",
+    displayOrder: "custom",
+    imageZoom: true,
+    videoUrl: "",
+
+    attributes: [],
+    variants: [],
+
+    productTypeDetail: "",
+    collection: "",
+    tags: "",
+    hsnCode: "",
+    countryOfOrigin: "",
+    warrantyInformation: "",
+    returnPolicy: "",
+    careInstructions: "",
+    safetyInformation: "",
+    customFields: [],
+
+    publishOption: "publishNow",
+    scheduleDate: "",
+    scheduleTime: "",
    }
    
 }

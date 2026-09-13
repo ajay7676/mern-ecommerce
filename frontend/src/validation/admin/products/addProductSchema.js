@@ -1,5 +1,34 @@
 import { z } from "zod";
 
+const emptyToUndefined = (value) => {
+  if (value === "" || value === null || value === undefined) {
+    return undefined;
+  }
+
+  return Number(value);
+};
+
+const requiredNumber = (message) =>
+  z.preprocess(
+    emptyToUndefined,
+    z
+      .number({
+        message,
+      })
+      .min(0, message)
+  );
+
+const optionalNumber = z.preprocess(
+  (value) => {
+    if (value === "" || value === null || value === undefined) {
+      return null;
+    }
+
+    return Number(value);
+  },
+  z.number().min(0).nullable()
+);
+
 export const addProductSchema = z.object({
   productName: z
     .string()
@@ -68,4 +97,40 @@ export const addProductSchema = z.object({
     mobileApp: z.boolean(),
     pos: z.boolean(),
   }),
+
+   // Step 2
+  sellingPrice: requiredNumber("Selling price is required"),
+
+  discountType: z.enum(["none", "percentage", "fixed"]),
+
+  discountValue: optionalNumber,
+
+  taxClass: z.enum([
+    "gst0",
+    "gst5",
+    "gst12",
+    "gst18",
+    "gst28",
+  ]),
+
+  costPrice: optionalNumber,
+
+  mrp: optionalNumber,
+
+  specialPrice: optionalNumber,
+
+  specialPriceFrom: z.string().optional(),
+  specialPriceTo: z.string().optional(),
+
+  barcode: z.string().trim().optional(),
+
+  trackInventory: z.boolean(),
+
+  stockQuantity: requiredNumber("Stock quantity is required"),
+
+  lowStockThreshold: optionalNumber,
+
+  units: z.enum(["pcs", "kg", "g", "ltr", "ml", "box"]),
+
+  allowBackorders: z.boolean(),
 });

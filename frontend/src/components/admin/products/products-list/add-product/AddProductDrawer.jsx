@@ -11,6 +11,7 @@ import { PRODUCT_WIZARD_STEPS } from "../../../../../constants/admin/products/pr
 import { addProductSchema } from "../../../../../validation/admin/products/addProductSchema";
 import { getAddProductDefaultValues } from "../../../../../utils/admin/products/product/getAddProductDefaultValues";
 import ProductBasicInfoStep from "./ProductBasicInfoStep";
+import ProductPricingInventoryStep from "./ProductPricingInventoryStep";
 
 const DRAWER_ANIMATION_MS = 500;
 
@@ -105,6 +106,30 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
         return;
       }
     }
+    if (activeStep === 2) {
+      const isValid = await methods.trigger([
+        "sellingPrice",
+        "discountType",
+        "discountValue",
+        "taxClass",
+        "costPrice",
+        "mrp",
+        "specialPrice",
+        "specialPriceFrom",
+        "specialPriceTo",
+        "sku",
+        "barcode",
+        "trackInventory",
+        "stockQuantity",
+        "lowStockThreshold",
+        "units",
+        "allowBackorders",
+      ]);
+
+      if (!isValid) {
+        return;
+      }
+    }
 
     if (activeStep >= totalSteps) {
       console.log("Dummy publish product:", methods.getValues());
@@ -117,14 +142,14 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
     console.log("Dummy save draft:", methods.getValues());
   };
   const handleClose = () => {
-  setIsDrawerVisible(false);
+    setIsDrawerVisible(false);
 
-  setTimeout(() => {
-    methods.reset(getAddProductDefaultValues());
-    onClose();
-    setActiveStep(1);
-  }, DRAWER_ANIMATION_MS);
-};
+    setTimeout(() => {
+      methods.reset(getAddProductDefaultValues());
+      onClose();
+      setActiveStep(1);
+    }, DRAWER_ANIMATION_MS);
+  };
   return createPortal(
     <div
       className={`fixed inset-0 z-80 bg-black/40 transition-opacity duration-500 ease-out ${
@@ -152,8 +177,9 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
               <form className="flex min-h-0 flex-1 flex-col overflow-hidden">
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6 sm:px-8">
                   {activeStep === 1 && <ProductBasicInfoStep />}
+                  {activeStep === 2 && <ProductPricingInventoryStep />}
 
-                  {activeStep !== 1 && (
+                  {activeStep > 2 && (
                     <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
                       <p className="text-sm font-semibold text-primary">
                         Step {activeStep}

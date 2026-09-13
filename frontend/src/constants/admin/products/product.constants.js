@@ -16,3 +16,20 @@ export const DIMENSION_UNITS = ["cm", "in"];
 
 export const SEO_TITLE_MAX_LENGTH = 60;
 export const SEO_DESCRIPTION_MAX_LENGTH = 160;
+
+
+export const TAX_RATE_MAP = {
+  gst0: 0,
+  gst5: 5,
+  gst12: 12,
+  gst18: 18,
+  gst28: 28,
+};
+
+export const TAX_LABEL_MAP = {
+  gst0: "GST 0%",
+  gst5: "GST 5%",
+  gst12: "GST 12%",
+  gst18: "GST 18%",
+  gst28: "GST 28%",
+};
