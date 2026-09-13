@@ -41,14 +41,15 @@ export const getAddProductDefaultValues  = () => {
     lowStockThreshold: "",
     units: "pcs",
     allowBackorders: false,
-    
-     // Later steps
+
+     // Step 3
     images: [],
     imageAltText: "",
     displayOrder: "custom",
     imageZoom: true,
     videoUrl: "",
-
+    
+     // Later steps
     attributes: [],
     variants: [],
 

@@ -18,6 +18,9 @@ export const SEO_TITLE_MAX_LENGTH = 60;
 export const SEO_DESCRIPTION_MAX_LENGTH = 160;
 
 
+ // New Prdoduct 
+
+
 export const TAX_RATE_MAP = {
   gst0: 0,
   gst5: 5,
@@ -33,3 +36,13 @@ export const TAX_LABEL_MAP = {
   gst18: "GST 18%",
   gst28: "GST 28%",
 };
+
+export const MAX_PRODUCT_IMAGES = 8;
+export const MAX_PRODUCT_IMAGE_SIZE = 2 * 1024 * 1024;
+
+export const ALLOWED_PRODUCT_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];

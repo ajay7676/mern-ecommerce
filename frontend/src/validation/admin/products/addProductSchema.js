@@ -29,6 +29,18 @@ const optionalNumber = z.preprocess(
   z.number().min(0).nullable()
 );
 
+const imageSchema = z.object({
+  imageId: z.string(),
+  name: z.string(),
+  size: z.number(),
+  type: z.string(),
+  previewUrl: z.string(),
+  altText: z.string().optional(),
+  isPrimary: z.boolean(),
+  sortOrder: z.number(),
+  file: z.any().optional(),
+});
+
 export const addProductSchema = z.object({
   productName: z
     .string()
@@ -133,4 +145,28 @@ export const addProductSchema = z.object({
   units: z.enum(["pcs", "kg", "g", "ltr", "ml", "box"]),
 
   allowBackorders: z.boolean(),
+
+  // Step 3: Images & Media
+images: z
+  .array(imageSchema)
+  .min(1, "Please upload at least one product image")
+  .max(8, "You can upload maximum 8 images"),
+
+imageAltText: z
+  .string()
+  .trim()
+  .max(120, "Image alt text cannot exceed 120 characters")
+  .optional(),
+
+displayOrder: z.enum(["custom", "newest", "oldest"]),
+
+imageZoom: z.boolean(),
+
+videoUrl: z
+  .union([
+    z.literal(""),
+    z.string().url("Please enter a valid video URL"),
+  ])
+  .optional(),
+
 });
