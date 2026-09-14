@@ -1,10 +1,10 @@
 import {
   getDefaultProductVariants,
-  getDefaultSelectedAttributes
-} from "./productVariationUtils"
+  getDefaultSelectedAttributes,
+} from "./productVariationUtils";
 
-export const getAddProductDefaultValues  = () => {
-   return{
+export const getAddProductDefaultValues = () => {
+  return {
     // Basic Information
     productName: "",
     sku: "",
@@ -47,19 +47,18 @@ export const getAddProductDefaultValues  = () => {
     units: "pcs",
     allowBackorders: false,
 
-     // Step 3
+    // Step 3
     images: [],
     imageAltText: "",
     displayOrder: "custom",
     imageZoom: true,
     videoUrl: "",
-     
-    // Step 4 
+
+    // Step 4
     attributes: getDefaultSelectedAttributes(),
     variants: getDefaultProductVariants(),
 
-    // Later steps
-    
+    // Step 5: Additional Details
     productTypeDetail: "",
     collection: "",
     tags: "",
@@ -68,12 +67,13 @@ export const getAddProductDefaultValues  = () => {
     warrantyInformation: "",
     returnPolicy: "",
     careInstructions: "",
+    userManual: null,
     safetyInformation: "",
     customFields: [],
 
+    // Step 6
     publishOption: "publishNow",
     scheduleDate: "",
     scheduleTime: "",
-   }
-   
-}
+  };
+};

@@ -15,6 +15,8 @@ import ProductPricingInventoryStep from "./ProductPricingInventoryStep";
 import ProductImagesMediaStep from "./ProductImagesMediaStep";
 import { revokeImagePreviewUrl } from "../../../../../utils/admin/products/product/productImageUtils";
 import ProductAttributesVariationsStep from "./ProductAttributesVariationsStep";
+import ProductAdditionalDetailsStep from "./ProductAdditionalDetailsStep";
+import ProductReviewPublishStep from "./ProductReviewPublishStep";
 
 const DRAWER_ANIMATION_MS = 500;
 
@@ -79,9 +81,9 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
   }
 
   const totalSteps = PRODUCT_WIZARD_STEPS.length;
-  const currentStep = PRODUCT_WIZARD_STEPS.find(
-    (step) => step.id === activeStep,
-  );
+  // const currentStep = PRODUCT_WIZARD_STEPS.find(
+  //   (step) => step.id === activeStep,
+  // );
 
   const handlePrevious = () => {
     setActiveStep((prev) => Math.max(prev - 1, 1));
@@ -154,11 +156,36 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
       if (!isValid) return;
     }
 
-    if (activeStep >= totalSteps) {
-      console.log("Dummy publish product:", methods.getValues());
+    if (activeStep === 5) {
+      const isValid = await methods.trigger([
+        "productTypeDetail",
+        "collection",
+        "tags",
+        "hsnCode",
+        "countryOfOrigin",
+        "warrantyInformation",
+        "returnPolicy",
+        "careInstructions",
+        "userManual",
+        "safetyInformation",
+        "customFields",
+      ]);
+
+      if (!isValid) return;
+    }
+    if (activeStep === 6) {
+      const isValid = await methods.trigger([
+        "publishOption",
+        "scheduleDate",
+        "scheduleTime",
+      ]);
+
+      if (!isValid) return;
+
+      console.log("Final product payload:", methods.getValues());
+
       return;
     }
-
     setActiveStep((prev) => prev + 1);
   };
   const handleSaveDraft = () => {
@@ -209,20 +236,10 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
                   {activeStep === 2 && <ProductPricingInventoryStep />}
                   {activeStep === 3 && <ProductImagesMediaStep />}
                   {activeStep === 4 && <ProductAttributesVariationsStep />}
-                  {activeStep > 4 && (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-                      <p className="text-sm font-semibold text-primary">
-                        Step {activeStep}
-                      </p>
+                  {activeStep === 5 && <ProductAdditionalDetailsStep />}
 
-                      <h3 className="mt-2 text-2xl font-bold text-slate-950">
-                        {currentStep?.label} fdgdfghd
-                      </h3>
-
-                      <p className="mt-2 text-sm text-slate-500">
-                        This step will be built in the next phase.
-                      </p>
-                    </div>
+                  {activeStep === 6 && (
+                    <ProductReviewPublishStep onEditStep={setActiveStep} />
                   )}
                 </div>
               </form>
