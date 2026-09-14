@@ -1,8 +1,4 @@
-import {
-  ArrowLeft,
-  ArrowRight,
-  Save,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Save } from "lucide-react";
 
 const AddProductDrawerFooter = ({
   activeStep,
@@ -10,6 +6,7 @@ const AddProductDrawerFooter = ({
   onPrevious,
   onNext,
   onSaveDraft,
+  onDiscardDraft,
 }) => {
   const isFirstStep = activeStep === 1;
   const isLastStep = activeStep === totalSteps;
@@ -27,6 +24,13 @@ const AddProductDrawerFooter = ({
       </button>
 
       <div className="flex flex-col gap-3 sm:flex-row">
+        <button
+          type="button"
+          onClick={onDiscardDraft}
+          className="btn btn-outline btn-error h-11 min-h-11 rounded-xl px-5"
+        >
+          Discard
+        </button>
         <button
           type="button"
           onClick={onSaveDraft}

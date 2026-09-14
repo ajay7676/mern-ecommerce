@@ -13,10 +13,17 @@ import { getAddProductDefaultValues } from "../../../../../utils/admin/products/
 import ProductBasicInfoStep from "./ProductBasicInfoStep";
 import ProductPricingInventoryStep from "./ProductPricingInventoryStep";
 import ProductImagesMediaStep from "./ProductImagesMediaStep";
-import { revokeImagePreviewUrl } from "../../../../../utils/admin/products/product/productImageUtils";
+// import { revokeImagePreviewUrl } from "../../../../../utils/admin/products/product/productImageUtils";
 import ProductAttributesVariationsStep from "./ProductAttributesVariationsStep";
 import ProductAdditionalDetailsStep from "./ProductAdditionalDetailsStep";
 import ProductReviewPublishStep from "./ProductReviewPublishStep";
+import ProductPayloadPreviewModal from "../view-product/ProductPayloadPreviewModal";
+import {
+  validateAllProductSteps,
+  validateProductStep,
+} from "../../../../../utils/admin/products/product/productStepValidation";
+
+import { buildProductPayload } from "../../../../../utils/admin/products/product/productPayloadUtils";
 
 const DRAWER_ANIMATION_MS = 500;
 
@@ -24,13 +31,37 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
   const [shouldRender, setShouldRender] = useState(false);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
-
+  const [previewModal, setPreviewModal] = useState({
+    isOpen: false,
+    title: "",
+    payload: null,
+  });
   const methods = useForm({
     resolver: zodResolver(addProductSchema),
     defaultValues: getAddProductDefaultValues(),
     mode: "onChange",
   });
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const savedDraft = localStorage.getItem("addProductDraft");
+
+    if (!savedDraft) return;
+
+    try {
+      const parsedDraft = JSON.parse(savedDraft);
+
+      if (parsedDraft?.formValues) {
+        methods.reset({
+          ...getAddProductDefaultValues(),
+          ...parsedDraft.formValues,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to restore product draft:", error);
+    }
+  }, [isOpen, methods]);
   useEffect(() => {
     let timer;
 
@@ -88,124 +119,113 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
   const handlePrevious = () => {
     setActiveStep((prev) => Math.max(prev - 1, 1));
   };
-  const handleNext = async () => {
-    if (activeStep === 1) {
-      const isValid = await methods.trigger([
-        "productName",
-        "sku",
-        "shortDescription",
-        "productType",
-        "category",
-        "brand",
-        "description",
-        "metaTitle",
-        "metaDescription",
-        "metaKeywords",
-        "status",
-        "visibility.onlineStore",
-        "visibility.mobileApp",
-        "visibility.pos",
-      ]);
 
-      if (!isValid) {
-        return;
-      }
-    }
-    if (activeStep === 2) {
-      const isValid = await methods.trigger([
-        "sellingPrice",
-        "discountType",
-        "discountValue",
-        "taxClass",
-        "costPrice",
-        "mrp",
-        "specialPrice",
-        "specialPriceFrom",
-        "specialPriceTo",
-        "sku",
-        "barcode",
-        "trackInventory",
-        "stockQuantity",
-        "lowStockThreshold",
-        "units",
-        "allowBackorders",
-      ]);
+  const handlePublishProduct = async () => {
+    const isValid = await validateAllProductSteps(methods);
 
-      if (!isValid) {
-        return;
-      }
-    }
-
-    if (activeStep === 3) {
-      const isValid = await methods.trigger([
-        "images",
-        "imageAltText",
-        "displayOrder",
-        "imageZoom",
-        "videoUrl",
-      ]);
-
-      if (!isValid) {
-        return;
-      }
-    }
-
-    if (activeStep === 4) {
-      const isValid = await methods.trigger(["attributes", "variants"]);
-
-      if (!isValid) return;
-    }
-
-    if (activeStep === 5) {
-      const isValid = await methods.trigger([
-        "productTypeDetail",
-        "collection",
-        "tags",
-        "hsnCode",
-        "countryOfOrigin",
-        "warrantyInformation",
-        "returnPolicy",
-        "careInstructions",
-        "userManual",
-        "safetyInformation",
-        "customFields",
-      ]);
-
-      if (!isValid) return;
-    }
-    if (activeStep === 6) {
-      const isValid = await methods.trigger([
-        "publishOption",
-        "scheduleDate",
-        "scheduleTime",
-      ]);
-
-      if (!isValid) return;
-
-      console.log("Final product payload:", methods.getValues());
-
+    if (!isValid) {
       return;
     }
+
+    const values = methods.getValues();
+
+    const payload = buildProductPayload({
+      values,
+      action: "publish",
+    });
+
+    setPreviewModal({
+      isOpen: true,
+      title: "Product ready to publish",
+      payload,
+    });
+
+    console.log("Publish payload:", payload);
+  };
+
+  const handleNext = async () => {
+    const isStepValid = await validateProductStep({
+      methods,
+      activeStep,
+    });
+
+    if (!isStepValid) {
+      return;
+    }
+
+    if (activeStep === totalSteps) {
+      await handlePublishProduct();
+      return;
+    }
+
     setActiveStep((prev) => prev + 1);
   };
+
   const handleSaveDraft = () => {
-    console.log("Dummy save draft:", methods.getValues());
+    const formValues = methods.getValues();
+
+    const payload = buildProductPayload({
+      values: formValues,
+      action: "draft",
+    });
+
+    localStorage.setItem(
+      "addProductDraft",
+      JSON.stringify({
+        formValues,
+        payload,
+        savedAt: new Date().toISOString(),
+      }),
+    );
+
+    setPreviewModal({
+      isOpen: true,
+      title: "Product draft saved locally",
+      payload,
+    });
+
+    console.log("Saved form values:", formValues);
+    console.log("Backend payload:", payload);
   };
+
+  // const handleClose = () => {
+  //   setIsDrawerVisible(false);
+
+  //   setTimeout(() => {
+  //     const images = methods.getValues("images") || [];
+
+  //     images.forEach((image) => {
+  //       revokeImagePreviewUrl(image.previewUrl);
+  //     });
+
+  //     methods.reset(getAddProductDefaultValues());
+  //     onClose();
+  //     setActiveStep(1);
+  //   }, DRAWER_ANIMATION_MS);
+  // };
   const handleClose = () => {
     setIsDrawerVisible(false);
 
     setTimeout(() => {
-      const images = methods.getValues("images") || [];
-
-      images.forEach((image) => {
-        revokeImagePreviewUrl(image.previewUrl);
-      });
-
-      methods.reset(getAddProductDefaultValues());
       onClose();
-      setActiveStep(1);
     }, DRAWER_ANIMATION_MS);
   };
+
+  const handleDiscardDraft = () => {
+    localStorage.removeItem("addProductDraft");
+
+    methods.reset(getAddProductDefaultValues());
+    setPreviewModal({
+    isOpen: false,
+    title: "",
+    payload: null,
+  });
+
+  console.log("Product draft discarded");
+
+    setActiveStep(1);
+  };
+
   return createPortal(
     <div
       className={`fixed inset-0 z-80 bg-black/40 transition-opacity duration-500 ease-out ${
@@ -245,13 +265,26 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
               </form>
             </div>
           </div>
-
           <AddProductDrawerFooter
             activeStep={activeStep}
             totalSteps={totalSteps}
             onPrevious={handlePrevious}
             onNext={handleNext}
             onSaveDraft={handleSaveDraft}
+            onDiscardDraft={handleDiscardDraft}
+          />
+
+          <ProductPayloadPreviewModal
+            isOpen={previewModal.isOpen}
+            title={previewModal.title}
+            payload={previewModal.payload}
+            onClose={() =>
+              setPreviewModal({
+                isOpen: false,
+                title: "",
+                payload: null,
+              })
+            }
           />
         </FormProvider>
       </div>
