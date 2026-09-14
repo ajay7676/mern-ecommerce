@@ -31,8 +31,8 @@ const ProductImagesMediaStep = () => {
               Upload high-quality images for your product gallery.
             </p>
           </div>
-          <div class="grid grid-cols-3 gap-4">
-            <div class="mt-6">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="mt-6">
               <ImageUploadDropzone
                 images={fields}
                 append={append}

@@ -14,6 +14,7 @@ import ProductBasicInfoStep from "./ProductBasicInfoStep";
 import ProductPricingInventoryStep from "./ProductPricingInventoryStep";
 import ProductImagesMediaStep from "./ProductImagesMediaStep";
 import { revokeImagePreviewUrl } from "../../../../../utils/admin/products/product/productImageUtils";
+import ProductAttributesVariationsStep from "./ProductAttributesVariationsStep";
 
 const DRAWER_ANIMATION_MS = 500;
 
@@ -147,6 +148,12 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
       }
     }
 
+    if (activeStep === 4) {
+      const isValid = await methods.trigger(["attributes", "variants"]);
+
+      if (!isValid) return;
+    }
+
     if (activeStep >= totalSteps) {
       console.log("Dummy publish product:", methods.getValues());
       return;
@@ -158,20 +165,20 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
     console.log("Dummy save draft:", methods.getValues());
   };
   const handleClose = () => {
-  setIsDrawerVisible(false);
+    setIsDrawerVisible(false);
 
-  setTimeout(() => {
-    const images = methods.getValues("images") || [];
+    setTimeout(() => {
+      const images = methods.getValues("images") || [];
 
-    images.forEach((image) => {
-      revokeImagePreviewUrl(image.previewUrl);
-    });
+      images.forEach((image) => {
+        revokeImagePreviewUrl(image.previewUrl);
+      });
 
-    methods.reset(getAddProductDefaultValues());
-    onClose();
-    setActiveStep(1);
-  }, DRAWER_ANIMATION_MS);
-};
+      methods.reset(getAddProductDefaultValues());
+      onClose();
+      setActiveStep(1);
+    }, DRAWER_ANIMATION_MS);
+  };
   return createPortal(
     <div
       className={`fixed inset-0 z-80 bg-black/40 transition-opacity duration-500 ease-out ${
@@ -201,7 +208,8 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
                   {activeStep === 1 && <ProductBasicInfoStep />}
                   {activeStep === 2 && <ProductPricingInventoryStep />}
                   {activeStep === 3 && <ProductImagesMediaStep />}
-                  {activeStep > 3 && (
+                  {activeStep === 4 && <ProductAttributesVariationsStep />}
+                  {activeStep > 4 && (
                     <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
                       <p className="text-sm font-semibold text-primary">
                         Step {activeStep}

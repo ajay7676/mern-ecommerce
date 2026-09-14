@@ -41,6 +41,37 @@ const imageSchema = z.object({
   file: z.any().optional(),
 });
 
+
+const productAttributeOptionSchema = z.object({
+  optionId: z.string().optional(),
+  label: z.string().trim().min(1, "Option label is required"),
+  value: z.string().trim().min(1, "Option value is required"),
+  colorCode: z.string().optional().nullable(),
+});
+
+const productAttributeSchema = z.object({
+  attributeId: z.string().optional(),
+  name: z.string().trim().min(1, "Attribute name is required"),
+  type: z.enum(["dropdown", "color", "text", "number", "boolean"]),
+  source: z.enum(["existing", "custom"]).optional(),
+  options: z
+    .array(productAttributeOptionSchema)
+    .min(1, "Please add at least one option"),
+});
+
+const productVariantSchema = z.object({
+  variantId: z.string().optional(),
+  name: z.string().trim().min(1, "Variant name is required"),
+  sku: z.string().trim().min(1, "Variant SKU is required"),
+  price: z.string().trim().min(1, "Price is required"),
+  stock: z.string().trim().min(1, "Stock is required"),
+  status: z.boolean(),
+  source: z.enum(["auto", "manual"]).optional(),
+  imageUrl: z.string().optional(),
+  images: z.array(z.any()).optional(),
+  attributeValues: z.any().optional(),
+});
+
 export const addProductSchema = z.object({
   productName: z
     .string()
@@ -168,5 +199,13 @@ videoUrl: z
     z.string().url("Please enter a valid video URL"),
   ])
   .optional(),
+
+  attributes: z
+  .array(productAttributeSchema)
+  .min(1, "Please select at least one attribute"),
+
+  variants: z
+  .array(productVariantSchema)
+  .min(1, "Please create at least one variant"),
 
 });

@@ -1,3 +1,8 @@
+import {
+  getDefaultProductVariants,
+  getDefaultSelectedAttributes
+} from "./productVariationUtils"
+
 export const getAddProductDefaultValues  = () => {
    return{
     // Basic Information
@@ -48,11 +53,13 @@ export const getAddProductDefaultValues  = () => {
     displayOrder: "custom",
     imageZoom: true,
     videoUrl: "",
-    
-     // Later steps
-    attributes: [],
-    variants: [],
+     
+    // Step 4 
+    attributes: getDefaultSelectedAttributes(),
+    variants: getDefaultProductVariants(),
 
+    // Later steps
+    
     productTypeDetail: "",
     collection: "",
     tags: "",
