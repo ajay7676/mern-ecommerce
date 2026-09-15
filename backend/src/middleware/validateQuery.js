@@ -2,10 +2,7 @@ import HandleError from "../utils/handleError.js";
 
 export const validateQuery = (schema) => {
   return (req, res, next) => {
-    console.log("schema");
     const result = schema.safeParse(req.query);
-    console.log("result");
-    console.log(result);
 
     if (!result.success) {
       const errors = {};

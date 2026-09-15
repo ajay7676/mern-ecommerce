@@ -10,9 +10,10 @@ import cors from "cors";
 dotenv.config();
 
 // import productRoutes from './routes/productRoutes.js'
-import productRoutes from "./modules/product/routes/product.routes.js";
+// import productRoutes from "./modules/product/routes/product.routes.js";
 import adminUserRoutes from "./modules/admin/users/adminUser.routes.js";
-import productVariantRoutes from "./modules/catalog/routes/productVariant.routes.js";
+// import productVariantRoutes from "./modules/catalog/routes/productVariant.routes.js";
+import adminProductRouter  from './modules/admin/products/routes/adminProduct.routes.js'
 import userRoutes from "./routes/userRoutes.js";
 import userAuthRoutes from "./modules/user/routes/user.routes.js";
 import categoryRoutes from "./modules/catalog/routes/category.routes.js";
@@ -58,9 +59,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 const PORT = process.env.PORT || 5000;
 
-app.use("/api/v1", productRoutes);
+// app.use("/api/v1", productRoutes);
+app.use("/api/v1", adminProductRouter);
 app.use("/api/v1", adminUserRoutes);
-app.use("/api/v1", productVariantRoutes);
+// app.use("/api/v1", productVariantRoutes);
 app.use("/api/v1", categoryRoutes);
 app.use("/api/v1", adminBrandRoutes);
 app.use("/api/v1", adminCategoryRoutes);
