@@ -1,5 +1,5 @@
 
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 import HandleError  from '../../../../utils/handleError.js';
 
 
@@ -269,7 +269,7 @@ export const createAdminProductService = async ({ payload, adminId }) => {
       throw duplicateError;
     }
 
-    throw error;
+    throw error; 
   } finally {
     session.endSession();
   }
