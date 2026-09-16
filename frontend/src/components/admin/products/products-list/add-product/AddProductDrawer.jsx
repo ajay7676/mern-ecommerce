@@ -32,6 +32,12 @@ import {
   getProductApiErrorMessage,
 } from "../../../../../utils/admin/products/product/productApiErrorUtils";
 
+import {
+  cleanupTemporaryProductImagesSafely,
+  shouldCleanupImagesAfterCreateFailure,
+} from "../../../../../utils/admin/products/product/productTempImageCleanup";
+import { useDeleteTemporaryProductImages } from "../../../../../hooks/admin/mutations/products/useDeleteTemporaryProductImages";
+
 const DRAWER_ANIMATION_MS = 500;
 
 const AddProductDrawer = ({ isOpen, onClose }) => {
@@ -52,6 +58,9 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
   const createProductMutation = useCreateAdminProduct();
 
   const isCreatingProduct = createProductMutation.isPending;
+  const deleteTemporaryProductImages = useDeleteTemporaryProductImages();
+
+  const isCleaningImages = deleteTemporaryProductImages.isPending;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -126,10 +135,25 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
   // const currentStep = PRODUCT_WIZARD_STEPS.find(
   //   (step) => step.id === activeStep,
   // );
+  const cleanupCurrentTempImages = async () => {
+    const values = methods.getValues();
 
+    return cleanupTemporaryProductImagesSafely({
+      values,
+      deleteTemporaryImages: deleteTemporaryProductImages.mutateAsync,
+    });
+  };
   const handlePrevious = () => {
     setActiveStep((prev) => Math.max(prev - 1, 1));
   };
+
+  const handleCloseWithoutSavingOrReset = () => {
+  setIsDrawerVisible(false);
+
+  setTimeout(() => {
+    onClose();
+  }, DRAWER_ANIMATION_MS);
+};
 
   const handlePublishProduct = async () => {
     const isValid = await validateAllProductSteps(methods);
@@ -155,8 +179,7 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
       methods.reset(getAddProductDefaultValues());
       setActiveStep(1);
 
-      handleClose();
-
+      handleCloseWithoutSavingOrReset();
       console.log("Created product:", createdProduct);
     } catch (error) {
       const appliedFields = applyCreateProductApiErrors(methods, error);
@@ -166,7 +189,30 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
         setActiveStep(firstErrorStep);
       }
 
+      if (shouldCleanupImagesAfterCreateFailure(error)) {
+        await cleanupCurrentTempImages();
+
+        methods.setValue("images", [], {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+
+        methods.setError("images", {
+          type: "server",
+          message:
+            "Product image processing failed. Please upload images again.",
+        });
+
+        setActiveStep(3);
+
+        localStorage.removeItem("addProductDraft");
+
+        toast.error("Image processing failed. Please upload images again.");
+        return;
+      }
+
       toast.error(getProductApiErrorMessage(error));
+
       console.error("Create product failed:", error);
     }
   };
@@ -216,22 +262,18 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
     console.log("Backend payload:", payload);
   };
 
-  // const handleClose = () => {
-  //   setIsDrawerVisible(false);
+  const handleCloseAndKeepDraft = () => {
+     
+    const formValues = methods.getValues();
 
-  //   setTimeout(() => {
-  //     const images = methods.getValues("images") || [];
+    localStorage.setItem(
+      "addProductDraft",
+      JSON.stringify({
+        formValues,
+        savedAt: new Date().toISOString(),
+      }),
+    );
 
-  //     images.forEach((image) => {
-  //       revokeImagePreviewUrl(image.previewUrl);
-  //     });
-
-  //     methods.reset(getAddProductDefaultValues());
-  //     onClose();
-  //     setActiveStep(1);
-  //   }, DRAWER_ANIMATION_MS);
-  // };
-  const handleClose = () => {
     setIsDrawerVisible(false);
 
     setTimeout(() => {
@@ -239,19 +281,20 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
     }, DRAWER_ANIMATION_MS);
   };
 
-  const handleDiscardDraft = () => {
-    localStorage.removeItem("addProductDraft");
+  const handleDiscardDraft = async () => {
+    try {
+      await cleanupCurrentTempImages();
 
-    methods.reset(getAddProductDefaultValues());
-    setPreviewModal({
-      isOpen: false,
-      title: "",
-      payload: null,
-    });
+      localStorage.removeItem("addProductDraft");
 
-    console.log("Product draft discarded");
+      methods.reset(getAddProductDefaultValues());
 
-    setActiveStep(1);
+      setActiveStep(1);
+
+      toast.success("Draft discarded successfully");
+    } catch (error) {
+      toast.error("Failed to discard draft", error);
+    }
   };
 
   return createPortal(
@@ -259,7 +302,7 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
       className={`fixed inset-0 z-80 bg-black/40 transition-opacity duration-500 ease-out ${
         isDrawerVisible ? "opacity-100" : "opacity-0"
       }`}
-      onClick={handleClose}
+      onClick={handleCloseAndKeepDraft}
     >
       <div
         onClick={(event) => event.stopPropagation()}
@@ -270,7 +313,7 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
            }`}
       >
         <FormProvider {...methods}>
-          <AddProductDrawerHeader onClose={handleClose} />
+          <AddProductDrawerHeader onClose={handleCloseAndKeepDraft} />
           <ProductStepIndicator
             activeStep={activeStep}
             onStepClick={setActiveStep}
@@ -300,7 +343,7 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
             onNext={handleNext}
             onSaveDraft={handleSaveDraft}
             onDiscardDraft={handleDiscardDraft}
-            isSubmitting={isCreatingProduct}
+            isSubmitting={isCreatingProduct || isCleaningImages}
           />
 
           <ProductPayloadPreviewModal

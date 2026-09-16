@@ -27,17 +27,32 @@ const optionalNumber = z.preprocess((value) => {
 }, z.number().min(0).nullable());
 
 const imageSchema = z.object({
-  imageId: z.string(),
-  name: z.string(),
-  size: z.number(),
-  type: z.string(),
-  previewUrl: z.string(),
-  altText: z.string().optional(),
+  imageId: z.string().min(1, "Image id is required"),
+
+  publicId: z.string().min(1, "Image publicId is required"),
+
+  url: z
+    .string()
+    .min(1, "Image url is required")
+    .url("Image url must be valid")
+    .refine((value) => !value.startsWith("blob:"), {
+      message: "Please upload image before continuing",
+    }),
+
+  previewUrl: z.string().optional().nullable(),
+
+  altText: z.string().optional().default(""),
+
   isPrimary: z.boolean(),
-  sortOrder: z.number(),
+
+  sortOrder: z.number().int().min(1),
+
+  // optional only for old local preview support
+  name: z.string().optional(),
+  size: z.number().optional(),
+  type: z.string().optional(),
   file: z.any().optional(),
 });
-
 const productAttributeOptionSchema = z.object({
   optionId: z.string().optional(),
   label: z.string().trim().min(1, "Option label is required"),
@@ -175,7 +190,17 @@ export const addProductSchema = z
     images: z
       .array(imageSchema)
       .min(1, "Please upload at least one product image")
-      .max(8, "You can upload maximum 8 images"),
+      .max(8, "You can upload maximum 8 images")
+      .superRefine((images, ctx) => {
+        const primaryImages = images.filter((image) => image.isPrimary);
+
+        if (primaryImages.length !== 1) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Exactly one primary image is required",
+          });
+        }
+      }),
 
     imageAltText: z
       .string()
