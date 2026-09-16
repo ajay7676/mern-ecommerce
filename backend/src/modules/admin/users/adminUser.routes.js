@@ -26,7 +26,6 @@ router.get("/admin/users/stats", userAuth, adminOnly, getAdminUserStats);
 router.get("/admin/users/:userId", userAuth, adminOnly, getAdminUser);
 router.patch("/admin/users/:userId", userAuth, adminOnly, updateAdminUser);
 
-
 router.patch("/admin/users/:userId/status",userAuth, adminOnly, updateAdminUserStatus);
 
 router.delete("/admin/users/:userId", userAuth, adminOnly ,deleteAdminUser);

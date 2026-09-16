@@ -1,3 +1,5 @@
+
+import {env} from '../../../../config/env.js'
 export const PRODUCT_STATUS = {
   DRAFT: "draft",
   ACTIVE: "active",
@@ -42,3 +44,5 @@ export const PUBLISH_OPTION = {
   SCHEDULE_PUBLISH: "schedulePublish",
   SAVE_AS_DRAFT: "saveAsDraft",
 };
+
+

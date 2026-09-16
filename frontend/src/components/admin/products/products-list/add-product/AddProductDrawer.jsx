@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import toast from "react-hot-toast";
 
 import AddProductDrawerHeader from "./AddProductDrawerHeader";
 import AddProductDrawerFooter from "./AddProductDrawerFooter";
@@ -19,11 +20,17 @@ import ProductAdditionalDetailsStep from "./ProductAdditionalDetailsStep";
 import ProductReviewPublishStep from "./ProductReviewPublishStep";
 import ProductPayloadPreviewModal from "../view-product/ProductPayloadPreviewModal";
 import {
+  getFirstStepFromFields,
   validateAllProductSteps,
   validateProductStep,
 } from "../../../../../utils/admin/products/product/productStepValidation";
 
 import { buildProductPayload } from "../../../../../utils/admin/products/product/productPayloadUtils";
+import { useCreateAdminProduct } from "../../../../../hooks/admin/mutations/products/useCreateAdminProduct";
+import {
+  applyCreateProductApiErrors,
+  getProductApiErrorMessage,
+} from "../../../../../utils/admin/products/product/productApiErrorUtils";
 
 const DRAWER_ANIMATION_MS = 500;
 
@@ -41,6 +48,10 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
     defaultValues: getAddProductDefaultValues(),
     mode: "onChange",
   });
+
+  const createProductMutation = useCreateAdminProduct();
+
+  const isCreatingProduct = createProductMutation.isPending;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -124,6 +135,7 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
     const isValid = await validateAllProductSteps(methods);
 
     if (!isValid) {
+      toast.error("Please fix form errors before publishing");
       return;
     }
 
@@ -133,14 +145,30 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
       values,
       action: "publish",
     });
+    try {
+      const createdProduct = await createProductMutation.mutateAsync(payload);
 
-    setPreviewModal({
-      isOpen: true,
-      title: "Product ready to publish",
-      payload,
-    });
+      localStorage.removeItem("addProductDraft");
 
-    console.log("Publish payload:", payload);
+      toast.success("Product created successfully");
+
+      methods.reset(getAddProductDefaultValues());
+      setActiveStep(1);
+
+      handleClose();
+
+      console.log("Created product:", createdProduct);
+    } catch (error) {
+      const appliedFields = applyCreateProductApiErrors(methods, error);
+      const firstErrorStep = getFirstStepFromFields(appliedFields);
+
+      if (firstErrorStep) {
+        setActiveStep(firstErrorStep);
+      }
+
+      toast.error(getProductApiErrorMessage(error));
+      console.error("Create product failed:", error);
+    }
   };
 
   const handleNext = async () => {
@@ -216,12 +244,12 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
 
     methods.reset(getAddProductDefaultValues());
     setPreviewModal({
-    isOpen: false,
-    title: "",
-    payload: null,
-  });
+      isOpen: false,
+      title: "",
+      payload: null,
+    });
 
-  console.log("Product draft discarded");
+    console.log("Product draft discarded");
 
     setActiveStep(1);
   };
@@ -272,6 +300,7 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
             onNext={handleNext}
             onSaveDraft={handleSaveDraft}
             onDiscardDraft={handleDiscardDraft}
+            isSubmitting={isCreatingProduct}
           />
 
           <ProductPayloadPreviewModal

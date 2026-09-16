@@ -1,7 +1,5 @@
-
-import mongoose from "mongoose"
-import HandleError  from '../../../../utils/handleError.js';
-
+import mongoose from "mongoose";
+import HandleError from "../../../../utils/handleError.js";
 
 import {
   PRODUCT_MODE,
@@ -9,6 +7,8 @@ import {
   PRODUCT_TYPE,
   PUBLISH_OPTION,
 } from "../constants/product.constants.js";
+
+import {} from '../constants/productImage.constants.js'
 
 import {
   assertValidObjectId,
@@ -24,9 +24,16 @@ import {
   findProductVariantsBySkus,
 } from "../repositories/adminProduct.repository.js";
 
-import { mapAdminCreatedProductResponse } from "../mappers/adminProduct.mapper.js";
-
-
+import {
+   mapAdminCreatedProductResponse
+  } from "../mappers/adminProduct.mapper.js";
+import { uploadTemporaryImage } from "../../../../utils/cloudinary/uploadTemporaryImage.js";
+import { PRODUCT_IMAGE_CONFIG } from "../constants/productImage.constants.js";
+import {
+   verifyTemporaryCloudinaryAsset
+   } from "../../../../utils/cloudinary/cloudinaryTemporaryAsset.js";
+import { isCloudinaryResourceNotFound } from "../../../../utils/cloudinary/cloudinaryError.js";
+import { deleteCloudinaryAssets } from "../../../../utils/cloudinary/cloudinaryDelete.js";
 
 const assertUniqueVariantSkusInPayload = (variants = []) => {
   const skus = variants.map((variant) => variant.sku).filter(Boolean);
@@ -62,7 +69,6 @@ const assertPrimaryImageExists = (images = []) => {
     });
   }
 };
-
 
 const assertPublishRules = (payload) => {
   if (
@@ -112,21 +118,21 @@ const assertProductReferences = (payload) => {
   assertValidObjectId(
     payload.basicInformation.category,
     "category",
-    "Invalid category id"
+    "Invalid category id",
   );
 
   if (payload.basicInformation.subCategory) {
     assertValidObjectId(
       payload.basicInformation.subCategory,
       "subCategory",
-      "Invalid sub category id"
+      "Invalid sub category id",
     );
   }
 
   assertValidObjectId(
     payload.basicInformation.brand,
     "brand",
-    "Invalid brand id"
+    "Invalid brand id",
   );
 };
 
@@ -154,7 +160,10 @@ const assertNoExistingProductConflict = async ({ productData, session }) => {
   }
 };
 
-const assertNoExistingVariantSkuConflict = async ({ variantsData, session }) => {
+const assertNoExistingVariantSkuConflict = async ({
+  variantsData,
+  session,
+}) => {
   const skus = variantsData.map((variant) => variant.sku).filter(Boolean);
 
   if (!skus.length) return;
@@ -174,6 +183,7 @@ const assertNoExistingVariantSkuConflict = async ({ variantsData, session }) => 
 };
 
 const handleDuplicateKeyError = (error) => {
+  console.log(error);
   if (error?.code !== 11000) {
     return null;
   }
@@ -193,7 +203,7 @@ const handleDuplicateKeyError = (error) => {
   }
 
   if (keyPattern.sku) {
-    return new HandleError("Variant SKU already exists", 409, {
+    return new HandleError("Variant SKU already exists @@@", 409, {
       variants: "One or more variant SKUs already exist",
     });
   }
@@ -269,8 +279,97 @@ export const createAdminProductService = async ({ payload, adminId }) => {
       throw duplicateError;
     }
 
-    throw error; 
+    throw error;
   } finally {
     session.endSession();
   }
+};
+
+const normalizeUploadedImageResponse = ({ uploadedImage, index }) => {
+  return {
+    imageId: uploadedImage.publicId,
+    publicId: uploadedImage.publicId ,
+    url: uploadedImage.url,
+    altText: "",
+    isPrimary: index === 0,
+    sortOrder: index + 1,
+  };
+};
+
+export const uploadTemporaryProductImagesService = async ({
+  files,
+  userId,
+}) => {
+  const uploadedImages = await Promise.all(
+      files.map(async (file, index) => {
+        const uploadedImage = await uploadTemporaryImage({
+          file,
+          ownerId: userId,
+          config: PRODUCT_IMAGE_CONFIG,
+        });
+
+        return normalizeUploadedImageResponse({
+          uploadedImage,
+          index,
+        });
+      })
+    );
+
+  return uploadedImages;
+};
+
+export const deleteTemporaryProductImagesService = async ({
+  userId,
+  publicIds,
+}) => {
+  
+  if (!Array.isArray(publicIds) || publicIds.length === 0) {
+      throw new HandleError("publicIds must be an array", 400, {
+        publicIds: "Please provide an array of image publicIds",
+      });
+    }
+  const uniquePublicIds = [...new Set(publicIds)];
+
+
+  const verifiedPublicIds = [];
+  const notFoundPublicIds = [];
+
+  for (const publicId of uniquePublicIds) {
+    try {
+      await verifyTemporaryCloudinaryAsset({
+        publicId,
+        ownerId: userId,
+        requiredTags: ["product-image"],
+        temporaryTag: "temporary",
+        resourceType: "image",
+      });
+
+      verifiedPublicIds.push(publicId);
+    } catch (error) {
+      if (isCloudinaryResourceNotFound(error)) {
+        notFoundPublicIds.push(publicId);
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  let cloudinaryResult = null;
+
+
+  if (verifiedPublicIds.length > 0) {
+    cloudinaryResult = await deleteCloudinaryAssets({
+      publicIds: verifiedPublicIds,
+      resourceType: "image",
+    });
+  }
+
+  return {
+    requestedCount: uniquePublicIds.length,
+    deletedCount: verifiedPublicIds.length,
+    deletedPublicIds: verifiedPublicIds,
+    notFoundPublicIds,
+    cloudinaryResult,
+  };
 };

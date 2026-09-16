@@ -7,12 +7,14 @@ export const validateImageFile = ({
   required = true,
 }) => {
   if (!file) {
+     console.log("File was not exist")
     if (required) {
       throw new HandleError("Image is required", 400);
     }
 
     return;
   }
+
 
   if (!allowedMimeTypes.includes(file.mimetype)) {
     throw new HandleError("Unsupported image type", 400);

@@ -1,4 +1,4 @@
-import { Product } from '../models/product.model';
+import { Product } from '../models/product.model.js';
 import { ProductVariant } from "../models/productVariant.model.js";
 
 export const findProductBySlug = async ({ slug, session }) => {

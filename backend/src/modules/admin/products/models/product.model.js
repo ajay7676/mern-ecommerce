@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 import {
@@ -8,7 +7,7 @@ import {
   PRODUCT_UNITS,
   PUBLISH_OPTION,
   TAX_CLASS,
-} from "../products/constants/product.constants.js";
+} from "../constants/product.constants.js";
 
 const productImageSchema = new mongoose.Schema(
   {
@@ -40,7 +39,7 @@ const productImageSchema = new mongoose.Schema(
       default: 1,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const productVisibilitySchema = new mongoose.Schema(
@@ -60,7 +59,7 @@ const productVisibilitySchema = new mongoose.Schema(
       default: false,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const productSeoSchema = new mongoose.Schema(
@@ -82,7 +81,7 @@ const productSeoSchema = new mongoose.Schema(
       default: [],
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const productPricingSchema = new mongoose.Schema(
@@ -145,7 +144,7 @@ const productPricingSchema = new mongoose.Schema(
       default: null,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const productInventorySchema = new mongoose.Schema(
@@ -192,7 +191,7 @@ const productInventorySchema = new mongoose.Schema(
       default: false,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const productAttributeOptionSnapshotSchema = new mongoose.Schema(
@@ -219,7 +218,7 @@ const productAttributeOptionSnapshotSchema = new mongoose.Schema(
       default: null,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const productAttributeSnapshotSchema = new mongoose.Schema(
@@ -253,7 +252,7 @@ const productAttributeSnapshotSchema = new mongoose.Schema(
       default: [],
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const customFieldSchema = new mongoose.Schema(
@@ -270,7 +269,7 @@ const customFieldSchema = new mongoose.Schema(
       trim: true,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const userManualSchema = new mongoose.Schema(
@@ -300,7 +299,7 @@ const userManualSchema = new mongoose.Schema(
       default: null,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const productSchema = new mongoose.Schema(
@@ -402,7 +401,7 @@ const productSchema = new mongoose.Schema(
       default: null,
     },
 
-    collection: {
+    productCollection: {
       type: String,
       trim: true,
       default: null,
@@ -500,18 +499,24 @@ const productSchema = new mongoose.Schema(
       default: null,
     },
     deletedBy: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 productSchema.index({ name: "text", shortDescription: "text" });
 productSchema.index({ status: 1, createdAt: -1 });
 productSchema.index({ category: 1, brand: 1 });
-productSchema.index({ "inventory.sku": 1 }, { unique: true });
+productSchema.index(
+  { "inventory.sku": 1 },
+  {
+    unique: true,
+    name: "inventory_sku_unique",
+  },
+);
 
 export const Product = mongoose.model("Product", productSchema);

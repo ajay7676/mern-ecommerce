@@ -72,3 +72,4 @@ export const deleteTemporaryProfileAvatar = async (req, res, next) => {
     next(error);
   }
 };
+

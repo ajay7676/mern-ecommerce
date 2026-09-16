@@ -1,4 +1,6 @@
-import {env} from '../../../config/env.js'
+import {env} from '../../../config/env.js';
+
+
 export const USER_AVATAR_CONFIG = {
   folder:
     env.cloudinary.userTempFolder,

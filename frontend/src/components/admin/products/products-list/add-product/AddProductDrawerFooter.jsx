@@ -7,8 +7,8 @@ const AddProductDrawerFooter = ({
   onNext,
   onSaveDraft,
   onDiscardDraft,
+  isSubmitting = false,
 }) => {
-  const isFirstStep = activeStep === 1;
   const isLastStep = activeStep === totalSteps;
 
   return (
@@ -16,7 +16,7 @@ const AddProductDrawerFooter = ({
       <button
         type="button"
         onClick={onPrevious}
-        disabled={isFirstStep}
+        disabled={activeStep === 1 || isSubmitting}
         className="btn btn-outline h-11 min-h-11 rounded-xl disabled:opacity-40"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -27,6 +27,7 @@ const AddProductDrawerFooter = ({
         <button
           type="button"
           onClick={onDiscardDraft}
+           disabled={isSubmitting}
           className="btn btn-outline btn-error h-11 min-h-11 rounded-xl px-5"
         >
           Discard
@@ -34,6 +35,7 @@ const AddProductDrawerFooter = ({
         <button
           type="button"
           onClick={onSaveDraft}
+           disabled={isSubmitting}
           className="btn h-11 min-h-11 rounded-xl border-slate-200 bg-white px-6 text-slate-900 shadow-sm hover:bg-slate-50"
         >
           <Save className="h-4 w-4" />
@@ -45,7 +47,13 @@ const AddProductDrawerFooter = ({
           onClick={onNext}
           className="btn btn-primary h-11 min-h-11 rounded-xl px-6 text-white shadow-md"
         >
-          {isLastStep ? "Publish Product" : "Save & Next"}
+          {isSubmitting ? (
+            <span className="loading loading-spinner loading-sm" />
+          ) : isLastStep ? (
+            "Publish Product"
+          ) : (
+            "Save & Next"
+          )}
           <ArrowRight className="h-4 w-4" />
         </button>
       </div>

@@ -88,3 +88,21 @@ export const validateAllProductSteps = async (methods) => {
 
   return isValid;
 };
+
+
+export const getFirstStepFromFields = (fieldNames = []) => {
+  for (const fieldName of fieldNames) {
+    const matchedEntry = Object.entries(PRODUCT_STEP_FIELDS).find(
+      ([, fields]) =>
+        fields.some(
+          (field) => field === fieldName || fieldName.startsWith(`${field}.`)
+        )
+    );
+
+    if (matchedEntry) {
+      return Number(matchedEntry[0]);
+    }
+  }
+
+  return null;
+};

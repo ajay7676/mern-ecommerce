@@ -157,7 +157,8 @@ const ProductBasicInfoStep = () => {
               {...register("category")}
             >
               <option value="">Select category</option>
-              <option value="men">Men</option>
+              {/* <option value="men">Men</option> */}
+              <option value="6a85c6b5f793390d8f590826">Men</option>
               <option value="women">Women</option>
               <option value="bags">Bags</option>
               <option value="accessories">Accessories</option>
@@ -169,7 +170,8 @@ const ProductBasicInfoStep = () => {
               {...register("subCategory")}
             >
               <option value="">Select sub category</option>
-              <option value="t-shirts">T-Shirts</option>
+              <option value="6a869b949f629824fb6ee418">T-Shirts</option>
+              {/* <option value="t-shirts">T-Shirts</option> */}
               <option value="shirts">Shirts</option>
               <option value="shoes">Shoes</option>
               <option value="jeans">Jeans</option>
@@ -182,6 +184,7 @@ const ProductBasicInfoStep = () => {
               {...register("brand")}
             >
               <option value="">Select brand</option>
+              <option value="6a5c6cb242d6305e1ec7dc73">Zara</option>
               <option value="adidas">Adidas</option>
               <option value="nike">Nike</option>
               <option value="puma">Puma</option>

@@ -228,7 +228,7 @@ export const buildProductDocument = ({ payload, adminId }) => {
     ),
 
     productTypeDetail: additionalDetails.productTypeDetail || null,
-    collection: additionalDetails.collection || null,
+    productCollection: additionalDetails.collection || null,
     tags: additionalDetails.tags || [],
     hsnCode: additionalDetails.hsnCode || null,
     countryOfOrigin: additionalDetails.countryOfOrigin || null,

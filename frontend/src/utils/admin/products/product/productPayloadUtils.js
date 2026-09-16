@@ -1,4 +1,9 @@
 
+const toNumberOrZero = (value) => {
+  const number = Number(value);
+  return Number.isNaN(number) ? 0 : number;
+};
+
 const cleanString = (value) => {
   if (value === null || value === undefined) return null;
 
@@ -28,19 +33,70 @@ const splitCommaText = (value) => {
     .filter(Boolean);
 };
 
-const mapProductImages = (images = []) => {
-  return images.map((image, index) => ({
-    publicId: image.publicId || null,
-    url: image.url || image.previewUrl || null,
-    altText: image.altText || image.imageAltText || "",
-    isPrimary: Boolean(image.isPrimary),
-    sortOrder: index + 1,
+const mapVariantAttributes = (variant) => {
+  const attributeValues = variant.attributeValues || {};
 
-    // only for frontend dummy preview
-    localName: image.name || null,
+  return Object.values(attributeValues).map((item) => ({
+    attributeId: item.attributeId || null,
+    attributeName: item.attributeName,
+    optionId: item.optionId || null,
+    label: item.label,
+    value: item.value,
+    colorCode: item.colorCode || null,
   }));
 };
 
+
+const mapProductImages = (images = []) => {
+  return images.map((image, index) => ({
+    publicId: image.publicId || null,
+
+    // For now previewUrl may be blob.
+    // In Phase 9.4 this should become Cloudinary url.
+    url: image.url || image.previewUrl,
+
+    altText: image.altText || image.imageAltText || "",
+    isPrimary: Boolean(image.isPrimary),
+    sortOrder: image.sortOrder || index + 1,
+  }));
+};
+
+const mapVariantImages = (images = []) => {
+  return images.map((image, index) => ({
+    publicId: image.publicId || null,
+    url: image.url || image.previewUrl,
+    isPrimary: image.isPrimary ?? index === 0,
+    sortOrder: image.sortOrder || index + 1,
+  }));
+};
+
+const mapProductVariants = (variants = []) => {
+  return variants.map((variant, index) => {
+    const images = mapVariantImages(variant.images || []);
+
+    return {
+      variantId: variant.variantId || null,
+      name: variant.name,
+      sku: variant.sku,
+
+      price: toNumberOrZero(variant.price),
+      stock: toNumberOrZero(variant.stock),
+
+      status: variant.status ? "active" : "inactive",
+      source: variant.source || "auto",
+      sortOrder: variant.sortOrder || index + 1,
+
+      image: {
+        publicId: variant.image?.publicId || null,
+        url: variant.image?.url || variant.imageUrl || null,
+      },
+
+      images,
+
+      attributes: mapVariantAttributes(variant),
+    };
+  });
+};
 const mapProductAttributes = (attributes = []) => {
   return attributes.map((attribute) => ({
     attributeId: attribute.attributeId,
@@ -52,40 +108,6 @@ const mapProductAttributes = (attributes = []) => {
       label: option.label,
       value: option.value,
       colorCode: option.colorCode || null,
-    })),
-  }));
-};
-
-const mapProductVariants = (variants = []) => {
-  return variants.map((variant, index) => ({
-    variantId: variant.variantId,
-    name: variant.name,
-    sku: cleanString(variant.sku),
-    price: toNumberOrNull(variant.price),
-    stock: toNumberOrNull(variant.stock),
-    status: variant.status ? "active" : "inactive",
-    source: variant.source || "auto",
-    sortOrder: index + 1,
-
-    image: {
-      publicId: variant.image?.publicId || null,
-      url: variant.imageUrl || variant.images?.[0]?.url || null,
-    },
-
-    images: (variant.images || []).map((image, imageIndex) => ({
-      publicId: image.publicId || null,
-      url: image.url || null,
-      isPrimary: image.isPrimary ?? imageIndex === 0,
-      sortOrder: imageIndex + 1,
-    })),
-
-    attributes: Object.values(variant.attributeValues || {}).map((item) => ({
-      attributeId: item.attributeId,
-      attributeName: item.attributeName,
-      optionId: item.optionId,
-      label: item.label,
-      value: item.value,
-      colorCode: item.colorCode || null,
     })),
   }));
 };
