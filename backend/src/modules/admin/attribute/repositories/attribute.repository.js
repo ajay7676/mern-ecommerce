@@ -181,3 +181,49 @@ export const getAttributeTypeSummary = async () => {
     },
   ]);
 };
+
+export const findAttributeOptions = async ({
+  search = "",
+  status = "active",
+  usage = "variant",
+  limit = 50,
+}) => {
+  const query = {};
+
+  if (status !== "all") {
+    query.status = status;
+  }
+
+  if (usage === "variant") {
+    query.type = {
+      $in: ["dropdown", "switch"],
+    };
+  }
+
+  if (search) {
+    query.$or = [
+      {
+        name: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+      {
+        slug: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+    ];
+  }
+
+  return Attribute.find(query)
+    .select("_id name slug type values status sortOrder")
+    .sort({
+      sortOrder: 1,
+      name: 1,
+    })
+    .limit(limit)
+    .lean();
+};
+

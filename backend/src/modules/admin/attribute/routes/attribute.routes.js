@@ -9,12 +9,14 @@ import {
   bulkDeleteAttributesSchema,
   updateAttributeSchema,
   updateAttributeStatusSchema,
+  getAttributeOptionsQuerySchema,
    
  } from "../validations/attribute.validation.js";
 import { 
   bulkDeleteAttributesController,
   createAttributeController,
   deleteAttributeController,
+  getAttributeOptionsController,
   getAttributeStatsController,
   getAttributeTypeSummaryController,
   getAttributesController,
@@ -41,7 +43,7 @@ router.get(
   "/admin/attributes",
   userAuth,
   adminOnly,
-  validateQuery(getAttributesQuerySchema),
+  validateQuery(getAttributeOptionsQuerySchema),
   getAttributesController
 );
 router.get(
@@ -56,6 +58,13 @@ router.get(
   userAuth,
   adminOnly,
   getAttributeTypeSummaryController
+);
+router.get(
+  "/admin/attributes/options",
+  userAuth,
+  adminOnly,
+   validateQuery(getAttributeOptionsQuerySchema),
+  getAttributeOptionsController
 );
 
 router.delete(

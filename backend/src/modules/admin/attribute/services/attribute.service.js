@@ -13,6 +13,7 @@ import {
   findAttributesByIds,
   getAttributeStats,
   getAttributeTypeSummary,
+  findAttributeOptions,
 } from "../repositories/attribute.repository.js";
 
 import {
@@ -365,4 +366,32 @@ export const getAttributeTypeSummaryService = async () => {
       count: found?.count || 0,
     };
   });
+};
+
+
+const mapAttributeOption = (attribute) => {
+  return {
+    _id: attribute._id,
+    name: attribute.name,
+    slug: attribute.slug,
+    type: attribute.type,
+    status: attribute.status,
+
+    values: (attribute.values || [])
+      .map((item) => ({
+        label: item.label,
+        value: item.value,
+        colorCode: item.colorCode || null,
+        sortOrder: item.sortOrder || 0,
+      }))
+      .sort((a, b) => a.sortOrder - b.sortOrder),
+  };
+};
+
+export const getAttributeOptionsService = async (query) => {
+  const attributes = await findAttributeOptions(query);
+
+  return {
+    options: attributes.map(mapAttributeOption),
+  };
 };

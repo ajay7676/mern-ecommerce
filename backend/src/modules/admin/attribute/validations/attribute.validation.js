@@ -237,3 +237,27 @@ export const getAttributesQuerySchema = z.object({
 
   sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
 });
+
+export const getAttributeOptionsQuerySchema = z.object({
+  search: z.string().trim().optional().default(""),
+
+  status: z
+    .enum(["active", "inactive", "all"])
+    .optional()
+    .default("active"),
+
+  usage: z
+    .enum(["variant", "all"])
+    .optional()
+    .default("variant"),
+
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .default(50),
+});
+
+

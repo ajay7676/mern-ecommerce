@@ -8,6 +8,7 @@ import {
   getSingleAttributeService,
   updateAttributeService,
   updateAttributeStatusService,
+  getAttributeOptionsService,
    } from "../services/attribute.service.js";
 
 export const createAttributeController = async (req, res, next) => {
@@ -145,6 +146,20 @@ export const getAttributeTypeSummaryController = async (req, res, next) => {
       success: true,
       message: "Attribute type summary fetched successfully",
       data: summary,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAttributeOptionsController = async (req, res, next) => {
+  try {
+    const data = await getAttributeOptionsService(req.query);
+
+    return res.status(200).json({
+      success: true,
+      message: "Attribute options fetched successfully",
+      data,
     });
   } catch (error) {
     next(error);
