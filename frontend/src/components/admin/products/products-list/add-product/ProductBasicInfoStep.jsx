@@ -9,23 +9,37 @@ import {
   Underline,
 } from "lucide-react";
 
-import {
-  SelectField,
-  TextAreaField,
-  TextInputField,
-} from "../form/FormField";
+import { TextAreaField, TextInputField } from "../form/FormField";
 
 import ProductPreviewCard from "../form/ProductPreviewCard";
 import ProductStatusCard from "../form/ProductStatusCard";
 import ProductVisibilityCard from "../form/ProductVisibilityCard";
 import SeoInformationCard from "../form/SeoInformationCard";
+import { useProductCategoryOptions } from "../../../../../hooks/admin/queries/products/product-list/useProductCategoryOptions";
+import { useProductBrandOptions } from "../../../../../hooks/admin/queries/products/product-list/useProductBrandOptions";
+import { useMemo } from "react";
+import { SelectPickerField } from "../form/SelectPickerField";
 
 const ProductBasicInfoStep = () => {
+  const { data: categoryData = [], isLoading: isCategoriesLoading } =
+    useProductCategoryOptions();
+
+  const { data: brandData = [], isLoading: isBrandsLoading } =
+    useProductBrandOptions();
   const {
     register,
     control,
+    setValue,
     formState: { errors },
   } = useFormContext();
+
+  const categoryOptions = useMemo(
+    () => categoryData?.options ?? [],
+    [categoryData?.options],
+  );
+  const brandOptions = useMemo(() => brandData ?? [], [brandData]);
+  console.log("brandOptions");
+  console.log(brandOptions);
 
   const productName = useWatch({
     control,
@@ -46,6 +60,23 @@ const ProductBasicInfoStep = () => {
     control,
     name: "description",
   });
+
+  const watchedCategoryId = useWatch({
+    control,
+    name: "category",
+  });
+
+  const parentCategories = useMemo(() => {
+    return categoryOptions.filter((category) => !category.parentCategory);
+  }, [categoryOptions]);
+
+  const subCategories = useMemo(() => {
+    if (!watchedCategoryId) return [];
+
+    return categoryOptions.filter((category) => {
+      return String(category.parentCategory) === String(watchedCategoryId);
+    });
+  }, [categoryOptions, watchedCategoryId]);
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_390px]">
@@ -149,47 +180,82 @@ const ProductBasicInfoStep = () => {
                 </p>
               )}
             </div>
+            <Controller
+              name="category"
+              control={control}
+              render={({ field }) => (
+                <SelectPickerField
+                  label="Category"
+                  required
+                  value={field.value}
+                  onChange={(categoryId) => {
+                    field.onChange(categoryId);
 
-            <SelectField
-              label="Category"
-              required
-              error={errors.category?.message}
-              {...register("category")}
-            >
-              <option value="">Select category</option>
-              {/* <option value="men">Men</option> */}
-              <option value="6a85c6b5f793390d8f590826">Men</option>
-              <option value="women">Women</option>
-              <option value="bags">Bags</option>
-              <option value="accessories">Accessories</option>
-            </SelectField>
-
-            <SelectField
-              label="Sub Category"
-              error={errors.subCategory?.message}
-              {...register("subCategory")}
-            >
-              <option value="">Select sub category</option>
-              <option value="6a869b949f629824fb6ee418">T-Shirts</option>
-              {/* <option value="t-shirts">T-Shirts</option> */}
-              <option value="shirts">Shirts</option>
-              <option value="shoes">Shoes</option>
-              <option value="jeans">Jeans</option>
-            </SelectField>
-
-            <SelectField
-              label="Brand"
-              required
-              error={errors.brand?.message}
-              {...register("brand")}
-            >
-              <option value="">Select brand</option>
-              <option value="6a5c6cb242d6305e1ec7dc73">Zara</option>
-              <option value="adidas">Adidas</option>
-              <option value="nike">Nike</option>
-              <option value="puma">Puma</option>
-              <option value="hrx">HRX</option>
-            </SelectField>
+                    setValue("subCategory", "", {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                  }}
+                  onBlur={field.onBlur}
+                  placeholder="Select category"
+                  searchPlaceholder="Search category..."
+                  isLoading={isCategoriesLoading}
+                  error={errors.category?.message}
+                  options={parentCategories.map((category) => ({
+                    label: category.name,
+                    value: category.id,
+                    description: category.slug,
+                  }))}
+                />
+              )}
+            />
+            <Controller
+              name="subCategory"
+              control={control}
+              render={({ field }) => (
+                <SelectPickerField
+                  label="Sub Category"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder={
+                    !watchedCategoryId
+                      ? "Select category first"
+                      : "Select subcategory"
+                  }
+                  searchPlaceholder="Search subcategory..."
+                  disabled={!watchedCategoryId}
+                  isLoading={isCategoriesLoading}
+                  error={errors.subCategory?.message}
+                  options={subCategories.map((category) => ({
+                    label: category.name,
+                    value: category._id,
+                    description: category.slug,
+                  }))}
+                />
+              )}
+            />
+            <Controller
+              name="brand"
+              control={control}
+              render={({ field }) => (
+                <SelectPickerField
+                  label="Brand"
+                  required
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder="Select brand"
+                  searchPlaceholder="Search brand..."
+                  isLoading={isBrandsLoading}
+                  error={errors.brand?.message}
+                  options={brandOptions.map((brand) => ({
+                    label: brand.name,
+                    value: brand._id,
+                  }))}
+                />
+              )}
+            />
 
             <div className="md:col-span-2">
               <label className="mb-2 block text-sm font-bold text-slate-800">

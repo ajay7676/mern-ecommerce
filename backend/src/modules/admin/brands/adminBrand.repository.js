@@ -185,3 +185,24 @@ export const getBrandStatsRepository = async () => {
       productsUsingBrands,
     }
 };
+
+export const findBrandOptions = async ({ search = "", status = "active", limit = 50 }) => {
+  const query = {};
+
+  if (status !== "all") {
+    query.status = status;
+  }
+
+  if (search) {
+    query.name = {
+      $regex: search,
+      $options: "i",
+    };
+  }
+
+  return Brand.find(query)
+    .select("_id name slug logo status")
+    .sort({ name: 1 })
+    .limit(limit)
+    .lean();
+};

@@ -10,7 +10,7 @@ import { normalizeSlug } from "./adminCategory.helpers.js";
 
 export const validateCategoryId = (categoryId) => {
   if (!categoryId || !mongoose.isValidObjectId(categoryId)) {
-    throw new HandleError("Invalid category id", 400);
+    throw new HandleError("Invalid Category", 400);
   }
 
   return categoryId;

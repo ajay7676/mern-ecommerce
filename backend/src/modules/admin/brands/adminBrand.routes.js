@@ -7,6 +7,7 @@ import {
   getAdminBrand,
   getAdminBrands,
   getAdminBrandsStats,
+  getBrandOptionsController,
   updateAdminBrand,
   uploadBrandBanner,
   uploadBrandLogo,
@@ -18,6 +19,8 @@ import {
   bannerUpload,
   logoUpload,
 } from "../../../middleware/brandUpload.middleware.js";
+import { validateQuery } from "../../../middleware/validateQuery.js";
+import { getBrandOptionsQuerySchema } from "./adminBrand.validators.js";
 
 const router = express.Router();
 
@@ -49,6 +52,11 @@ router.delete(
 
 router.get("/admin/brands", userAuth,getAdminBrands);
 router.get("/admin/brands/stats", userAuth, adminOnly,getAdminBrandsStats);
+router.get(
+  "/admin/brands/options",
+  validateQuery(getBrandOptionsQuerySchema),
+  getBrandOptionsController
+);
 
 
 router.get("/admin/brands/:brandId", userAuth, getAdminBrand );

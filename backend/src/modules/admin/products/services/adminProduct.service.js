@@ -118,21 +118,21 @@ const assertProductReferences = (payload) => {
   assertValidObjectId(
     payload.basicInformation.category,
     "category",
-    "Invalid category id",
+    "Invalid Category",
   );
 
   if (payload.basicInformation.subCategory) {
     assertValidObjectId(
       payload.basicInformation.subCategory,
       "subCategory",
-      "Invalid sub category id",
+      "Invalid sub category",
     );
   }
 
   assertValidObjectId(
     payload.basicInformation.brand,
     "brand",
-    "Invalid brand id",
+    "Invalid Brand",
   );
 };
 

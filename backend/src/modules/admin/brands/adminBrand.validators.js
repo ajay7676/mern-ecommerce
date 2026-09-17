@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import HandleError from "../../../utils/handleError.js";
+import { z } from "zod";
 
 import {
   BRAND_STATUSES,
@@ -16,7 +17,7 @@ import { normalizeBrandSlug } from "./adminBrand.helpers.js";
 
 export const validateBrandId = (brandId) => {
   if (!brandId || !mongoose.isValidObjectId(brandId)) {
-    throw new HandleError("Invalid brand ID", 400);
+    throw new HandleError("Invalid Brand", 400);
   }
 
   return brandId;
@@ -389,3 +390,11 @@ export const normalizeBrandQuery = (query = {}) => {
     sortOrder,
   };
 };
+
+export const getBrandOptionsQuerySchema = z.object({
+  search: z.string().trim().optional().default(""),
+
+  status: z.enum(["active", "inactive", "all"]).optional().default("active"),
+
+  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+});

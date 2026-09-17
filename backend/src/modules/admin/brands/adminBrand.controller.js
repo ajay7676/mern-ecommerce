@@ -5,6 +5,7 @@ import {
   getAdminBrandsService,
   updateAdminBrandService,
   getBrandStatsService,
+  getBrandOptionsService,
 } from "./adminBrand.service.js";
 
 import {
@@ -182,6 +183,20 @@ export const getAdminBrandsStats = async (req, res, next) => {
       success: true,
       message: "Brand stats fetched successfully",
       data: stats,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getBrandOptionsController = async (req, res, next) => {
+  try {
+    const brands = await getBrandOptionsService(req.query);
+
+    return res.status(200).json({
+      success: true,
+      message: "Brand options fetched successfully",
+      data: brands,
     });
   } catch (error) {
     next(error);

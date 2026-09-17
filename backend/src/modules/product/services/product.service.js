@@ -45,7 +45,7 @@ const updateAllowedFields = (document, data, allowedFields = []) => {
 
 const getActiveCategoryOrThrow = async (categoryId) => {
   if (!isValidObjectId(categoryId)) {
-    throw new HandleError("Invalid category ID", 400);
+    throw new HandleError("Invalid Category", 400);
   }
   const category = await Category.findOne({
     _id: categoryId,
@@ -65,7 +65,7 @@ const getActiveCategoryOrThrow = async (categoryId) => {
 
 const getActiveBrandOrThrow = async (brandId) => {
   if (!isValidObjectId(brandId)) {
-    throw new HandleError("Invalid brand ID", 400);
+    throw new HandleError("Invalid Brand", 400);
   }
   const brand = await Brand.findOne({
     _id: brandId,

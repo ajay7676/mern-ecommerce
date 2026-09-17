@@ -17,8 +17,10 @@ import {
   findBrands,
   deleteBrand,
   productCounts,
-  getBrandStatsRepository
+  getBrandStatsRepository,
+  findBrandOptions
 } from "./adminBrand.repository.js";
+
 
 import {
   validateBrandId,
@@ -340,4 +342,16 @@ export const deleteAdminBrandService = async({brandId , adminId}) => {
 
 export const getBrandStatsService = async () => {
   return await getBrandStatsRepository();
+};
+
+export const getBrandOptionsService = async (query) => {
+  const brands = await findBrandOptions(query);
+
+  return brands.map((brand) => ({
+    _id: brand._id,
+    name: brand.name,
+    slug: brand.slug,
+    logo: brand.logo || null,
+    status: brand.status,
+  }));
 };

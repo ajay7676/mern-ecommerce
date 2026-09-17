@@ -1,4 +1,4 @@
-const FormError = ({ message }) => {
+export const FormError = ({ message }) => {
   if (!message) return null;
 
   return <p className="mt-1 text-xs font-medium text-error">{message}</p>;
