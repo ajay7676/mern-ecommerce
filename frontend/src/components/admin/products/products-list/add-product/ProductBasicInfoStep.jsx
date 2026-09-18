@@ -229,7 +229,7 @@ const ProductBasicInfoStep = () => {
                   error={errors.subCategory?.message}
                   options={subCategories.map((category) => ({
                     label: category.name,
-                    value: category._id,
+                    value: category.id,
                     description: category.slug,
                   }))}
                 />

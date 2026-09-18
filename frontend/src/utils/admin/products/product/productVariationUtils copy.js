@@ -1,4 +1,3 @@
-export const MAX_GENERATED_VARIANTS = 100;
 
 export const DUMMY_VARIANT_IMAGES = {
   black: "https://placehold.co/120x120/111827/ffffff?text=Black",
@@ -64,6 +63,15 @@ export const EXISTING_PRODUCT_ATTRIBUTES = [
     ],
   },
 ];
+
+
+export const createClientId = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
 
 export const slugifyValue = (value = "") => {
   return value
@@ -143,6 +151,19 @@ const buildCombinations = (attributes = []) => {
     [{}]
   );
 };
+
+export const calculatePossibleVariantCount = (attributes = []) => {
+  const validAttributes = attributes.filter(
+    (attribute) => attribute.name?.trim() && attribute.options?.length
+  );
+
+  if (!validAttributes.length) return 0;
+
+  return validAttributes.reduce((total, attribute) => {
+    return total * attribute.options.length;
+  }, 1);
+};
+
 export const generateVariantsFromAttributes = ({
   attributes,
   baseSku = "TSHIRT",
@@ -247,14 +268,6 @@ export const calculateVariantStats = (variants = [], lowStockThreshold = 10) => 
   };
 };
 
-export const createClientId = () => {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-};
-
 export const createVariantImagePreview = (file) => ({
   imageId: createClientId(),
   name: file.name,
@@ -264,221 +277,3 @@ export const createVariantImagePreview = (file) => ({
   file,
   isPrimary: true,
 });
-
-const cleanSkuPart = (value = "") => {
-  return String(value)
-    .trim()
-    .replace(/[^a-zA-Z0-9]/g, "")
-    .slice(0, 6)
-    .toUpperCase();
-};
-const normalizeBaseSku = (sku = "") => {
-  const cleanSku = String(sku)
-    .trim()
-    .replace(/[^a-zA-Z0-9-]/g, "-")
-    .replace(/-+/g, "-")
-    .toUpperCase();
-
-  return cleanSku || "PRODUCT";
-};
-
-export const getValidVariantAttributes = (attributes = []) => {
-  return attributes.filter((attribute) => {
-    return (
-      attribute?.name?.trim() &&
-      ["dropdown", "switch"].includes(attribute.type) &&
-      Array.isArray(attribute.options) &&
-      attribute.options.length > 0
-    );
-  });
-};
-
-export const calculatePossibleVariantCount = (attributes = []) => {
-  const validAttributes = getValidVariantAttributes(attributes);
-
-  if (!validAttributes.length) return 0;
-
-  return validAttributes.reduce((total, attribute) => {
-    return total * attribute.options.length;
-  }, 1);
-};
-
-export const buildVariantOptionSignature = (attributeValues = []) => {
-  return attributeValues
-    .map((item) => {
-      const attributeKey = item.attributeId || item.attributeName;
-      return `${attributeKey}:${item.value}`;
-    })
-    .sort()
-    .join("|")
-    .toLowerCase();
-};
-
-const buildAttributeCombinations = (attributes = []) => {
-  const validAttributes = getValidVariantAttributes(attributes);
-
-  if (!validAttributes.length) return [];
-
-  return validAttributes.reduce(
-    (combinations, attribute) => {
-      return combinations.flatMap((combination) => {
-        return attribute.options.map((option) => {
-          return [
-            ...combination,
-            {
-              attributeId: attribute.attributeId || null,
-              attributeName: attribute.name,
-              optionId: option.optionId || option.value,
-              label: option.label,
-              value: option.value,
-              colorCode: option.colorCode || null,
-              isCustom: Boolean(option.isCustom),
-            },
-          ];
-        });
-      });
-    },
-    [[]]
-  );
-};
-
-const createVariantName = (attributeValues = []) => {
-  return attributeValues.map((item) => item.label).join(" / ");
-};
-
-const createVariantSku = ({ baseSku, attributeValues, index }) => {
-  const suffix = attributeValues
-    .map((item) => cleanSkuPart(item.value || item.label))
-    .filter(Boolean)
-    .join("-");
-
-  return `${normalizeBaseSku(baseSku)}-${suffix || index + 1}`;
-};
-
-
-const getVariantMainImage = ({ attributeValues, productImages = [] }) => {
-  const primaryProductImage =
-    productImages.find((image) => image.isPrimary) || productImages[0];
-
-  return {
-    publicId: primaryProductImage?.publicId || null,
-    url: primaryProductImage?.url || null,
-  };
-};
-
-const mapExistingVariantsBySignature = (variants = []) => {
-  const map = new Map();
-
-  variants.forEach((variant) => {
-    const signature =
-      variant.optionSignature ||
-      buildVariantOptionSignature(
-        Object.values(variant.attributeValues || {})
-      );
-
-    if (signature) {
-      map.set(signature, variant);
-    }
-  });
-
-  return map;
-};
-
-export const generateVariantsFromCurrentOptions = ({
-  attributes = [],
-  existingVariants = [],
-  baseSku = "PRODUCT",
-  sellingPrice = 0,
-  stockQuantity = 0,
-  productImages = [],
-}) => {
-  const validAttributes = getValidVariantAttributes(attributes);
-  const possibleVariantCount = calculatePossibleVariantCount(validAttributes);
-
-  if (!validAttributes.length) {
-    return {
-      success: false,
-      message: "Please select at least one variant attribute",
-      variants: [],
-    };
-  }
-
-  if (possibleVariantCount > MAX_GENERATED_VARIANTS) {
-    return {
-      success: false,
-      message: `Too many variants. Maximum ${MAX_GENERATED_VARIANTS} variants allowed`,
-      variants: [],
-    };
-  }
-
-  const combinations = buildAttributeCombinations(validAttributes);
-  const existingVariantMap = mapExistingVariantsBySignature(existingVariants);
-
-  const usedSkus = new Set();
-
-  const variants = combinations.map((attributeValues, index) => {
-    const optionSignature = buildVariantOptionSignature(attributeValues);
-    const existingVariant = existingVariantMap.get(optionSignature);
-
-    let sku =
-      existingVariant?.sku ||
-      createVariantSku({
-        baseSku,
-        attributeValues,
-        index,
-      });
-
-    if (usedSkus.has(sku)) {
-      sku = `${sku}-${index + 1}`;
-    }
-
-    usedSkus.add(sku);
-
-    const image =
-      existingVariant?.image ||
-      getVariantMainImage({
-        attributeValues,
-        productImages,
-      });
-
-    return {
-      variantId: existingVariant?.variantId || createClientId(),
-
-      name: createVariantName(attributeValues),
-
-      sku,
-
-      price: String(existingVariant?.price ?? sellingPrice ?? ""),
-
-      stock: String(existingVariant?.stock ?? stockQuantity ?? "0"),
-
-      status:
-        typeof existingVariant?.status === "boolean"
-          ? existingVariant.status
-          : true,
-
-      source: "auto",
-
-      imageUrl: existingVariant?.imageUrl || image?.url || "",
-
-      image,
-
-      images: existingVariant?.images || [],
-
-      attributeValues: attributeValues.reduce((acc, item) => {
-        acc[item.attributeName] = item;
-        return acc;
-      }, {}),
-
-      optionSignature,
-
-      sortOrder: index + 1,
-    };
-  });
-
-  return {
-    success: true,
-    message: `${variants.length} variants generated successfully`,
-    variants,
-  };
-};

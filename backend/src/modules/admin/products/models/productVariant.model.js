@@ -1,5 +1,3 @@
-
-
 import mongoose from "mongoose";
 
 const variantImageSchema = new mongoose.Schema(
@@ -26,7 +24,7 @@ const variantImageSchema = new mongoose.Schema(
       default: 1,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const variantAttributeSchema = new mongoose.Schema(
@@ -64,8 +62,12 @@ const variantAttributeSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    isCustom: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const productVariantSchema = new mongoose.Schema(
@@ -164,7 +166,7 @@ const productVariantSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 productVariantSchema.index(
@@ -174,7 +176,7 @@ productVariantSchema.index(
   },
   {
     unique: true,
-  }
+  },
 );
 
 productVariantSchema.index({
@@ -184,5 +186,5 @@ productVariantSchema.index({
 
 export const ProductVariant = mongoose.model(
   "ProductVariant",
-  productVariantSchema
+  productVariantSchema,
 );

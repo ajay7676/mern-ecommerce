@@ -19,3 +19,15 @@ export const getProductBrandOptionsApi = async () => {
 
   return data.data;
 };
+
+export const getProductAttributeOptionsApi = async () => {
+  const { data } = await api.get("/admin/attributes/options", {
+    params: {
+      status: "active",
+      usage: "variant",
+      limit: 100,
+    },
+  });
+
+  return data.data;
+};

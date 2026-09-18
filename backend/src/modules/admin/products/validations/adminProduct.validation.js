@@ -16,6 +16,12 @@ const objectIdString = z
   .trim()
   .min(1, "Id is required");
 
+const optionalObjectIdString = z
+  .string()
+  .trim()
+  .optional()
+  .nullable();  
+
 const nullableString = z
   .string()
   .trim()
@@ -50,10 +56,11 @@ const productAttributeOptionSchema = z.object({
   label: requiredString("Option label is required"),
   value: requiredString("Option value is required"),
   colorCode: nullableString,
+   isCustom: z.boolean().optional().default(false),
 });
 
 const productAttributeSchema = z.object({
-  attributeId: objectIdString,
+  attributeId: optionalObjectIdString,
   name: requiredString("Attribute name is required"),
   type: requiredString("Attribute type is required"),
   source: z.enum(["existing", "custom"]).optional().default("existing"),
@@ -63,12 +70,13 @@ const productAttributeSchema = z.object({
 });
 
 const variantAttributeSchema = z.object({
-  attributeId: objectIdString,
+  attributeId: optionalObjectIdString,
   attributeName: requiredString("Attribute name is required"),
   optionId: nullableString,
   label: requiredString("Variant option label is required"),
   value: requiredString("Variant option value is required"),
   colorCode: nullableString,
+   isCustom: z.boolean().optional().default(false),
 });
 
 const productVariantImageSchema = z.object({

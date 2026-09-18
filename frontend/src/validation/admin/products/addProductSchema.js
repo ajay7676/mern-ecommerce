@@ -63,7 +63,7 @@ const productAttributeOptionSchema = z.object({
 const productAttributeSchema = z.object({
   attributeId: z.string().optional(),
   name: z.string().trim().min(1, "Attribute name is required"),
-  type: z.enum(["dropdown", "color", "text", "number", "boolean"]),
+  type: z.enum(["dropdown", "switch", "text", "number", "boolean"]),
   source: z.enum(["existing", "custom"]).optional(),
   options: z
     .array(productAttributeOptionSchema)

@@ -2,9 +2,7 @@
 import { useRef } from "react";
 import { Plus } from "lucide-react";
 
-import {
-     createVariantImagePreview
-    } from '../../../../../utils/admin/products/product/productVariationUtils'
+import { createVariantImagePreview } from '../../../../../utils/admin/products/product/productVariationUtils'
 
 const VariantImagePicker = ({
   variant,

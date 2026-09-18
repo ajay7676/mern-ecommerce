@@ -1,11 +1,7 @@
 // components/ProductAttributesVariationsStep.jsx
 
-import { useState } from "react";
-import {
-  useFieldArray,
-  useFormContext,
-  useWatch,
-} from "react-hook-form";
+import { useMemo, useState } from "react";
+import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import ProductAttributesCard from "../form/ProductAttributesCard";
 import VariantCreationCard from "../form/VariantCreationCard";
@@ -18,17 +14,30 @@ import AttributeVariationTipsCard from "../form/AttributeVariationTipsCard";
 import {
   createManualVariant,
   generateVariantsFromAttributes,
-} from '../../../../../utils/admin/products/product/productVariationUtils';
+} from "../../../../../utils/admin/products/product/productVariationUtils";
+import { useProductAttributeOptions } from "../../../../../hooks/admin/queries/products/product-list/useProductAttributeOptions";
 
 const ProductAttributesVariationsStep = () => {
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
 
   const {
     control,
+    getValues,
     register,
     setValue,
     formState: { errors },
   } = useFormContext();
+
+  const {
+    data: attributeData,
+    isLoading: isAttributesLoading,
+    isError: isAttributesError,
+    refetch: refetchAttributes,
+  } = useProductAttributeOptions();
+
+  const existingAttributes = useMemo(() => {
+    return attributeData?.options ?? [];
+  }, [attributeData?.options]);
 
   const {
     fields: attributeFields,
@@ -76,6 +85,12 @@ const ProductAttributesVariationsStep = () => {
     name: "lowStockThreshold",
   });
 
+  const variants =
+    useWatch({
+      control,
+      name: "variants",
+    }) || [];
+
   const selectedVariant =
     watchedVariants[selectedVariantIndex] || watchedVariants[0];
 
@@ -120,30 +135,24 @@ const ProductAttributesVariationsStep = () => {
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="space-y-6">
         <ProductAttributesCard
-          fields={attributeFields}
-          watchedAttributes={watchedAttributes}
-          register={register}
-          setValue={setValue}
-          append={appendAttribute}
-          remove={removeAttribute}
-          errors={errors}
+          attributeFields={attributeFields}
+          attributes={watchedAttributes}
+          appendAttribute={appendAttribute}
+          removeAttribute={removeAttribute}
+          existingAttributes={existingAttributes}
+          isAttributesLoading={isAttributesLoading}
+          isAttributesError={isAttributesError}
+          refetchAttributes={refetchAttributes}
         />
 
         <VariantCreationCard
           attributes={watchedAttributes}
-          baseSku={sku}
-          sellingPrice={sellingPrice}
-          onGenerateVariants={(variants) => {
-            replaceVariants(variants);
-            setSelectedVariantIndex(0);
-          }}
-          onAddManualVariant={(variant) => {
-            appendVariant(variant);
-            setSelectedVariantIndex(watchedVariants.length);
-          }}
+          variants={variants}
+          replaceVariants={replaceVariants}
+          getValues={getValues}
         />
 
         <ProductVariantsCard

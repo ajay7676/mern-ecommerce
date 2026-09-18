@@ -81,6 +81,7 @@ export const validateProductStep = async ({
 
 export const validateAllProductSteps = async (methods) => {
   const allFields = Object.values(PRODUCT_STEP_FIELDS).flat();
+  console.log(allFields)
 
   const isValid = await methods.trigger(allFields, {
     shouldFocus: true,

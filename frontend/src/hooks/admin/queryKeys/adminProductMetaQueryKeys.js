@@ -3,4 +3,5 @@ export const adminProductMetaQueryKeys = {
 
   categories: () => [...adminProductMetaQueryKeys.all, "categories"],
   brands: () => [...adminProductMetaQueryKeys.all, "brands"],
+  attributes: () => [...adminProductMetaQueryKeys.all, "attributes"],
 };

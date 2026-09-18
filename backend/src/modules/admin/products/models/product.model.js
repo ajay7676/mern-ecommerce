@@ -200,6 +200,11 @@ const productAttributeOptionSnapshotSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    slug: {
+      type: String,
+      trim: true,
+      default: null,
+    },
 
     label: {
       type: String,
@@ -216,6 +221,11 @@ const productAttributeOptionSnapshotSchema = new mongoose.Schema(
     colorCode: {
       type: String,
       default: null,
+    },
+
+    isCustom: {
+      type: Boolean,
+      default: false,
     },
   },
   { _id: false },
@@ -301,7 +311,6 @@ const userManualSchema = new mongoose.Schema(
   },
   { _id: false },
 );
-
 const productSchema = new mongoose.Schema(
   {
     name: {

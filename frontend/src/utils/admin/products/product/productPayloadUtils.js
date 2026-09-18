@@ -39,13 +39,13 @@ const mapVariantAttributes = (variant) => {
   return Object.values(attributeValues).map((item) => ({
     attributeId: item.attributeId || null,
     attributeName: item.attributeName,
-    optionId: item.optionId || null,
+    optionId: item.optionId || item.value,
     label: item.label,
     value: item.value,
     colorCode: item.colorCode || null,
+    isCustom: Boolean(item.isCustom),
   }));
 };
-
 
 const mapProductImages = (images = []) => {
   return images.map((image, index) => ({
@@ -99,15 +99,18 @@ const mapProductVariants = (variants = []) => {
 };
 const mapProductAttributes = (attributes = []) => {
   return attributes.map((attribute) => ({
-    attributeId: attribute.attributeId,
+    attributeId: attribute.attributeId || null,
     name: attribute.name,
+    slug: attribute.slug || null,
     type: attribute.type,
     source: attribute.source || "existing",
+
     options: (attribute.options || []).map((option) => ({
-      optionId: option.optionId,
+      optionId: option.optionId || option.value,
       label: option.label,
       value: option.value,
       colorCode: option.colorCode || null,
+      isCustom: Boolean(option.isCustom),
     })),
   }));
 };

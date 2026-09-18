@@ -37,6 +37,7 @@ import {
   shouldCleanupImagesAfterCreateFailure,
 } from "../../../../../utils/admin/products/product/productTempImageCleanup";
 import { useDeleteTemporaryProductImages } from "../../../../../hooks/admin/mutations/products/useDeleteTemporaryProductImages";
+import { validateProductAttributeSnapshot } from "../../../../../utils/admin/products/product/productAttributeSnapshotValidator";
 
 const DRAWER_ANIMATION_MS = 500;
 
@@ -148,12 +149,12 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
   };
 
   const handleCloseWithoutSavingOrReset = () => {
-  setIsDrawerVisible(false);
+    setIsDrawerVisible(false);
 
-  setTimeout(() => {
-    onClose();
-  }, DRAWER_ANIMATION_MS);
-};
+    setTimeout(() => {
+      onClose();
+    }, DRAWER_ANIMATION_MS);
+  };
 
   const handlePublishProduct = async () => {
     const isValid = await validateAllProductSteps(methods);
@@ -164,6 +165,22 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
     }
 
     const values = methods.getValues();
+
+    const attributeSnapshotCheck = validateProductAttributeSnapshot({
+      attributes: values.attributes,
+      variants: values.variants,
+    });
+
+    if (!attributeSnapshotCheck.isValid) {
+      methods.setError(attributeSnapshotCheck.field, {
+        type: "manual",
+        message: attributeSnapshotCheck.message,
+      });
+
+      setActiveStep(4);
+      toast.error(attributeSnapshotCheck.message);
+      return;
+    }
 
     const payload = buildProductPayload({
       values,
@@ -224,6 +241,10 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
     });
 
     if (!isStepValid) {
+      console.log("Failed step:", activeStep);
+    console.log("Attributes:", methods.getValues("attributes"));
+    console.log("Variants:", methods.getValues("variants"));
+    console.log("Errors:", methods.formState.errors);
       return;
     }
 
@@ -263,7 +284,6 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
   };
 
   const handleCloseAndKeepDraft = () => {
-     
     const formValues = methods.getValues();
 
     localStorage.setItem(

@@ -123,6 +123,7 @@ export const normalizeProductAttributes = (attributes = []) => {
       label: cleanString(option.label),
       value: cleanString(option.value),
       colorCode: cleanString(option.colorCode),
+      isCustom: Boolean(option.isCustom),
     })),
   }));
 };
@@ -150,6 +151,7 @@ export const normalizeVariantAttributes = (attributes = []) => {
     label: cleanString(item.label),
     value: cleanString(item.value),
     colorCode: cleanString(item.colorCode),
+    isCustom: Boolean(item.isCustom),
   }));
 };
 
