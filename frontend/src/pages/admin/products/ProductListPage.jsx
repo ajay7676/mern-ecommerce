@@ -2,7 +2,6 @@ import ProductFilters from "../../../components/admin/products/products-list/Pro
 import ProductsHeader from "../../../components/admin/products/products-list/ProductsHeader";
 import ProductsTable from "../../../components/admin/products/products-list/ProductsTable";
 import ProductPagination from "../../../components/admin/products/products-list/ProductPagination";
-// import { products } from "../../../components/admin/products/products-list/data/products.mock";
 import AddProductDrawer from "../../../components/admin/products/products-list/add-product/AddProductDrawer";
 import { useMemo, useState } from "react";
 import { useAdminProducts } from "../../../hooks/admin/queries/products/product-list/useAdminProducts";
@@ -65,6 +64,28 @@ const ProductListPage = () => {
       page: 1,
     }));
   };
+
+  const handleLimitChange = (limit) => {
+    setFilters((prev) => ({
+      ...prev,
+      page: 1,
+      limit,
+    }));
+  };
+  const handleClearFilters = () => {
+    setFilters({
+      page: 1,
+      limit: 10,
+      search: "",
+      status: "all",
+      productType: "all",
+      category: "all",
+      brand: "all",
+      stockStatus: "all",
+      sortBy: "createdAt",
+      sortOrder: "desc",
+    });
+  };
   return (
     <>
       <main className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
@@ -95,24 +116,13 @@ const ProductListPage = () => {
                   filters.stockStatus !== "all"
                 }
                 onAddProduct={handleAddProductModal}
-                onClearFilters={() =>
-                  setFilters({
-                    page: 1,
-                    limit: 10,
-                    search: "",
-                    status: "all",
-                    productType: "all",
-                    category: "all",
-                    brand: "all",
-                    stockStatus: "all",
-                    sortBy: "createdAt",
-                    sortOrder: "desc",
-                  })
-                }
+                onClearFilters={handleClearFilters}
               />
               <ProductPagination
                 pagination={pagination}
                 onPageChange={handlePageChange}
+                onLimitChange={handleLimitChange}
+                isLoading={isFetching}
               />
             </div>
           </section>
