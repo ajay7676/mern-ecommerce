@@ -1,4 +1,7 @@
-import { createAdminProductService } from "../services/adminProduct.service.js";
+import {
+  createAdminProductService,
+  getAdminProductsService,
+} from "../services/adminProduct.service.js";
 
 export const createAdminProductController = async (req, res, next) => {
   try {
@@ -11,6 +14,20 @@ export const createAdminProductController = async (req, res, next) => {
       success: true,
       message: "Product created successfully",
       data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdminProductsController = async (req, res, next) => {
+  try {
+    const data = await getAdminProductsService(req.query);
+
+    return res.status(200).json({
+      success: true,
+      message: "Products fetched successfully",
+      data,
     });
   } catch (error) {
     next(error);

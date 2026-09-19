@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { deleteTemporaryProductImagesApi } from "../../../../api/admin/productApi";
+import { deleteTemporaryProductImagesApi } from "../../../../api/admin/adminProductApi";
 
 
 export const useDeleteTemporaryProductImages = () => {

@@ -1,4 +1,4 @@
-
+import mongoose from "mongoose";
 import { z } from "zod";
 
 import {
@@ -11,37 +11,23 @@ import {
   TAX_CLASS,
 } from "../constants/product.constants.js";
 
-const objectIdString = z
-  .string()
-  .trim()
-  .min(1, "Id is required");
+const objectIdString = z.string().trim().min(1, "Id is required");
 
-const optionalObjectIdString = z
-  .string()
-  .trim()
-  .optional()
-  .nullable();  
+const optionalObjectIdString = z.string().trim().optional().nullable();
 
-const nullableString = z
-  .string()
-  .trim()
-  .nullable()
-  .optional();
+const nullableString = z.string().trim().nullable().optional();
 
-const requiredString = (message) =>
-  z.string().trim().min(1, message);
+const requiredString = (message) => z.string().trim().min(1, message);
 
-const optionalNumber = z
-  .number()
-  .min(0)
-  .nullable()
-  .optional();
+const optionalNumber = z.number().min(0).nullable().optional();
 
 const requiredNumber = (message) =>
-  z.number({
-    required_error: message,
-    invalid_type_error: message,
-  }).min(0, message);
+  z
+    .number({
+      required_error: message,
+      invalid_type_error: message,
+    })
+    .min(0, message);
 
 const cloudinaryImageUrl = requiredString("Image url is required")
   .url("Image url must be valid")
@@ -62,7 +48,7 @@ const productAttributeOptionSchema = z.object({
   label: requiredString("Option label is required"),
   value: requiredString("Option value is required"),
   colorCode: nullableString,
-   isCustom: z.boolean().optional().default(false),
+  isCustom: z.boolean().optional().default(false),
 });
 
 const productAttributeSchema = z.object({
@@ -82,7 +68,7 @@ const variantAttributeSchema = z.object({
   label: requiredString("Variant option label is required"),
   value: requiredString("Variant option value is required"),
   colorCode: nullableString,
-   isCustom: z.boolean().optional().default(false),
+  isCustom: z.boolean().optional().default(false),
 });
 
 const productVariantImageSchema = z.object({
@@ -120,20 +106,14 @@ const customFieldSchema = z.object({
 
 export const createAdminProductSchema = z
   .object({
-    mode: z.enum([
-      PRODUCT_MODE.DRAFT,
-      PRODUCT_MODE.PUBLISH,
-    ]),
+    mode: z.enum([PRODUCT_MODE.DRAFT, PRODUCT_MODE.PUBLISH]),
 
     basicInformation: z.object({
       name: requiredString("Product name is required"),
       sku: requiredString("Product SKU is required"),
       shortDescription: requiredString("Short description is required"),
       description: requiredString("Product description is required"),
-      productType: z.enum([
-        PRODUCT_TYPE.SIMPLE,
-        PRODUCT_TYPE.VARIABLE,
-      ]),
+      productType: z.enum([PRODUCT_TYPE.SIMPLE, PRODUCT_TYPE.VARIABLE]),
       category: requiredString("Category is required"),
       subCategory: nullableString,
       brand: requiredString("Brand is required"),
@@ -278,3 +258,44 @@ export const createAdminProductSchema = z
       });
     }
   });
+
+const objectIdOrAllSchema = z
+  .string()
+  .trim()
+  .optional()
+  .default("all")
+  .refine(
+    (value) => value === "all" || mongoose.isValidObjectId(value),
+    "Invalid id",
+  );
+
+export const getAdminProductsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+
+  limit: z.coerce.number().int().min(1).max(100).optional().default(10),
+
+  search: z.string().trim().optional().default(""),
+
+  status: z
+    .enum(["draft", "active", "inactive", "all"])
+    .optional()
+    .default("all"),
+
+  productType: z.enum(["simple", "variable", "all"]).optional().default("all"),
+
+  category: objectIdOrAllSchema,
+
+  brand: objectIdOrAllSchema,
+
+  stockStatus: z
+    .enum(["inStock", "lowStock", "outOfStock", "all"])
+    .optional()
+    .default("all"),
+
+  sortBy: z
+    .enum(["createdAt", "name", "price", "stock"])
+    .optional()
+    .default("createdAt"),
+
+  sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
+});

@@ -2,9 +2,16 @@ import express from "express";
 import { userAuth } from "../../../../middleware/userAuthMIddleware.js";
 import adminOnly from "../../../../middleware/adminMddleware.js";
 import {validate} from "../../../../middleware/validate.js";
+import {validateQuery} from '../../../../middleware/validateQuery.js'
 import {uploadProductImagesMiddleware} from '../../../../middleware/adminproductImageUpload.middleware.js'
-import { createAdminProductSchema } from "../validations/adminProduct.validation.js";
-import { createAdminProductController } from "../controllers/adminProduct.controller.js";
+import {
+  createAdminProductSchema,
+ getAdminProductsQuerySchema
+ } from "../validations/adminProduct.validation.js";
+import { 
+  createAdminProductController,
+   getAdminProductsController
+ } from "../controllers/adminProduct.controller.js";
 import {
   deleteTemporaryProductImagesController,
   uploadTemporaryProductImagesController
@@ -13,9 +20,6 @@ import {
 
 
 const router = express.Router();
-
-
-
 
 
 router.post(
@@ -31,6 +35,14 @@ router.delete(
   adminOnly,
   deleteTemporaryProductImagesController
 );
+
+router.get(
+  "/admin/products",
+   userAuth,
+  adminOnly,
+  validateQuery(getAdminProductsQuerySchema),
+  getAdminProductsController
+);
 router.post(
   "/admin/products",
    userAuth,
@@ -38,6 +50,7 @@ router.post(
   validate(createAdminProductSchema),
   createAdminProductController
 );
+
 
 
 export default router;

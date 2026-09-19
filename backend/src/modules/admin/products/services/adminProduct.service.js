@@ -26,12 +26,16 @@ import {
 import {
   createProduct,
   createProductVariants,
+  findAdminProducts,
   findProductByInventorySku,
   findProductBySlug,
   findProductVariantsBySkus,
 } from "../repositories/adminProduct.repository.js";
 
-import { mapAdminCreatedProductResponse } from "../mappers/adminProduct.mapper.js";
+import {
+  mapAdminCreatedProductResponse,
+   mapAdminProductListResponse 
+  } from "../mappers/adminProduct.mapper.js";
 import { uploadTemporaryImage } from "../../../../utils/cloudinary/uploadTemporaryImage.js";
 import { PRODUCT_IMAGE_CONFIG } from "../constants/productImage.constants.js";
 import { verifyTemporaryCloudinaryAsset } from "../../../../utils/cloudinary/cloudinaryTemporaryAsset.js";
@@ -389,4 +393,23 @@ export const deleteTemporaryProductImagesService = async ({
     notFoundPublicIds,
     cloudinaryResult,
   };
+};
+
+
+export const getAdminProductsService = async (query) => {
+  const page = Number(query.page || 1);
+  const limit = Number(query.limit || 10);
+
+  const { products, totalProducts } = await findAdminProducts({
+    ...query,
+    page,
+    limit,
+  });
+
+  return mapAdminProductListResponse({
+    products,
+    totalProducts,
+    page,
+    limit,
+  });
 };

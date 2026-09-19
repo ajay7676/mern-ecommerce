@@ -1,18 +1,42 @@
-import {
-  Eye,
-  MoreVertical,
-  Pencil,
-  ArrowUpDown,
-} from "lucide-react";
+import { Eye, MoreVertical, Pencil, ArrowUpDown } from "lucide-react";
 
-import {
-  ProductStatusBadge,
-  StockBadge,
-} from "./ProductBadges";
+// import {
+//   ProductStatusBadge,
+//   StockBadge,
+// } from "./ProductBadges";
+import { formatCurrency } from "../../../../utils/admin/products/product/productPricingUtils";
+import ProductTableSkeleton from "./ProductTableSkeleton";
+import ProductEmptyState from "./ProductEmptyState";
 
-const ProductsTable = ({ products }) => {
+const ProductsTable = ({
+  products = [],
+  isLoading = false,
+  isFetching = false,
+  isError = false,
+  errorMessage = "",
+}) => {
+  if (isLoading) {
+    return <ProductTableSkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-3xl border border-error/20 bg-error/5 p-8 text-center">
+        <p className="font-semibold text-error">{errorMessage}</p>
+      </div>
+    );
+  }
+
+  if (!products.length) {
+    return <ProductEmptyState />;
+  }
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      {isFetching && (
+        <div className="h-1 w-full bg-primary/20">
+          <div className="h-full w-1/3 animate-pulse bg-primary" />
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="table w-full">
           <thead className="bg-slate-50 text-xs text-slate-600">
@@ -56,7 +80,9 @@ const ProductsTable = ({ products }) => {
                   <div className="flex items-center gap-4">
                     <div className="h-16 w-16 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
                       <img
-                        src={product.image}
+                        src={
+                          product.image?.url || "/images/brand-placeholder.png"
+                        }
                         alt={product.name}
                         className="h-full w-full object-cover"
                       />
@@ -79,54 +105,88 @@ const ProductsTable = ({ products }) => {
                 </td>
 
                 <td className="min-w-42.5 px-5 py-4 text-sm font-medium text-slate-700">
-                  {product.category}
+                  {product.category?.name || "-"}
                 </td>
 
                 <td className="min-w-32.5 px-5 py-4 text-sm font-medium text-slate-700">
-                  {product.brand}
+                  {product.brand?.name || "-"}
                 </td>
 
                 <td className="min-w-32.5 px-5 py-4">
                   <div>
                     <p className="text-sm font-bold text-slate-950">
-                      ₹{product.price.toLocaleString("en-IN")}
+                      {formatCurrency(product.finalPrice)}
                     </p>
 
-                    {product.oldPrice && (
+                    {product.mrp && (
                       <p className="text-xs font-medium text-slate-400 line-through">
-                        ₹{product.oldPrice.toLocaleString("en-IN")}
+                        {formatCurrency(product.mrp)}
                       </p>
                     )}
 
-                    {product.discount && (
-                      <span className="mt-1 inline-flex rounded-md bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-700">
-                        {product.discount}
+                   <p>
+                     {product.discountType === "percentage" ? (
+                      <span className="badge badge-success">
+                        {product.discountValue}% OFF
                       </span>
+                    ) : product.discountType === "fixed" ? (
+                      <span className="badge badge-info">
+                        ₹
+                        {Number(product.discountValue || 0).toLocaleString(
+                          "en-IN",
+                        )}{" "}
+                        OFF
+                      </span>
+                    ) : (
+                      <span className="badge badge-ghost">No discount</span>
                     )}
+                   </p>
                   </div>
                 </td>
 
                 <td className="min-w-32.5 px-5 py-4">
-                  <p className="text-sm font-bold text-slate-950">
-                    {product.stock}
-                  </p>
-
                   <div className="mt-1">
-                    <StockBadge status={product.stockStatus} />
+                    {/* <StockBadge status={product.stockStatus} /> */}
+                    <span
+                      className={`badge ${
+                        product.stockStatus === "outOfStock"
+                          ? "badge-error"
+                          : product.stockStatus === "lowStock"
+                            ? "badge-warning"
+                            : "badge-success"
+                      }`}
+                    >
+                      {product.stockQuantity}
+                    </span>
                   </div>
                 </td>
 
                 <td className="min-w-35 px-5 py-4">
-                  <ProductStatusBadge status={product.status} />
+                  {/* <ProductStatusBadge status={product.status} /> */}
+                  <span
+                    className={`badge ${
+                      product.status === "active"
+                        ? "badge-success"
+                        : product.status === "draft"
+                          ? "badge-warning"
+                          : "badge-ghost"
+                    }`}
+                  >
+                    {product.status}
+                  </span>
                 </td>
 
                 <td className="min-w-37.5 px-5 py-4">
                   <p className="text-sm font-medium text-slate-700">
-                    {product.createdAt}
+                    {product.createdAt
+                      ? new Date(product.createdAt).toLocaleDateString("en-IN")
+                      : "-"}
                   </p>
 
                   <p className="mt-1 text-xs font-medium text-slate-500">
-                    {product.createdTime}
+                    {product.createdAt
+                      ? new Date(product.createdAt).toLocaleTimeString("en-IN")
+                      : "-"}
                   </p>
                 </td>
 

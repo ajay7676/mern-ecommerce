@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createAdminProductApi } from "../../../../api/admin/productAPi";
+import { createAdminProductApi } from "../../../../api/admin/adminProductApi";
 import { adminProductQueryKeys } from "../../queryKeys/adminProductQueryKeys";
 
 export const useCreateAdminProduct = () => {
