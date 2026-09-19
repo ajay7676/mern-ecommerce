@@ -103,9 +103,9 @@ const ProductsTable = ({
                         {product.name}
                       </p>
 
-                      <p className="mt-1 text-xs font-medium text-slate-500">
+                      {/* <p className="mt-1 text-xs font-medium text-slate-500">
                         ID: #{product.id}
-                      </p>
+                      </p> */}
                     </div>
                   </div>
                 </td>
