@@ -1,3 +1,5 @@
+import { getFirstErrorFromFields } from "./productFormErrorUtils";
+
 export const PRODUCT_STEP_FIELDS = {
   1: [
     "productName",
@@ -106,4 +108,42 @@ export const getFirstStepFromFields = (fieldNames = []) => {
   }
 
   return null;
+};
+
+export const validateProductWizardInOrder = async (methods) => {
+  const stepNumbers = Object.keys(PRODUCT_STEP_FIELDS)
+    .map(Number)
+    .sort((a, b) => a - b);
+
+  for (const step of stepNumbers) {
+    const fields = PRODUCT_STEP_FIELDS[step];
+
+    const isStepValid = await methods.trigger(fields, {
+      shouldFocus: true,
+    });
+
+    if (!isStepValid) {
+      // Important: wait for RHF errors update
+      await Promise.resolve();
+
+      const firstError = getFirstErrorFromFields(
+        methods.formState.errors,
+        fields
+      );
+
+      return {
+        isValid: false,
+        step,
+        field: firstError.field,
+        message: firstError.message || "Please fill required fields",
+      };
+    }
+  }
+
+  return {
+    isValid: true,
+    step: null,
+    field: null,
+    message: "",
+  };
 };

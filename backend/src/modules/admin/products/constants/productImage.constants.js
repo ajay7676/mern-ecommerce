@@ -5,13 +5,17 @@ export const PRODUCT_IMAGE_CONFIG = {
 
   tags: ["product-image", "temporary"],
 
+  permanentTag: "permanent",
+  temporaryTag: "temporary",
+  moduleTag: "product-image",
+
+  ownerContextKey: "uploaded_by",
+  productContextKey: "product_id",
+  moduleContextKey: "module",
+
   maxSize: 2 * 1024 * 1024, // 2MB
 
-  allowedMimeTypes: [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-  ],
+  allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
 
   transformation: [
     {

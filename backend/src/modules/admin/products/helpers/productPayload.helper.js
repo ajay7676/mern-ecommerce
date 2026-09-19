@@ -155,7 +155,7 @@ export const normalizeVariantAttributes = (attributes = []) => {
   }));
 };
 
-export const buildProductDocument = ({ payload, adminId }) => {
+export const buildProductDocument = ({ payload, adminId,productId }) => {
   const {
     basicInformation,
     seo,
@@ -181,6 +181,7 @@ export const buildProductDocument = ({ payload, adminId }) => {
   });
 
   return {
+    _id: productId,
     name: basicInformation.name,
     slug: generateProductSlug(basicInformation.name),
 

@@ -2,13 +2,20 @@ import mongoose from "mongoose";
 import HandleError from "../../../../utils/handleError.js";
 
 import {
+  extractProductImagePublicIds,
+  makeProductImagesPermanent,
+  rollbackPermanentProductImages,
+  verifyTemporaryProductImages,
+} from "./productCloudinaryAsset.service.js";
+
+import {
   PRODUCT_MODE,
   PRODUCT_STATUS,
   PRODUCT_TYPE,
   PUBLISH_OPTION,
 } from "../constants/product.constants.js";
 
-import {} from '../constants/productImage.constants.js'
+import {} from "../constants/productImage.constants.js";
 
 import {
   assertValidObjectId,
@@ -24,14 +31,10 @@ import {
   findProductVariantsBySkus,
 } from "../repositories/adminProduct.repository.js";
 
-import {
-   mapAdminCreatedProductResponse
-  } from "../mappers/adminProduct.mapper.js";
+import { mapAdminCreatedProductResponse } from "../mappers/adminProduct.mapper.js";
 import { uploadTemporaryImage } from "../../../../utils/cloudinary/uploadTemporaryImage.js";
 import { PRODUCT_IMAGE_CONFIG } from "../constants/productImage.constants.js";
-import {
-   verifyTemporaryCloudinaryAsset
-   } from "../../../../utils/cloudinary/cloudinaryTemporaryAsset.js";
+import { verifyTemporaryCloudinaryAsset } from "../../../../utils/cloudinary/cloudinaryTemporaryAsset.js";
 import { isCloudinaryResourceNotFound } from "../../../../utils/cloudinary/cloudinaryError.js";
 import { deleteCloudinaryAssets } from "../../../../utils/cloudinary/cloudinaryDelete.js";
 
@@ -129,11 +132,7 @@ const assertProductReferences = (payload) => {
     );
   }
 
-  assertValidObjectId(
-    payload.basicInformation.brand,
-    "brand",
-    "Invalid Brand",
-  );
+  assertValidObjectId(payload.basicInformation.brand, "brand", "Invalid Brand");
 };
 
 const assertNoExistingProductConflict = async ({ productData, session }) => {
@@ -222,43 +221,60 @@ const handleDuplicateKeyError = (error) => {
 export const createAdminProductService = async ({ payload, adminId }) => {
   const session = await mongoose.startSession();
 
+  const productId = new mongoose.Types.ObjectId();
+  let madePermanentPublicIds = [];
+
   try {
+    assertProductReferences(payload);
+    assertPrimaryImageExists(payload.media.images);
+    assertPublishRules(payload);
+    assertVariableProductRules(payload);
+
+    const productData = buildProductDocument({
+      payload,
+      adminId,
+      productId,
+    });
+
+    await assertNoExistingProductConflict({
+      productData,
+      session: null,
+    });
+
+    const variantsData = buildProductVariantDocuments({
+      payload,
+      product: productData,
+      productId,
+      adminId,
+    });
+
+    assertUniqueVariantSkusInPayload(variantsData);
+    assertUniqueVariantSignaturesInPayload(variantsData);
+
+    await assertNoExistingVariantSkuConflict({
+      variantsData,
+      session: null,
+    });
+
+    const imagePublicIds = extractProductImagePublicIds(payload);
+
+    await verifyTemporaryProductImages({
+      publicIds: imagePublicIds,
+      adminId,
+    });
+
+    madePermanentPublicIds = await makeProductImagesPermanent({
+      publicIds: imagePublicIds,
+      adminId,
+      productId,
+    });
+
     let createdProduct;
     let createdVariants = [];
 
     await session.withTransaction(async () => {
-      assertProductReferences(payload);
-      assertPrimaryImageExists(payload.media.images);
-      assertPublishRules(payload);
-      assertVariableProductRules(payload);
-
-      const productData = buildProductDocument({
-        payload,
-        adminId,
-      });
-
-      await assertNoExistingProductConflict({
-        productData,
-        session,
-      });
-
       createdProduct = await createProduct({
         productData,
-        session,
-      });
-
-      const variantsData = buildProductVariantDocuments({
-        payload,
-        product: productData,
-        productId: createdProduct._id,
-        adminId,
-      });
-
-      assertUniqueVariantSkusInPayload(variantsData);
-      assertUniqueVariantSignaturesInPayload(variantsData);
-
-      await assertNoExistingVariantSkuConflict({
-        variantsData,
         session,
       });
 
@@ -275,6 +291,10 @@ export const createAdminProductService = async ({ payload, adminId }) => {
   } catch (error) {
     const duplicateError = handleDuplicateKeyError(error);
 
+    if (madePermanentPublicIds.length > 0) {
+      await rollbackPermanentProductImages(madePermanentPublicIds);
+    }
+
     if (duplicateError) {
       throw duplicateError;
     }
@@ -288,7 +308,7 @@ export const createAdminProductService = async ({ payload, adminId }) => {
 const normalizeUploadedImageResponse = ({ uploadedImage, index }) => {
   return {
     imageId: uploadedImage.publicId,
-    publicId: uploadedImage.publicId ,
+    publicId: uploadedImage.publicId,
     url: uploadedImage.url,
     altText: "",
     isPrimary: index === 0,
@@ -301,19 +321,19 @@ export const uploadTemporaryProductImagesService = async ({
   userId,
 }) => {
   const uploadedImages = await Promise.all(
-      files.map(async (file, index) => {
-        const uploadedImage = await uploadTemporaryImage({
-          file,
-          ownerId: userId,
-          config: PRODUCT_IMAGE_CONFIG,
-        });
+    files.map(async (file, index) => {
+      const uploadedImage = await uploadTemporaryImage({
+        file,
+        ownerId: userId,
+        config: PRODUCT_IMAGE_CONFIG,
+      });
 
-        return normalizeUploadedImageResponse({
-          uploadedImage,
-          index,
-        });
-      })
-    );
+      return normalizeUploadedImageResponse({
+        uploadedImage,
+        index,
+      });
+    }),
+  );
 
   return uploadedImages;
 };
@@ -322,14 +342,12 @@ export const deleteTemporaryProductImagesService = async ({
   userId,
   publicIds,
 }) => {
-  
   if (!Array.isArray(publicIds) || publicIds.length === 0) {
-      throw new HandleError("publicIds must be an array", 400, {
-        publicIds: "Please provide an array of image publicIds",
-      });
-    }
+    throw new HandleError("publicIds must be an array", 400, {
+      publicIds: "Please provide an array of image publicIds",
+    });
+  }
   const uniquePublicIds = [...new Set(publicIds)];
-
 
   const verifiedPublicIds = [];
   const notFoundPublicIds = [];
@@ -356,7 +374,6 @@ export const deleteTemporaryProductImagesService = async ({
   }
 
   let cloudinaryResult = null;
-
 
   if (verifiedPublicIds.length > 0) {
     cloudinaryResult = await deleteCloudinaryAssets({

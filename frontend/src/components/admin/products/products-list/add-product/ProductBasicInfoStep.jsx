@@ -38,8 +38,6 @@ const ProductBasicInfoStep = () => {
     [categoryData?.options],
   );
   const brandOptions = useMemo(() => brandData ?? [], [brandData]);
-  console.log("brandOptions");
-  console.log(brandOptions);
 
   const productName = useWatch({
     control,

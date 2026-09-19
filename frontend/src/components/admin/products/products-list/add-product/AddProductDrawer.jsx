@@ -22,7 +22,7 @@ import ProductPayloadPreviewModal from "../view-product/ProductPayloadPreviewMod
 import {
   getFirstStepFromFields,
   validateAllProductSteps,
-  validateProductStep,
+  validateProductWizardInOrder,
 } from "../../../../../utils/admin/products/product/productStepValidation";
 
 import { buildProductPayload } from "../../../../../utils/admin/products/product/productPayloadUtils";
@@ -38,6 +38,7 @@ import {
 } from "../../../../../utils/admin/products/product/productTempImageCleanup";
 import { useDeleteTemporaryProductImages } from "../../../../../hooks/admin/mutations/products/useDeleteTemporaryProductImages";
 import { validateProductAttributeSnapshot } from "../../../../../utils/admin/products/product/productAttributeSnapshotValidator";
+import { getFirstProductFormError } from "../../../../../utils/admin/products/product/productFormErrorUtils";
 
 const DRAWER_ANIMATION_MS = 500;
 
@@ -157,10 +158,13 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
   };
 
   const handlePublishProduct = async () => {
-    const isValid = await validateAllProductSteps(methods);
+    const wizardValidation = await validateProductWizardInOrder(methods);
 
-    if (!isValid) {
-      toast.error("Please fix form errors before publishing");
+    if (!wizardValidation.isValid) {
+      setActiveStep(wizardValidation.step);
+
+      toast.error(wizardValidation.message);
+
       return;
     }
 
@@ -188,7 +192,6 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
     });
     try {
       const createdProduct = await createProductMutation.mutateAsync(payload);
-
       localStorage.removeItem("addProductDraft");
 
       toast.success("Product created successfully");
@@ -198,6 +201,7 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
 
       handleCloseWithoutSavingOrReset();
       console.log("Created product:", createdProduct);
+      
     } catch (error) {
       const appliedFields = applyCreateProductApiErrors(methods, error);
       const firstErrorStep = getFirstStepFromFields(appliedFields);
@@ -235,16 +239,17 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
   };
 
   const handleNext = async () => {
-    const isStepValid = await validateProductStep({
-      methods,
-      activeStep,
-    });
+    const isStepValid = await validateAllProductSteps(methods);
 
     if (!isStepValid) {
-      console.log("Failed step:", activeStep);
-    console.log("Attributes:", methods.getValues("attributes"));
-    console.log("Variants:", methods.getValues("variants"));
-    console.log("Errors:", methods.formState.errors);
+      const firstError =  getFirstProductFormError(methods.formState.errors);
+
+      if (firstError.step) {
+        setActiveStep(firstError.step);
+      }
+
+      toast.error(firstError.message);
+
       return;
     }
 

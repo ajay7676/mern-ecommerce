@@ -43,9 +43,15 @@ const requiredNumber = (message) =>
     invalid_type_error: message,
   }).min(0, message);
 
+const cloudinaryImageUrl = requiredString("Image url is required")
+  .url("Image url must be valid")
+  .refine((value) => !value.startsWith("blob:"), {
+    message: "Please upload image before creating product",
+  });
+
 const productImageSchema = z.object({
-  publicId: nullableString,
-  url: requiredString("Image url is required"),
+  publicId: requiredString("Image publicId is required"),
+  url: cloudinaryImageUrl,
   altText: z.string().trim().optional().default(""),
   isPrimary: z.boolean().optional().default(false),
   sortOrder: z.number().int().min(1).optional(),
@@ -80,8 +86,8 @@ const variantAttributeSchema = z.object({
 });
 
 const productVariantImageSchema = z.object({
-  publicId: nullableString,
-  url: requiredString("Variant image url is required"),
+  publicId: requiredString("Variant image publicId is required"),
+  url: cloudinaryImageUrl,
   isPrimary: z.boolean().optional().default(false),
   sortOrder: z.number().int().min(1).optional(),
 });
@@ -97,8 +103,8 @@ const productVariantSchema = z.object({
   sortOrder: z.number().int().min(1).optional(),
   image: z
     .object({
-      publicId: nullableString,
-      url: nullableString,
+      publicId: requiredString("Variant image publicId is required"),
+      url: cloudinaryImageUrl,
     })
     .optional(),
   images: z.array(productVariantImageSchema).optional().default([]),
