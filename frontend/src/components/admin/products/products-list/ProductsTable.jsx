@@ -112,7 +112,7 @@ const ProductsTable = ({
                   {product.brand?.name || "-"}
                 </td>
 
-                <td className="min-w-32.5 px-5 py-4">
+                <td className="min-w-42.5 px-5 py-4">
                   <div>
                     <p className="text-sm font-bold text-slate-950">
                       {formatCurrency(product.finalPrice)}
@@ -124,7 +124,7 @@ const ProductsTable = ({
                       </p>
                     )}
 
-                   <p>
+                   <p className="mt-1">
                      {product.discountType === "percentage" ? (
                       <span className="badge badge-success">
                         {product.discountValue}% OFF
