@@ -73,8 +73,8 @@ const ProductListPage = () => {
 
           <section className="rounded-2xl border border-slate-200 bg-white/40 p-4 shadow-sm">
             <ProductFilters
-             handleFilterChange={handleFilterChange}
-             handleSearchChange={handleSearchChange}
+              handleFilterChange={handleFilterChange}
+              handleSearchChange={handleSearchChange}
             />
 
             <div className="mt-5">
@@ -85,6 +85,29 @@ const ProductListPage = () => {
                 isError={isError}
                 errorMessage={
                   error?.response?.data?.message || "Failed to load products"
+                }
+                hasFilters={
+                  Boolean(filters.search) ||
+                  filters.status !== "all" ||
+                  filters.productType !== "all" ||
+                  filters.category !== "all" ||
+                  filters.brand !== "all" ||
+                  filters.stockStatus !== "all"
+                }
+                onAddProduct={handleAddProductModal}
+                onClearFilters={() =>
+                  setFilters({
+                    page: 1,
+                    limit: 10,
+                    search: "",
+                    status: "all",
+                    productType: "all",
+                    category: "all",
+                    brand: "all",
+                    stockStatus: "all",
+                    sortBy: "createdAt",
+                    sortOrder: "desc",
+                  })
                 }
               />
               <ProductPagination

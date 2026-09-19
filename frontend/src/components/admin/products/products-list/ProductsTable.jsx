@@ -14,6 +14,9 @@ const ProductsTable = ({
   isFetching = false,
   isError = false,
   errorMessage = "",
+  hasFilters = false,
+  onAddProduct,
+  onClearFilters,
 }) => {
   if (isLoading) {
     return <ProductTableSkeleton />;
@@ -28,8 +31,15 @@ const ProductsTable = ({
   }
 
   if (!products.length) {
-    return <ProductEmptyState />;
-  }
+  return (
+    <ProductEmptyState
+      hasFilters={hasFilters}
+      onAddProduct={onAddProduct}
+      onClearFilters={onClearFilters}
+      isRefreshing={isFetching}
+    />
+  );
+}
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       {isFetching && (
