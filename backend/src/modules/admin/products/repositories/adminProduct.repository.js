@@ -291,3 +291,31 @@ export const findAdminProducts = async ({
     totalProducts,
   };
 };
+
+export const findAdminProductById = async (productId) => {
+  return Product.findById(productId)
+    .populate({
+      path: "category",
+      select: "_id name slug status",
+    })
+    .populate({
+      path: "subCategory",
+      select: "_id name slug status parentCategory",
+    })
+    .populate({
+      path: "brand",
+      select: "_id name slug logo status",
+    })
+    .lean();
+};
+
+export const findAdminProductVariantsByProductId = async (productId) => {
+  return ProductVariant.find({
+    product: productId,
+  })
+    .sort({
+      sortOrder: 1,
+      createdAt: 1,
+    })
+    .lean();
+};

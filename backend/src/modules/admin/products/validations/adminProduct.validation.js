@@ -299,3 +299,12 @@ export const getAdminProductsQuerySchema = z.object({
 
   sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
 });
+
+export const adminProductIdParamSchema = z.object({
+  productId: z
+    .string()
+    .trim()
+    .refine((value) => mongoose.isValidObjectId(value), {
+      message: "Invalid product id",
+    }),
+});

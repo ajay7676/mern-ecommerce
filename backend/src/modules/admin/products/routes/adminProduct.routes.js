@@ -2,14 +2,17 @@ import express from "express";
 import { userAuth } from "../../../../middleware/userAuthMIddleware.js";
 import adminOnly from "../../../../middleware/adminMddleware.js";
 import {validate} from "../../../../middleware/validate.js";
-import {validateQuery} from '../../../../middleware/validateQuery.js'
+import {validateQuery} from '../../../../middleware/validateQuery.js';
+import {validateParams} from '../../../../middleware/validateParams.js'
 import {uploadProductImagesMiddleware} from '../../../../middleware/adminproductImageUpload.middleware.js'
 import {
+  adminProductIdParamSchema,
   createAdminProductSchema,
  getAdminProductsQuerySchema
  } from "../validations/adminProduct.validation.js";
 import { 
   createAdminProductController,
+   getAdminProductDetailController,
    getAdminProductsController
  } from "../controllers/adminProduct.controller.js";
 import {
@@ -49,6 +52,13 @@ router.post(
   adminOnly,
   validate(createAdminProductSchema),
   createAdminProductController
+);
+router.get(
+  "/admin/products/:productId",
+   userAuth,
+  adminOnly,
+  validateParams(adminProductIdParamSchema),
+  getAdminProductDetailController
 );
 
 

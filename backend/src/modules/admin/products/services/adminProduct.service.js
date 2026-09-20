@@ -30,11 +30,15 @@ import {
   findProductByInventorySku,
   findProductBySlug,
   findProductVariantsBySkus,
+  findAdminProductById,
+  findAdminProductVariantsByProductId,
 } from "../repositories/adminProduct.repository.js";
 
 import {
   mapAdminCreatedProductResponse,
-   mapAdminProductListResponse 
+   mapAdminProductListResponse ,
+   mapAdminProductDetailResponse,
+   
   } from "../mappers/adminProduct.mapper.js";
 import { uploadTemporaryImage } from "../../../../utils/cloudinary/uploadTemporaryImage.js";
 import { PRODUCT_IMAGE_CONFIG } from "../constants/productImage.constants.js";
@@ -411,5 +415,26 @@ export const getAdminProductsService = async (query) => {
     totalProducts,
     page,
     limit,
+  });
+};
+
+/**
+ * Single Product View  & ProductVariants by ProductId Service
+ */
+
+export const getAdminProductDetailService = async (productId) => {
+  const product = await findAdminProductById(productId);
+
+  if (!product) {
+    throw new HandleError("Product not found", 404, {
+      productId: "Product does not exist",
+    });
+  }
+
+  const variants = await findAdminProductVariantsByProductId(productId);
+
+  return mapAdminProductDetailResponse({
+    product,
+    variants,
   });
 };
