@@ -15,8 +15,9 @@ import {
 } from "../../../utils/admin/products/product/productFilterUtils";
 import { DEFAULT_PRODUCT_FILTERS } from "../../../constants/admin/products/productFilter.constants";
 import ActiveProductFilters from "../../../components/admin/products/products-list/ActiveProductFilters";
-
+import ProductDetailDrawer from "../../../components/admin/products/products-list/view-product/ProductDetailDrawer";
 import useDebounce from "../../../utils/useDebounce";
+import toast from "react-hot-toast";
 const ProductListPage = () => {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [filters, setFilters] = useState({
@@ -35,6 +36,10 @@ const ProductListPage = () => {
     DEFAULT_PRODUCT_FILTERS.search,
   );
   const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
+
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [isProductDetailDrawerOpen, setIsProductDetailDrawerOpen] =
+    useState(false);
 
   const debouncedSearch = useDebounce(searchInput, 500);
 
@@ -71,12 +76,12 @@ const ProductListPage = () => {
   const pagination = data?.pagination;
 
   const isParentCategory = (category) => {
-  return (
-    !category.parentCategory ||
-    category.parentCategory === null ||
-    category.parentCategory === ""
-  );
-};
+    return (
+      !category.parentCategory ||
+      category.parentCategory === null ||
+      category.parentCategory === ""
+    );
+  };
 
   const allCategoryOptions = categoryData?.options || [];
   const brandOptions = brandData || [];
@@ -90,6 +95,24 @@ const ProductListPage = () => {
   };
   const hideAddProductModal = () => {
     setIsAddProductOpen(false);
+  };
+
+  const handleViewProduct = (product) => {
+  const productId = product?.id;
+
+  if (!productId) {
+    console.log("Product id not found:", product);
+    toast.error("Product id not found");
+    return;
+  }
+  
+
+  setSelectedProductId(productId);
+  setIsProductDetailDrawerOpen(true);
+};
+
+  const handleCloseProductDetailDrawer = () => {
+    setIsProductDetailDrawerOpen(false);
   };
 
   const handleSearchChange = (value) => {
@@ -173,6 +196,8 @@ const ProductListPage = () => {
     }));
   };
 
+   console.log(selectedProductId)
+
   return (
     <>
       <main className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
@@ -216,6 +241,7 @@ const ProductListPage = () => {
                 }
                 hasFilters={hasFilters}
                 onAddProduct={handleAddProductModal}
+                onViewProduct={handleViewProduct}
                 onClearFilters={handleClearFilters}
               />
               <ProductPagination
@@ -238,6 +264,11 @@ const ProductListPage = () => {
         onClose={() => setIsMoreFiltersOpen(false)}
         onApply={handleApplyMoreFilters}
         onClearAdvanced={handleClearAdvancedFilters}
+      />
+      <ProductDetailDrawer
+        isOpen={isProductDetailDrawerOpen}
+        productId={selectedProductId}
+        onClose={handleCloseProductDetailDrawer}
       />
     </>
   );

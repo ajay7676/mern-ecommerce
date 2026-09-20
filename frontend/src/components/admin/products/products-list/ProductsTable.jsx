@@ -7,7 +7,6 @@ import { Eye, MoreVertical, Pencil, ArrowUpDown } from "lucide-react";
 import { formatCurrency } from "../../../../utils/admin/products/product/productPricingUtils";
 import ProductTableSkeleton from "./ProductTableSkeleton";
 import ProductEmptyState from "./ProductEmptyState";
-import { useAdminProductDetail } from "../../../../hooks/admin/queries/products/product-list/useAdminProductDetail";
 
 const ProductsTable = ({
   products = [],
@@ -17,18 +16,10 @@ const ProductsTable = ({
   errorMessage = "",
   hasFilters = false,
   onAddProduct,
+  onViewProduct,
   onClearFilters,
 }) => {
-   const productId ="6aacfbbb12665608ca380021";
-    const {
-       data:productData,
-       isLoading:isProductLoading, 
-       isError:isProductError, 
-       error }
-        = useAdminProductDetail(productId);
   
-  console.log(productData)
-
   if (isLoading) {
     return <ProductTableSkeleton />;
   }
@@ -212,24 +203,27 @@ const ProductsTable = ({
                 </td>
 
                 <td className="px-5 py-4">
-                  <div className="flex justify-end gap-3 text-slate-700">
+                  <div 
+                  onClick={(event) => event.stopPropagation()}
+                  className="flex justify-end gap-3 text-slate-700">
                     <button
                       type="button"
-                      className="rounded-lg p-1.5 hover:bg-slate-100"
+                      onClick={() => onViewProduct?.(product)}
+                      className="rounded-lg p-1.5 hover:bg-slate-100 cursor-pointer"
                     >
                       <Eye className="h-4 w-4" />
                     </button>
 
                     <button
                       type="button"
-                      className="rounded-lg p-1.5 hover:bg-slate-100"
+                      className="rounded-lg p-1.5 hover:bg-slate-100 cursor-pointer"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
 
                     <button
                       type="button"
-                      className="rounded-lg p-1.5 hover:bg-slate-100"
+                      className="rounded-lg p-1.5 hover:bg-slate-100 cursor-pointer"
                     >
                       <MoreVertical className="h-4 w-4" />
                     </button>
