@@ -9,11 +9,12 @@ import {
   X,
 } from "lucide-react";
 
-
 const DRAWER_ANIMATION_MS = 300;
 
-import {useAdminProductDetail} from '../../../../../hooks/admin/queries/products/product-list/useAdminProductDetail';
-import { getProductDetailErrorMessage } from '../../../../../utils/admin/products/product/productDetailErrorUtils';
+import { useAdminProductDetail } from "../../../../../hooks/admin/queries/products/product-list/useAdminProductDetail";
+import { getProductDetailErrorMessage } from "../../../../../utils/admin/products/product/productDetailErrorUtils";
+import ProductDetailOverview from "./ProductDetailOverview";
+
 const formatCurrency = (value) => {
   return `₹${Number(value || 0).toLocaleString("en-IN")}`;
 };
@@ -72,9 +73,7 @@ const ProductDetailDrawerError = ({ message, onRetry, onClose }) => {
           Unable to load product
         </h3>
 
-        <p className="mt-2 text-sm leading-6 text-base-content/60">
-          {message}
-        </p>
+        <p className="mt-2 text-sm leading-6 text-base-content/60">{message}</p>
 
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <button
@@ -142,9 +141,7 @@ const ProductDetailPreview = ({ product }) => {
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="badge badge-outline">
-                Type: {productType}
-              </span>
+              <span className="badge badge-outline">Type: {productType}</span>
 
               <span className="badge badge-outline">
                 SKU: {inventory.sku || "-"}
@@ -231,9 +228,7 @@ const ProductDetailPreview = ({ product }) => {
           </div>
 
           <div>
-            <p className="text-xs font-semibold text-base-content/50">
-              Brand
-            </p>
+            <p className="text-xs font-semibold text-base-content/50">Brand</p>
             <p className="mt-1 font-semibold text-base-content">
               {product?.brand?.name || "-"}
             </p>
@@ -243,7 +238,8 @@ const ProductDetailPreview = ({ product }) => {
 
       <div className="rounded-2xl bg-info/10 px-4 py-3 text-sm text-info">
         Detail data connected successfully. In the next phases we will replace
-        this preview with full images, pricing, inventory, and variants sections.
+        this preview with full images, pricing, inventory, and variants
+        sections.
       </div>
     </div>
   );
@@ -364,9 +360,7 @@ const ProductDetailDrawer = ({ isOpen = false, productId = null, onClose }) => {
               </h2>
 
               <p className="truncate text-xs text-base-content/50">
-                {productId
-                  ? `Product ID: ${productId}`
-                  : "No product selected"}
+                {productId ? `Product ID: ${productId}` : "No product selected"}
               </p>
             </div>
           </div>
@@ -408,12 +402,12 @@ const ProductDetailDrawer = ({ isOpen = false, productId = null, onClose }) => {
           )}
 
           {productId && !isLoading && !isError && product && (
-            <ProductDetailPreview product={product} />
+            <ProductDetailOverview product={product} />
           )}
         </div>
       </aside>
     </div>,
-    document.body
+    document.body,
   );
 };
 
