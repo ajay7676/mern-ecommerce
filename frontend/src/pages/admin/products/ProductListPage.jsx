@@ -3,17 +3,20 @@ import ProductsHeader from "../../../components/admin/products/products-list/Pro
 import ProductsTable from "../../../components/admin/products/products-list/ProductsTable";
 import ProductPagination from "../../../components/admin/products/products-list/ProductPagination";
 import AddProductDrawer from "../../../components/admin/products/products-list/add-product/AddProductDrawer";
-import { useMemo, useState } from "react";
+import ProductMoreFiltersDrawer from "../../../components/admin/products/products-list/ProductMoreFiltersDrawer";
+import { useEffect, useMemo, useState } from "react";
 import { useAdminProducts } from "../../../hooks/admin/queries/products/product-list/useAdminProducts";
 import { useProductCategoryOptions } from "../../../hooks/admin/queries/products/product-list/useProductCategoryOptions";
 import { useProductBrandOptions } from "../../../hooks/admin/queries/products/product-list/useProductBrandOptions";
 import {
+  getMoreFiltersCount,
   getProductQueryParams,
   hasActiveProductFilters,
 } from "../../../utils/admin/products/product/productFilterUtils";
 import { DEFAULT_PRODUCT_FILTERS } from "../../../constants/admin/products/productFilter.constants";
 import ActiveProductFilters from "../../../components/admin/products/products-list/ActiveProductFilters";
 
+import useDebounce from "../../../utils/useDebounce";
 const ProductListPage = () => {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [filters, setFilters] = useState({
@@ -28,8 +31,28 @@ const ProductListPage = () => {
     sortBy: "createdAt",
     sortOrder: "desc",
   });
-
+  const [searchInput, setSearchInput] = useState(
+    DEFAULT_PRODUCT_FILTERS.search,
+  );
   const [isMoreFiltersOpen, setIsMoreFiltersOpen] = useState(false);
+
+  const debouncedSearch = useDebounce(searchInput, 500);
+
+  useEffect(() => {
+    setFilters((prev) => {
+      const cleanSearch = debouncedSearch.trim();
+
+      if (prev.search === cleanSearch) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        search: cleanSearch,
+        page: 1,
+      };
+    });
+  }, [debouncedSearch]);
 
   const queryParams = useMemo(() => {
     return getProductQueryParams(filters);
@@ -38,21 +61,28 @@ const ProductListPage = () => {
   const { data, isLoading, isFetching, isError, error } =
     useAdminProducts(queryParams);
 
-  const { data: categoryData } = useProductCategoryOptions();
-  const { data: brandData } = useProductBrandOptions();
+  const { data: categoryData, isLoading: isCategoriesLoading } =
+    useProductCategoryOptions();
+
+  const { data: brandData, isLoading: isBrandsLoading } =
+    useProductBrandOptions();
 
   const products = data?.products || [];
   const pagination = data?.pagination;
 
-  // console.log(products);
+  const isParentCategory = (category) => {
+  return (
+    !category.parentCategory ||
+    category.parentCategory === null ||
+    category.parentCategory === ""
+  );
+};
 
-  const categoryOptions = categoryData?.options || [];
+  const allCategoryOptions = categoryData?.options || [];
   const brandOptions = brandData || [];
-
+  const categoryOptions = allCategoryOptions.filter(isParentCategory);
   const hasFilters = hasActiveProductFilters(filters);
-
-  console.log(categoryOptions);
-  console.log(brandOptions);
+  const moreFiltersCount = getMoreFiltersCount(filters);
 
   const handleAddProductModal = () => {
     console.log("Click Add New Product Modal");
@@ -62,19 +92,8 @@ const ProductListPage = () => {
     setIsAddProductOpen(false);
   };
 
-  const handlePageChange = (page) => {
-    setFilters((prev) => ({
-      ...prev,
-      page,
-    }));
-  };
-
-  const handleSearchChange = (search) => {
-    setFilters((prev) => ({
-      ...prev,
-      search,
-      page: 1,
-    }));
+  const handleSearchChange = (value) => {
+    setSearchInput(value);
   };
 
   const handleFilterChange = (name, value) => {
@@ -85,23 +104,75 @@ const ProductListPage = () => {
     }));
   };
 
+  const handleRemoveFilter = (name) => {
+    if (name === "search") {
+      setSearchInput("");
+
+      setFilters((prev) => ({
+        ...prev,
+        search: "",
+        page: 1,
+      }));
+
+      return;
+    }
+
+    if (name === "sort") {
+      setFilters((prev) => ({
+        ...prev,
+        sortBy: DEFAULT_PRODUCT_FILTERS.sortBy,
+        sortOrder: DEFAULT_PRODUCT_FILTERS.sortOrder,
+        page: 1,
+      }));
+
+      return;
+    }
+
+    setFilters((prev) => ({
+      ...prev,
+      [name]: "all",
+      page: 1,
+    }));
+  };
+
+  const handleClearFilters = () => {
+    setSearchInput(DEFAULT_PRODUCT_FILTERS.search);
+    setFilters(DEFAULT_PRODUCT_FILTERS);
+  };
+
+  const handleApplyMoreFilters = (advancedFilters) => {
+    setFilters((prev) => ({
+      ...prev,
+      ...advancedFilters,
+      page: 1,
+    }));
+
+    setIsMoreFiltersOpen(false);
+  };
+
+  const handleClearAdvancedFilters = (advancedFilters) => {
+    setFilters((prev) => ({
+      ...prev,
+      ...advancedFilters,
+      page: 1,
+    }));
+  };
+
+  const handlePageChange = (page) => {
+    setFilters((prev) => ({
+      ...prev,
+      page,
+    }));
+  };
+
   const handleLimitChange = (limit) => {
     setFilters((prev) => ({
       ...prev,
-      page: 1,
       limit,
-    }));
-  };
-  const handleRemoveFilter = (name) => {
-    setFilters((prev) => ({
-      ...prev,
-      [name]: name === "search" ? "" : "all",
       page: 1,
     }));
   };
-  const handleClearFilters = () => {
-    setFilters(DEFAULT_PRODUCT_FILTERS);
-  };
+
   return (
     <>
       <main className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
@@ -112,8 +183,12 @@ const ProductListPage = () => {
             <div className="space-y-6">
               <ProductFilters
                 filters={filters}
+                searchValue={searchInput}
                 categoryOptions={categoryOptions}
                 brandOptions={brandOptions}
+                isCategoriesLoading={isCategoriesLoading}
+                isBrandsLoading={isBrandsLoading}
+                moreFiltersCount={moreFiltersCount}
                 onSearchChange={handleSearchChange}
                 onFilterChange={handleFilterChange}
                 onClearFilters={handleClearFilters}
@@ -156,6 +231,13 @@ const ProductListPage = () => {
       <AddProductDrawer
         isOpen={isAddProductOpen}
         onClose={hideAddProductModal}
+      />
+      <ProductMoreFiltersDrawer
+        isOpen={isMoreFiltersOpen}
+        filters={filters}
+        onClose={() => setIsMoreFiltersOpen(false)}
+        onApply={handleApplyMoreFilters}
+        onClearAdvanced={handleClearAdvancedFilters}
       />
     </>
   );

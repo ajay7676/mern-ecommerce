@@ -1,5 +1,8 @@
 
-import { DEFAULT_PRODUCT_FILTERS } from '../../../../constants/admin/products/productFilter.constants';
+import {
+     DEFAULT_PRODUCT_FILTERS,
+     PRODUCT_SORT_OPTIONS
+    } from '../../../../constants/admin/products/productFilter.constants';
 
 export const normalizeProductFilters = (filters = {}) => {
   return {
@@ -34,7 +37,9 @@ export const hasActiveProductFilters = (filters = {}) => {
     filters.brand !== "all" ||
     filters.status !== "all" ||
     filters.stockStatus !== "all" ||
-    filters.productType !== "all"
+    filters.productType !== "all" ||
+    filters.sortBy !== DEFAULT_PRODUCT_FILTERS.sortBy ||
+    filters.sortOrder !== DEFAULT_PRODUCT_FILTERS.sortOrder
   );
 };
 
@@ -49,4 +54,30 @@ export const splitSortValue = (value = "createdAt_desc") => {
 
 export const joinSortValue = ({ sortBy = "createdAt", sortOrder = "desc" }) => {
   return `${sortBy}_${sortOrder}`;
+};
+
+export const getSortLabel = ({ sortBy, sortOrder }) => {
+  const value = joinSortValue({ sortBy, sortOrder });
+
+  return (
+    PRODUCT_SORT_OPTIONS.find((option) => option.value === value)?.label ||
+    "Custom sort"
+  );
+};
+
+export const getMoreFiltersCount = (filters = {}) => {
+  let count = 0;
+
+  if (filters.productType !== DEFAULT_PRODUCT_FILTERS.productType) {
+    count += 1;
+  }
+
+  if (
+    filters.sortBy !== DEFAULT_PRODUCT_FILTERS.sortBy ||
+    filters.sortOrder !== DEFAULT_PRODUCT_FILTERS.sortOrder
+  ) {
+    count += 1;
+  }
+
+  return count;
 };

@@ -4,7 +4,9 @@ import {
   PRODUCT_STATUS_OPTIONS,
   PRODUCT_STOCK_OPTIONS,
   PRODUCT_TYPE_OPTIONS,
-} from '../../../../constants/admin/products/productFilter.constants'
+  DEFAULT_PRODUCT_FILTERS,
+} from "../../../../constants/admin/products/productFilter.constants";
+import { getSortLabel } from "../../../../utils/admin/products/product/productFilterUtils";
 
 const findLabel = (options, value) => {
   return options.find((option) => option.value === value)?.label || value;
@@ -48,7 +50,7 @@ const ActiveProductFilters = ({
 
   if (filters.category !== "all") {
     const category = categoryOptions.find(
-      (item) => String(item._id || item.id) === String(filters.category)
+      (item) => String(item._id || item.id) === String(filters.category),
     );
 
     chips.push({
@@ -59,7 +61,7 @@ const ActiveProductFilters = ({
 
   if (filters.brand !== "all") {
     const brand = brandOptions.find(
-      (item) => String(item._id || item.id) === String(filters.brand)
+      (item) => String(item._id || item.id) === String(filters.brand),
     );
 
     chips.push({
@@ -67,12 +69,21 @@ const ActiveProductFilters = ({
       label: `Brand: ${brand?.name || "Selected"}`,
     });
   }
-
+  if (
+    filters.sortBy !== DEFAULT_PRODUCT_FILTERS.sortBy ||
+    filters.sortOrder !== DEFAULT_PRODUCT_FILTERS.sortOrder
+  ) {
+    chips.push({
+      key: "sort",
+      label: `Sort: ${getSortLabel({
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
+      })}`,
+    });
+  }
   if (!chips.length) {
     return (
-      <div className="text-sm text-base-content/50">
-        No active filters
-      </div>
+      <div className="text-sm text-base-content/50">No active filters</div>
     );
   }
 
