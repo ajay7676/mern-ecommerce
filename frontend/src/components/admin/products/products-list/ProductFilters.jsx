@@ -4,108 +4,178 @@ import {
   RotateCcw,
   Search,
   Plus,
+  ChevronDown,
 } from "lucide-react";
+import {
+  PRODUCT_STATUS_OPTIONS,
+  PRODUCT_STOCK_OPTIONS,
+} from '../../../../constants/admin/products/productFilter.constants'
 
-const ProductFilters = () => {
+const ProductFilters = ({
+  filters,
+  categoryOptions = [],
+  brandOptions = [],
+  onSearchChange,
+  onFilterChange,
+  onClearFilters,
+  onOpenMoreFilters,
+  onCreateView,
+  onSavedViews,
+  hasActiveFilters = false,
+}) => {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="grid gap-3 xl:grid-cols-[1fr_190px_190px_190px_190px_auto_auto]">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+    <div className="rounded-3xl border border-base-300 bg-base-100 p-5 shadow-sm">
+      <div className="flex flex-col gap-5">
+        {/* Top filters */}
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1.5fr_0.8fr_0.8fr_0.8fr_0.8fr_auto_auto]">
+          {/* Search */}
+          <label className="input input-bordered flex h-12 items-center gap-2 rounded-xl bg-base-100">
+            <Search className="h-4 w-4 text-base-content/40" />
 
-          <input
-            type="text"
-            placeholder="Search by product name, SKU, or barcode..."
-            className="input input-bordered h-12 w-full rounded-xl border-slate-200 bg-white pl-12 text-sm"
-          />
-        </div>
+            <input
+              type="text"
+              value={filters.search}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Search by product name, SKU, or barcode..."
+              className="grow text-sm"
+            />
+          </label>
 
-        <FilterSelect label="Category" value="All Categories" />
-        <FilterSelect label="Brand" value="All Brands" />
-        <FilterSelect label="Status" value="All Status" />
-        <FilterSelect label="Stock" value="All Stock" />
+          {/* Category */}
+          <div className="relative">
+            <span className="absolute left-3 top-1.5 text-[11px] font-semibold text-base-content/40">
+              Category
+            </span>
 
-        <button
-          type="button"
-          className="btn h-12 min-h-12 rounded-xl border-slate-200 bg-white px-5 text-slate-800"
-        >
-          <Filter className="h-4 w-4" />
-          More Filters
-        </button>
+            <select
+              value={filters.category}
+              onChange={(event) => onFilterChange("category", event.target.value)}
+              className="select select-bordered h-12 w-full rounded-xl pt-1 text-sm font-semibold"
+            >
+              <option value="all">All Categories</option>
 
-        <button
-          type="button"
-          className="btn btn-ghost h-12 min-h-12 rounded-xl px-5 text-primary"
-        >
-          <RotateCcw className="h-4 w-4" />
-          Clear All
-        </button>
-      </div>
+              {categoryOptions.map((category) => (
+                <option key={category._id || category.id} value={category._id || category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <div className="my-5 border-t border-slate-100" />
+          {/* Brand */}
+          <div className="relative">
+            <span className="absolute left-3 top-1.5 text-[11px] font-semibold text-base-content/40">
+              Brand
+            </span>
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm font-medium text-slate-600">
-            Active Filters:
-          </span>
+            <select
+              value={filters.brand}
+              onChange={(event) => onFilterChange("brand", event.target.value)}
+              className="select select-bordered h-12 w-full rounded-xl pt-1 text-sm font-semibold"
+            >
+              <option value="all">All Brands</option>
 
-          <FilterChip label="Status: Published" />
-          <FilterChip label="Stock: In Stock" />
-        </div>
+              {brandOptions.map((brand) => (
+                <option key={brand._id || brand.id} value={brand._id || brand.id}>
+                  {brand.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex flex-wrap gap-3">
+          {/* Status */}
+          <div className="relative">
+            <span className="absolute left-3 top-1.5 text-[11px] font-semibold text-base-content/40">
+              Status
+            </span>
+
+            <select
+              value={filters.status}
+              onChange={(event) => onFilterChange("status", event.target.value)}
+              className="select select-bordered h-12 w-full rounded-xl pt-1 text-sm font-semibold"
+            >
+              {PRODUCT_STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Stock */}
+          <div className="relative">
+            <span className="absolute left-3 top-1.5 text-[11px] font-semibold text-base-content/40">
+              Stock
+            </span>
+
+            <select
+              value={filters.stockStatus}
+              onChange={(event) =>
+                onFilterChange("stockStatus", event.target.value)
+              }
+              className="select select-bordered h-12 w-full rounded-xl pt-1 text-sm font-semibold"
+            >
+              {PRODUCT_STOCK_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* More Filters */}
           <button
             type="button"
-            className="btn h-10 min-h-10 rounded-xl border-slate-200 bg-white px-4 text-slate-800"
+            onClick={onOpenMoreFilters}
+            className="btn btn-outline h-12 rounded-xl"
           >
-            <Bookmark className="h-4 w-4" />
-            Saved Views
+            <Filter className="h-4 w-4" />
+            More Filters
+            <ChevronDown className="h-4 w-4" />
           </button>
 
+          {/* Clear */}
           <button
             type="button"
-            className="btn h-10 min-h-10 rounded-xl border-slate-200 bg-white px-4 text-slate-800"
+            onClick={onClearFilters}
+            disabled={!hasActiveFilters}
+            className="btn btn-ghost h-12 rounded-xl text-primary disabled:text-base-content/30"
           >
-            <Plus className="h-4 w-4" />
-            Create View
+            <RotateCcw className="h-4 w-4" />
+            Clear All
           </button>
+        </div>
+
+        <div className="border-t border-base-300" />
+
+        {/* Bottom actions */}
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="text-sm font-semibold text-base-content/60">
+            Active Filters
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={onSavedViews}
+              className="btn btn-outline btn-sm h-10 rounded-xl"
+            >
+              <Bookmark className="h-4 w-4" />
+              Saved Views
+            </button>
+
+            <button
+              type="button"
+              onClick={onCreateView}
+              className="btn btn-outline btn-sm h-10 rounded-xl"
+            >
+              <Plus className="h-4 w-4" />
+              Create View
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  );
-};
-
-const FilterSelect = ({ label, value }) => {
-  return (
-    <label className="select select-bordered flex h-12 min-h-12 items-center rounded-xl border-slate-200 bg-white">
-      <div className="flex flex-col">
-        <span className="text-xs font-medium leading-none text-slate-400">
-          {label}
-        </span>
-
-        <select
-          className="mt-1 bg-transparent text-sm font-medium text-slate-800 outline-none"
-          defaultValue={value}
-        >
-          <option>{value}</option>
-        </select>
-      </div>
-    </label>
-  );
-};
-
-const FilterChip = ({ label }) => {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">
-      {label}
-      <button
-        type="button"
-        className="text-slate-500 hover:text-slate-900"
-      >
-        ×
-      </button>
-    </span>
   );
 };
 

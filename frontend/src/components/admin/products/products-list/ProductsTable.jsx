@@ -91,7 +91,7 @@ const ProductsTable = ({
                     <div className="h-16 w-16 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
                       <img
                         src={
-                          product.image?.url || "/images/brand-placeholder.png"
+                          product?.image?.url || "../../../../../public/images/product-placeholder.png"
                         }
                         alt={product.name}
                         className="h-full w-full object-cover"
