@@ -15,6 +15,7 @@ import { useAdminProductDetail } from "../../../../../hooks/admin/queries/produc
 import { getProductDetailErrorMessage } from "../../../../../utils/admin/products/product/productDetailErrorUtils";
 import ProductDetailOverview from "./ProductDetailOverview";
 
+
 const formatCurrency = (value) => {
   return `₹${Number(value || 0).toLocaleString("en-IN")}`;
 };
