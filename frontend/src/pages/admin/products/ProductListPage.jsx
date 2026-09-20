@@ -100,13 +100,10 @@ const ProductListPage = () => {
   const handleViewProduct = (product) => {
   const productId = product?.id;
 
-  if (!productId) {
-    console.log("Product id not found:", product);
+   if (!productId) {
     toast.error("Product id not found");
     return;
   }
-  
-
   setSelectedProductId(productId);
   setIsProductDetailDrawerOpen(true);
 };
