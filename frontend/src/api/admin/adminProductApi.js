@@ -35,3 +35,9 @@ export const getAdminProductsApi = async (params) => {
 
   return data.data;
 };
+
+export const getAdminProductDetailApi = async (productId) => {
+  const { data } = await api.get(`/admin/products/${productId}`);
+
+  return data.data;
+};

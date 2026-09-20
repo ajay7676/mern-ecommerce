@@ -7,6 +7,7 @@ import { Eye, MoreVertical, Pencil, ArrowUpDown } from "lucide-react";
 import { formatCurrency } from "../../../../utils/admin/products/product/productPricingUtils";
 import ProductTableSkeleton from "./ProductTableSkeleton";
 import ProductEmptyState from "./ProductEmptyState";
+import { useAdminProductDetail } from "../../../../hooks/admin/queries/products/product-list/useAdminProductDetail";
 
 const ProductsTable = ({
   products = [],
@@ -18,6 +19,16 @@ const ProductsTable = ({
   onAddProduct,
   onClearFilters,
 }) => {
+   const productId ="6aacfbbb12665608ca380021";
+    const {
+       data:productData,
+       isLoading:isProductLoading, 
+       isError:isProductError, 
+       error }
+        = useAdminProductDetail(productId);
+  
+  console.log(productData)
+
   if (isLoading) {
     return <ProductTableSkeleton />;
   }
