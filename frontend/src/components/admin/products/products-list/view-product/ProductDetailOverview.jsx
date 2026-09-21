@@ -1,6 +1,8 @@
 import ProductDetailImagesSection from "./ProductDetailImagesSection";
 import ProductDetailInfoSection from "./ProductDetailInfoSection";
 import ProductDetailPricingInventorySection from "./ProductDetailPricingInventorySection";
+import ProductDetailVariantsSection from "./ProductDetailVariantsSection";
+
 
 
 const ProductDetailOverview = ({ product }) => {
@@ -15,6 +17,7 @@ const ProductDetailOverview = ({ product }) => {
 
       <ProductDetailInfoSection product={product} />
       <ProductDetailPricingInventorySection product={product} />
+      <ProductDetailVariantsSection variants={product?.variants || []} />
     </div>
   );
 };

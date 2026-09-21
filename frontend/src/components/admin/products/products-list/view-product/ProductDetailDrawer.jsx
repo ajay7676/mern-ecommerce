@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   AlertTriangle,
-  ImageOff,
   Loader2,
   Package,
   RefreshCcw,
@@ -15,18 +14,6 @@ import { useAdminProductDetail } from "../../../../../hooks/admin/queries/produc
 import { getProductDetailErrorMessage } from "../../../../../utils/admin/products/product/productDetailErrorUtils";
 import ProductDetailOverview from "./ProductDetailOverview";
 
-
-const formatCurrency = (value) => {
-  return `₹${Number(value || 0).toLocaleString("en-IN")}`;
-};
-
-const getStatusBadgeClass = (status) => {
-  if (status === "active") return "badge-success";
-  if (status === "draft") return "badge-warning";
-  if (status === "inactive") return "badge-ghost";
-
-  return "badge-ghost";
-};
 
 const ProductDetailDrawerSkeleton = () => {
   return (
@@ -99,152 +86,7 @@ const ProductDetailDrawerError = ({ message, onRetry, onClose }) => {
   );
 };
 
-const ProductDetailPreview = ({ product }) => {
-  const name = product?.basicInformation?.name || "Untitled product";
-  const status = product?.basicInformation?.status || "draft";
-  const productType = product?.basicInformation?.productType || "-";
 
-  const primaryImage =
-    product?.media?.primaryImage || product?.media?.images?.[0] || null;
-
-  const pricing = product?.pricing || {};
-  const inventory = product?.inventory || {};
-
-  return (
-    <div className="space-y-5">
-      {/* Top summary */}
-      <div className="rounded-3xl border border-base-300 bg-base-100 p-5 shadow-sm">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-          <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-base-200">
-            {primaryImage?.url ? (
-              <img
-                src={primaryImage.url}
-                alt={primaryImage.altText || name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <ImageOff className="h-9 w-9 text-base-content/30" />
-            )}
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-xl font-bold text-base-content">{name}</h3>
-
-              <span className={`badge ${getStatusBadgeClass(status)}`}>
-                {status}
-              </span>
-            </div>
-
-            <p className="mt-2 text-sm text-base-content/60">
-              {product?.basicInformation?.shortDescription ||
-                "No short description added."}
-            </p>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="badge badge-outline">Type: {productType}</span>
-
-              <span className="badge badge-outline">
-                SKU: {inventory.sku || "-"}
-              </span>
-
-              <span className="badge badge-outline">
-                Variants: {product?.variants?.length || 0}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick stats */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="rounded-3xl border border-base-300 bg-base-100 p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-base-content/50">
-            Final Price
-          </p>
-
-          <p className="mt-2 text-2xl font-bold text-base-content">
-            {formatCurrency(pricing.finalPrice)}
-          </p>
-
-          <p className="mt-1 text-xs text-base-content/50">
-            Selling: {formatCurrency(pricing.sellingPrice)}
-          </p>
-        </div>
-
-        <div className="rounded-3xl border border-base-300 bg-base-100 p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-base-content/50">
-            Stock
-          </p>
-
-          <p className="mt-2 text-2xl font-bold text-base-content">
-            {inventory.stockQuantity || 0}
-          </p>
-
-          <p className="mt-1 text-xs text-base-content/50">
-            Status: {inventory.stockStatus || "-"}
-          </p>
-        </div>
-
-        <div className="rounded-3xl border border-base-300 bg-base-100 p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase text-base-content/50">
-            Discount
-          </p>
-
-          <p className="mt-2 text-2xl font-bold text-base-content">
-            {pricing.discountType === "percentage"
-              ? `${pricing.discountValue || 0}%`
-              : pricing.discountType === "fixed"
-                ? formatCurrency(pricing.discountValue)
-                : "None"}
-          </p>
-
-          <p className="mt-1 text-xs text-base-content/50">
-            Type: {pricing.discountType || "none"}
-          </p>
-        </div>
-      </div>
-
-      {/* Basic refs */}
-      <div className="rounded-3xl border border-base-300 bg-base-100 p-5 shadow-sm">
-        <h4 className="font-bold text-base-content">Product References</h4>
-
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div>
-            <p className="text-xs font-semibold text-base-content/50">
-              Category
-            </p>
-            <p className="mt-1 font-semibold text-base-content">
-              {product?.category?.name || "-"}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs font-semibold text-base-content/50">
-              Sub Category
-            </p>
-            <p className="mt-1 font-semibold text-base-content">
-              {product?.subCategory?.name || "-"}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs font-semibold text-base-content/50">Brand</p>
-            <p className="mt-1 font-semibold text-base-content">
-              {product?.brand?.name || "-"}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-2xl bg-info/10 px-4 py-3 text-sm text-info">
-        Detail data connected successfully. In the next phases we will replace
-        this preview with full images, pricing, inventory, and variants
-        sections.
-      </div>
-    </div>
-  );
-};
 
 const ProductDetailDrawer = ({ isOpen = false, productId = null, onClose }) => {
   const [shouldRender, setShouldRender] = useState(isOpen);

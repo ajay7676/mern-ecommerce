@@ -90,3 +90,31 @@ export const formatTaxClass = (taxClass) => {
 
   return taxMap[taxClass] || taxClass || "-";
 };
+
+export const formatVariantStatus = (status) => {
+  if (status === true || status === "active") return "Active";
+  if (status === false || status === "inactive") return "Inactive";
+
+  return status || "-";
+};
+
+export const getVariantStatusBadgeClass = (status) => {
+  if (status === true || status === "active") return "badge-success";
+  if (status === false || status === "inactive") return "badge-ghost";
+
+  return "badge-ghost";
+};
+
+export const normalizeVariantAttributes = (attributeValues) => {
+  if (!attributeValues) return [];
+
+  if (Array.isArray(attributeValues)) {
+    return attributeValues;
+  }
+
+  if (typeof attributeValues === "object") {
+    return Object.values(attributeValues);
+  }
+
+  return [];
+};
