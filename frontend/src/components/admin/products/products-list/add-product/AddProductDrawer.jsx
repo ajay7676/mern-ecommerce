@@ -27,6 +27,7 @@ import {
 
 import { buildProductPayload } from "../../../../../utils/admin/products/product/productPayloadUtils";
 import { useCreateAdminProduct } from "../../../../../hooks/admin/mutations/products/useCreateAdminProduct";
+import { useAdminProductDetail } from "../../../../../hooks/admin/queries/products/product-list/useAdminProductDetail";
 import {
   applyCreateProductApiErrors,
   getProductApiErrorMessage,
@@ -39,10 +40,16 @@ import {
 import { useDeleteTemporaryProductImages } from "../../../../../hooks/admin/mutations/products/useDeleteTemporaryProductImages";
 import { validateProductAttributeSnapshot } from "../../../../../utils/admin/products/product/productAttributeSnapshotValidator";
 import { getFirstProductFormError } from "../../../../../utils/admin/products/product/productFormErrorUtils";
+import { PRODUCT_FORM_MODE } from "../../../../../constants/admin/products/productFormMode.constants";
 
 const DRAWER_ANIMATION_MS = 500;
 
-const AddProductDrawer = ({ isOpen, onClose }) => {
+const AddProductDrawer = ({
+  isOpen = false,
+  productId = null,
+  onClose,
+  mode,
+}) => {
   const [shouldRender, setShouldRender] = useState(false);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
@@ -51,11 +58,27 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
     title: "",
     payload: null,
   });
+
+  const isEditMode = mode === PRODUCT_FORM_MODE.EDIT;
+  const isCreateMode = mode === PRODUCT_FORM_MODE.CREATE;
   const methods = useForm({
     resolver: zodResolver(addProductSchema),
     defaultValues: getAddProductDefaultValues(),
     mode: "onChange",
   });
+
+  const {
+    data: editProduct,
+    isLoading: isEditProductLoading,
+    isError: isEditProductError,
+    error: editProductError,
+    refetch: refetchEditProduct,
+  } = useAdminProductDetail(productId, {
+    enabled: isOpen && isEditMode && Boolean(productId),
+  });
+
+
+   console.log(editProduct)
 
   const createProductMutation = useCreateAdminProduct();
 
@@ -201,7 +224,6 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
 
       handleCloseWithoutSavingOrReset();
       console.log("Created product:", createdProduct);
-      
     } catch (error) {
       const appliedFields = applyCreateProductApiErrors(methods, error);
       const firstErrorStep = getFirstStepFromFields(appliedFields);
@@ -242,7 +264,7 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
     const isStepValid = await validateAllProductSteps(methods);
 
     if (!isStepValid) {
-      const firstError =  getFirstProductFormError(methods.formState.errors);
+      const firstError = getFirstProductFormError(methods.formState.errors);
 
       if (firstError.step) {
         setActiveStep(firstError.step);
@@ -268,15 +290,16 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
       values: formValues,
       action: "draft",
     });
-
-    localStorage.setItem(
-      "addProductDraft",
-      JSON.stringify({
-        formValues,
-        payload,
-        savedAt: new Date().toISOString(),
-      }),
-    );
+    if (isCreateMode) {
+      localStorage.setItem(
+        "addProductDraft",
+        JSON.stringify({
+          formValues,
+          payload,
+          savedAt: new Date().toISOString(),
+        }),
+      );
+    }
 
     setPreviewModal({
       isOpen: true,
@@ -322,6 +345,48 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
     }
   };
 
+  {isEditMode && isEditProductLoading && (
+  <div className="space-y-5 p-5">
+    <div className="skeleton h-8 w-64 rounded-xl" />
+    <div className="skeleton h-32 rounded-3xl" />
+    <div className="skeleton h-32 rounded-3xl" />
+    <div className="skeleton h-32 rounded-3xl" />
+  </div>
+)}
+
+{isEditMode && isEditProductError && (
+  <div className="flex min-h-105 items-center justify-center p-5">
+    <div className="max-w-md rounded-3xl border border-error/20 bg-error/5 p-8 text-center">
+      <h3 className="text-lg font-bold text-error">
+        Failed to load product
+      </h3>
+
+      <p className="mt-2 text-sm text-base-content/60">
+        {editProductError?.response?.data?.message ||
+          "Unable to load product detail for editing."}
+      </p>
+
+      <div className="mt-6 flex justify-center gap-3">
+        <button
+          type="button"
+          onClick={refetchEditProduct}
+          className="btn btn-error rounded-xl text-white"
+        >
+          Retry
+        </button>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="btn btn-outline rounded-xl"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
   return createPortal(
     <div
       className={`fixed inset-0 z-80 bg-black/40 transition-opacity duration-500 ease-out ${
@@ -338,7 +403,15 @@ const AddProductDrawer = ({ isOpen, onClose }) => {
            }`}
       >
         <FormProvider {...methods}>
-          <AddProductDrawerHeader onClose={handleCloseAndKeepDraft} />
+          <AddProductDrawerHeader
+            title={isEditMode ? "Edit Product" : "Add New Product"}
+            subtitle={
+              isEditMode
+                ? "Update product information, images, pricing, inventory, and variants"
+                : "Create a new product with images, pricing, inventory, and variants"
+            }
+            onClose={handleCloseAndKeepDraft}
+          />
           <ProductStepIndicator
             activeStep={activeStep}
             onStepClick={setActiveStep}

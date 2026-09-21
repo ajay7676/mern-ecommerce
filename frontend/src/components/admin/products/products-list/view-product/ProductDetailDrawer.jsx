@@ -6,6 +6,7 @@ import {
   Package,
   RefreshCcw,
   X,
+  Pencil,
 } from "lucide-react";
 
 const DRAWER_ANIMATION_MS = 300;
@@ -13,7 +14,6 @@ const DRAWER_ANIMATION_MS = 300;
 import { useAdminProductDetail } from "../../../../../hooks/admin/queries/products/product-list/useAdminProductDetail";
 import { getProductDetailErrorMessage } from "../../../../../utils/admin/products/product/productDetailErrorUtils";
 import ProductDetailOverview from "./ProductDetailOverview";
-
 
 const ProductDetailDrawerSkeleton = () => {
   return (
@@ -86,9 +86,12 @@ const ProductDetailDrawerError = ({ message, onRetry, onClose }) => {
   );
 };
 
-
-
-const ProductDetailDrawer = ({ isOpen = false, productId = null, onClose }) => {
+const ProductDetailDrawer = ({
+  isOpen = false,
+  productId = null,
+  onClose,
+  onEditProduct,
+}) => {
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -212,6 +215,23 @@ const ProductDetailDrawer = ({ isOpen = false, productId = null, onClose }) => {
             {isFetching && !isLoading && (
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
             )}
+
+            <button
+              type="button"
+              onClick={() => {
+                if (product) {
+                  onEditProduct?.(product);
+                  return;
+                }
+
+                onEditProduct?.({ id: productId });
+              }}
+              disabled={!productId}
+              className="btn btn-outline btn-sm rounded-xl"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </button>
 
             <button
               type="button"

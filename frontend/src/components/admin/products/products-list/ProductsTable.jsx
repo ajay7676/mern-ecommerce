@@ -17,6 +17,7 @@ const ProductsTable = ({
   hasFilters = false,
   onAddProduct,
   onViewProduct,
+  onEditProduct,
   onClearFilters,
 }) => {
   
@@ -216,6 +217,7 @@ const ProductsTable = ({
 
                     <button
                       type="button"
+                      onClick={() => onEditProduct?.(product)}
                       className="rounded-lg p-1.5 hover:bg-slate-100 cursor-pointer"
                     >
                       <Pencil className="h-4 w-4" />

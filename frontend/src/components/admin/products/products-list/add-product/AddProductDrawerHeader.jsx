@@ -5,6 +5,8 @@ import {
 } from "lucide-react";
 
 const AddProductDrawerHeader = ({
+  title = "Add New Product",
+  subtitle = "Create a new product",
   onClose,
 }) => {
   return (
@@ -20,16 +22,16 @@ const AddProductDrawerHeader = ({
 
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-950">
-            Add New Product
+           {title}
           </h2>
-
+          <p className="mt-1 text-sm text-base-content/60">{subtitle}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm font-medium text-slate-500">
             <span>Dashboard</span>
             <ChevronRight className="h-4 w-4" />
             <span>Products</span>
             <ChevronRight className="h-4 w-4" />
             <span className="text-slate-800">
-              Add New Product
+             {title}
             </span>
           </div>
         </div>

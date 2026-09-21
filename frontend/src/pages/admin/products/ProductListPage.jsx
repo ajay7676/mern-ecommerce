@@ -18,6 +18,7 @@ import ActiveProductFilters from "../../../components/admin/products/products-li
 import ProductDetailDrawer from "../../../components/admin/products/products-list/view-product/ProductDetailDrawer";
 import useDebounce from "../../../utils/useDebounce";
 import toast from "react-hot-toast";
+import { PRODUCT_FORM_MODE } from "../../../constants/admin/products/productFormMode.constants";
 const ProductListPage = () => {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [filters, setFilters] = useState({
@@ -40,6 +41,12 @@ const ProductListPage = () => {
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [isProductDetailDrawerOpen, setIsProductDetailDrawerOpen] =
     useState(false);
+
+  const [isProductEditorOpen, setIsProductEditorOpen] = useState(false);
+  const [productEditorMode, setProductEditorMode] = useState(
+    PRODUCT_FORM_MODE.CREATE,
+  );
+  const [editingProductId, setEditingProductId] = useState(null);
 
   const debouncedSearch = useDebounce(searchInput, 500);
 
@@ -91,6 +98,8 @@ const ProductListPage = () => {
 
   const handleAddProductModal = () => {
     console.log("Click Add New Product Modal");
+    setProductEditorMode(PRODUCT_FORM_MODE.CREATE);
+    setEditingProductId(null);
     setIsAddProductOpen(true);
   };
   const hideAddProductModal = () => {
@@ -98,20 +107,42 @@ const ProductListPage = () => {
   };
 
   const handleViewProduct = (product) => {
-  const productId = product?.id;
+    const productId = product?.id;
 
-   if (!productId) {
-    toast.error("Product id not found");
-    return;
-  }
-  setSelectedProductId(productId);
-  setIsProductDetailDrawerOpen(true);
-};
+    if (!productId) {
+      toast.error("Product id not found");
+      return;
+    }
+    setSelectedProductId(productId);
+    setIsProductDetailDrawerOpen(true);
+  };
 
   const handleCloseProductDetailDrawer = () => {
     setIsProductDetailDrawerOpen(false);
   };
 
+  const handleOpenEditProduct = (product) => {
+  const productId = product?.id ;
+   console.log("Click Edit modal");
+   console.log(productId)
+
+
+  if (!productId) {
+    toast.error("Product id not found");
+    return;
+  }
+
+  setProductEditorMode(PRODUCT_FORM_MODE.EDIT);
+  setEditingProductId(productId);
+
+  // optional: close detail drawer if open
+  setIsProductDetailDrawerOpen(false);
+  setIsProductEditorOpen(true);
+  setIsAddProductOpen(true);
+};
+const handleCloseProductEditor = () => {
+  setIsProductEditorOpen(false);
+};
   const handleSearchChange = (value) => {
     setSearchInput(value);
   };
@@ -193,7 +224,7 @@ const ProductListPage = () => {
     }));
   };
 
-   console.log(selectedProductId)
+  console.log(selectedProductId);
 
   return (
     <>
@@ -239,6 +270,7 @@ const ProductListPage = () => {
                 hasFilters={hasFilters}
                 onAddProduct={handleAddProductModal}
                 onViewProduct={handleViewProduct}
+                onEditProduct={handleOpenEditProduct}
                 onClearFilters={handleClearFilters}
               />
               <ProductPagination
@@ -254,6 +286,8 @@ const ProductListPage = () => {
       <AddProductDrawer
         isOpen={isAddProductOpen}
         onClose={hideAddProductModal}
+        mode={productEditorMode}
+        productId={editingProductId}
       />
       <ProductMoreFiltersDrawer
         isOpen={isMoreFiltersOpen}
@@ -266,6 +300,7 @@ const ProductListPage = () => {
         isOpen={isProductDetailDrawerOpen}
         productId={selectedProductId}
         onClose={handleCloseProductDetailDrawer}
+        onEditProduct={handleOpenEditProduct}
       />
     </>
   );
