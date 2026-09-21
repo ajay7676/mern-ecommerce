@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,6 +41,7 @@ import { useDeleteTemporaryProductImages } from "../../../../../hooks/admin/muta
 import { validateProductAttributeSnapshot } from "../../../../../utils/admin/products/product/productAttributeSnapshotValidator";
 import { getFirstProductFormError } from "../../../../../utils/admin/products/product/productFormErrorUtils";
 import { PRODUCT_FORM_MODE } from "../../../../../constants/admin/products/productFormMode.constants";
+import { mapAdminProductDetailToFormValues } from "../../../../../utils/admin/products/product/productEditFormMapper";
 
 const DRAWER_ANIMATION_MS = 500;
 
@@ -77,8 +78,7 @@ const AddProductDrawer = ({
     enabled: isOpen && isEditMode && Boolean(productId),
   });
 
-
-   console.log(editProduct)
+  const loadedEditProductIdRef = useRef(null);
 
   const createProductMutation = useCreateAdminProduct();
 
@@ -88,7 +88,7 @@ const AddProductDrawer = ({
   const isCleaningImages = deleteTemporaryProductImages.isPending;
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !isCreateMode) return;
 
     const savedDraft = localStorage.getItem("addProductDraft");
 
@@ -106,7 +106,7 @@ const AddProductDrawer = ({
     } catch (error) {
       console.error("Failed to restore product draft:", error);
     }
-  }, [isOpen, methods]);
+  }, [isOpen, isCreateMode, methods]);
   useEffect(() => {
     let timer;
 
@@ -151,6 +151,24 @@ const AddProductDrawer = ({
       document.body.style.paddingRight = originalPaddingRight;
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !isEditMode || !editProduct) return;
+
+    const currentProductId = editProduct.id || productId;
+
+    if (loadedEditProductIdRef.current === currentProductId) {
+      return;
+    }
+
+    const mappedValues = mapAdminProductDetailToFormValues(editProduct);
+
+    methods.reset(mappedValues);
+
+    setActiveStep(1);
+
+    loadedEditProductIdRef.current = currentProductId;
+  }, [isOpen, isEditMode, editProduct, productId, methods]);
 
   if (!shouldRender) {
     return null;
@@ -284,44 +302,43 @@ const AddProductDrawer = ({
   };
 
   const handleSaveDraft = () => {
+    if (!isCreateMode) {
+      toast("Draft save is only available while creating a new product", {
+        icon: "ℹ️",
+      });
+      return;
+    }
     const formValues = methods.getValues();
 
     const payload = buildProductPayload({
       values: formValues,
       action: "draft",
     });
+    localStorage.setItem(
+      "addProductDraft",
+      JSON.stringify({
+        formValues,
+        payload,
+        savedAt: new Date().toISOString(),
+      }),
+    );
+    setPreviewModal({
+      isOpen: true,
+      title: "Draft saved successfully",
+      payload,
+    });
+  };
+  const handleCloseAndKeepDraft = () => {
+    const formValues = methods.getValues();
     if (isCreateMode) {
       localStorage.setItem(
         "addProductDraft",
         JSON.stringify({
           formValues,
-          payload,
           savedAt: new Date().toISOString(),
         }),
       );
     }
-
-    setPreviewModal({
-      isOpen: true,
-      title: "Product draft saved locally",
-      payload,
-    });
-
-    console.log("Saved form values:", formValues);
-    console.log("Backend payload:", payload);
-  };
-
-  const handleCloseAndKeepDraft = () => {
-    const formValues = methods.getValues();
-
-    localStorage.setItem(
-      "addProductDraft",
-      JSON.stringify({
-        formValues,
-        savedAt: new Date().toISOString(),
-      }),
-    );
-
     setIsDrawerVisible(false);
 
     setTimeout(() => {
@@ -345,47 +362,74 @@ const AddProductDrawer = ({
     }
   };
 
-  {isEditMode && isEditProductLoading && (
-  <div className="space-y-5 p-5">
-    <div className="skeleton h-8 w-64 rounded-xl" />
-    <div className="skeleton h-32 rounded-3xl" />
-    <div className="skeleton h-32 rounded-3xl" />
-    <div className="skeleton h-32 rounded-3xl" />
-  </div>
-)}
+  const handleClose = () => {
+    setIsDrawerVisible(false);
 
-{isEditMode && isEditProductError && (
-  <div className="flex min-h-105 items-center justify-center p-5">
-    <div className="max-w-md rounded-3xl border border-error/20 bg-error/5 p-8 text-center">
-      <h3 className="text-lg font-bold text-error">
-        Failed to load product
-      </h3>
+    setTimeout(() => {
+      loadedEditProductIdRef.current = null;
+      onClose?.();
+    }, DRAWER_ANIMATION_MS);
+  };
 
-      <p className="mt-2 text-sm text-base-content/60">
-        {editProductError?.response?.data?.message ||
-          "Unable to load product detail for editing."}
-      </p>
+  const handleResetEditChanges = () => {
+    if (!isEditMode || !editProduct) return;
 
-      <div className="mt-6 flex justify-center gap-3">
-        <button
-          type="button"
-          onClick={refetchEditProduct}
-          className="btn btn-error rounded-xl text-white"
-        >
-          Retry
-        </button>
+    const mappedValues = mapAdminProductDetailToFormValues(editProduct);
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="btn btn-outline rounded-xl"
-        >
-          Close
-        </button>
+    methods.reset(mappedValues);
+
+    setActiveStep(1);
+
+    toast("Changes reset to original product data", {
+      icon: "↩️",
+    });
+  };
+
+  {
+    isEditMode && isEditProductLoading && (
+      <div className="space-y-5 p-5">
+        <div className="skeleton h-8 w-64 rounded-xl" />
+        <div className="skeleton h-32 rounded-3xl" />
+        <div className="skeleton h-32 rounded-3xl" />
+        <div className="skeleton h-32 rounded-3xl" />
       </div>
-    </div>
-  </div>
-)}
+    );
+  }
+
+  {
+    isEditMode && isEditProductError && (
+      <div className="flex min-h-105 items-center justify-center p-5">
+        <div className="max-w-md rounded-3xl border border-error/20 bg-error/5 p-8 text-center">
+          <h3 className="text-lg font-bold text-error">
+            Failed to load product
+          </h3>
+
+          <p className="mt-2 text-sm text-base-content/60">
+            {editProductError?.response?.data?.message ||
+              "Unable to load product detail for editing."}
+          </p>
+
+          <div className="mt-6 flex justify-center gap-3">
+            <button
+              type="button"
+              onClick={refetchEditProduct}
+              className="btn btn-error rounded-xl text-white"
+            >
+              Retry
+            </button>
+
+            <button
+              type="button"
+              onClick={handleClose}
+              className="btn btn-outline rounded-xl"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return createPortal(
     <div
@@ -441,7 +485,19 @@ const AddProductDrawer = ({
             onNext={handleNext}
             onSaveDraft={handleSaveDraft}
             onDiscardDraft={handleDiscardDraft}
-            isSubmitting={isCreatingProduct || isCleaningImages}
+            onResetChanges={handleResetEditChanges}
+            isEditMode={isEditMode}
+            isSubmitting={
+              isCreateMode ? isCreatingProduct || isCleaningImages : false
+            }
+            primaryButtonLabel={
+              isEditMode && activeStep === totalSteps
+                ? "Update Product"
+                : activeStep === totalSteps
+                  ? "Publish Product"
+                  : "Save & Next"
+            }
+            showSaveDraft={isCreateMode}
           />
 
           <ProductPayloadPreviewModal
