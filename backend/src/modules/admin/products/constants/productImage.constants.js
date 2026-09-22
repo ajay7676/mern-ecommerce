@@ -12,6 +12,7 @@ export const PRODUCT_IMAGE_CONFIG = {
   ownerContextKey: "uploaded_by",
   productContextKey: "product_id",
   moduleContextKey: "module",
+  assetStateContextKey: "asset_state",
 
   maxSize: 2 * 1024 * 1024, // 2MB
 

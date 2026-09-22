@@ -87,8 +87,8 @@ router.patch(
   "/admin/attributes/:attributeId",
    userAuth,
   adminOnly,
-  validateParams(attributeParamsSchema),
-  validate(updateAttributeSchema),
+  // validateParams(attributeParamsSchema),
+  // validate(updateAttributeSchema),
   updateAttributeController
 );
 

@@ -36,13 +36,16 @@ export const mapUploadedImageToFormImage = ({
   currentImageCount,
 }) => {
   return {
-    imageId: image.imageId ,
+    imageId: image.publicId || image.imageId ,
     publicId: image.publicId,
     url: image.url,
     previewUrl: image.url,
     altText: image.altText || "",
     isPrimary: currentImageCount === 0 && index === 0,
     sortOrder: currentImageCount + index + 1,
+    isExisting: false,
+    isTemporary: true,
+    assetState: "temporary",
   };
 };
 

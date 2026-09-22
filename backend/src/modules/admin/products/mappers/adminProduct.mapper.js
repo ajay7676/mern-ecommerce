@@ -297,3 +297,21 @@ export const mapAdminProductDetailResponse = ({ product, variants = [] }) => {
     updatedAt: product.updatedAt,
   };
 };
+
+export const mapAdminUpdatedProductResponse = ({ product, variants = [] }) => {
+  return {
+    id: product._id,
+    name: product.name,
+    slug: product.slug,
+    productType: product.productType,
+    status: product.status,
+
+    sku: product.inventory?.sku,
+    finalPrice: product.pricing?.finalPrice,
+    stockQuantity: product.inventory?.stockQuantity,
+
+    variantCount: variants.length,
+
+    updatedAt: product.updatedAt,
+  };
+};

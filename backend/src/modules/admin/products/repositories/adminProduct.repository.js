@@ -319,3 +319,69 @@ export const findAdminProductVariantsByProductId = async (productId) => {
     })
     .lean();
 };
+
+export const findProductById  = async(productId, session = null) => {
+
+  return Product.findById(productId).session(session);
+
+}
+
+export const findProductBySlugExceptId = async ({ slug, productId }) => {
+  return Product.findOne({
+    slug,
+    _id: { $ne: productId },
+  }).lean();
+};
+
+export const findProductByInventorySkuExceptId = async ({ sku, productId }) => {
+  return Product.findOne({
+    "inventory.sku": sku,
+    _id: { $ne: productId },
+  }).lean();
+};
+
+export const findVariantSkusExceptProduct = async ({ skus, productId }) => {
+  if (!skus?.length) return [];
+
+  return ProductVariant.find({
+    sku: { $in: skus },
+    product: { $ne: productId },
+  })
+    .select("_id sku product")
+    .lean();
+};
+
+export const updateProductById = async ({ productId, update, session }) => {
+  return Product.findByIdAndUpdate(
+    productId,
+    {
+      $set: update,
+    },
+    {
+      new: true,
+      runValidators: true,
+      session,
+    }
+  );
+};
+
+export const replaceProductVariants = async ({
+  productId,
+  variantsData,
+  session,
+}) => {
+  await ProductVariant.deleteMany({
+    product: productId,
+  }).session(session);
+
+  if (!variantsData.length) {
+    return [];
+  }
+
+  const variants = await ProductVariant.insertMany(variantsData, {
+    session,
+    ordered: true,
+  });
+
+  return variants;
+};

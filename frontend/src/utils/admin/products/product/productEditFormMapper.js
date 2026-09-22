@@ -32,6 +32,14 @@ const formatTimeForInput = (dateValue) => {
   return date.toTimeString().slice(0, 5);
 };
 
+const mapMetaKeywordsToForm = (keywords) => {
+  if (Array.isArray(keywords)) {
+    return keywords.join(", ");
+  }
+
+  return keywords || "";
+};
+
 const mapProductImagesToForm = (images = []) => {
   return images.map((image, index) => ({
     imageId: image.publicId || image.imageId || "",
@@ -137,8 +145,10 @@ const mapVariantsToForm = (variants = []) => {
     optionSignature: variant.optionSignature || "",
     sortOrder: Number(variant.sortOrder || index + 1),
 
-    // important for update flow
+     // old saved image
     isExisting: true,
+    isTemporary: false,
+    assetState: "permanent",
   }));
 };
 
@@ -196,7 +206,7 @@ export const mapAdminProductDetailToFormValues = (product) => {
 
     metaTitle: seo.metaTitle || "",
     metaDescription: seo.metaDescription || "",
-    metaKeywords: seo.metaKeywords || "",
+    metaKeywords: mapMetaKeywordsToForm(seo.metaKeywords),
 
     // Step 2 — Pricing & Inventory
     sellingPrice: toStringValue(pricing.sellingPrice),

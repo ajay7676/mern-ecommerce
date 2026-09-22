@@ -277,3 +277,45 @@ export const createVariantImagePreview = (file) => ({
   file,
   isPrimary: true,
 });
+
+export const getTemporaryProductImagePublicIdsFromValues = (values = {}) => {
+  const productImagePublicIds = (values.images || [])
+    .filter(
+      (image) => image?.isTemporary === true || image?.assetState === "temporary"
+    )
+    .map((image) => image.publicId)
+    .filter(Boolean);
+
+  const variantImagePublicIds = (values.variants || [])
+    .flatMap((variant) => {
+      const mainImage =
+        variant.image?.isTemporary === true ||
+        variant.image?.assetState === "temporary"
+          ? variant.image?.publicId
+          : null;
+
+      const extraImages = (variant.images || [])
+        .filter(
+          (image) =>
+            image?.isTemporary === true || image?.assetState === "temporary"
+        )
+        .map((image) => image.publicId);
+
+      return [mainImage, ...extraImages].filter(Boolean);
+    });
+
+  return [...new Set([...productImagePublicIds, ...variantImagePublicIds])];
+};
+
+export const cleanupTemporaryProductImagesSafely = async ({
+  values,
+  deleteTemporaryImages,
+}) => {
+  const publicIds = getTemporaryProductImagePublicIdsFromValues(values);
+
+  if (!publicIds.length) return;
+
+  await deleteTemporaryImages({
+    publicIds,
+  });
+};

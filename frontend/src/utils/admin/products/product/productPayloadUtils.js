@@ -33,6 +33,36 @@ const splitCommaText = (value) => {
     .filter(Boolean);
 };
 
+const normalizeMetaKeywords = (value) => {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => String(item).trim())
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return String(value).trim();
+};
+
+const getImageAssetState = (image = {}) => {
+  if (image.isTemporary === true || image.assetState === "temporary") {
+    return "temporary";
+  }
+
+  return "permanent";
+};
+
+const getImageIsTemporary = (image = {}) => {
+  return image.isTemporary === true || image.assetState === "temporary";
+};
+
+const getImageIsExisting = (image = {}) => {
+  return image.isExisting === true && !getImageIsTemporary(image);
+};
 const mapVariantAttributes = (variant) => {
   const attributeValues = variant.attributeValues || {};
 
@@ -49,24 +79,44 @@ const mapVariantAttributes = (variant) => {
 
 const mapProductImages = (images = []) => {
   return images.map((image, index) => ({
-    publicId: image.publicId || null,
-
-    // For now previewUrl may be blob.
-    // In Phase 9.4 this should become Cloudinary url.
-    url: image.url || image.previewUrl,
-
-    altText: image.altText || image.imageAltText || "",
+    imageId: image.publicId || image.imageId,
+    publicId: image.publicId,
+    url: image.url,
+    altText: image.altText || "",
     isPrimary: Boolean(image.isPrimary),
-    sortOrder: image.sortOrder || index + 1,
+    sortOrder: Number(image.sortOrder || index + 1),
+
+    isExisting: getImageIsExisting(image),
+    isTemporary: getImageIsTemporary(image),
+    assetState: getImageAssetState(image),
   }));
+};
+
+const mapVariantImage = (image) => {
+  if (!image?.publicId && !image?.url) return null;
+
+  return {
+    publicId: image.publicId || null,
+    url: image.url || null,
+
+  isExisting: getImageIsExisting(image),
+    isTemporary: getImageIsTemporary(image),
+    assetState: getImageAssetState(image),
+  };
 };
 
 const mapVariantImages = (images = []) => {
   return images.map((image, index) => ({
-    publicId: image.publicId || null,
-    url: image.url || image.previewUrl,
-    isPrimary: image.isPrimary ?? index === 0,
-    sortOrder: image.sortOrder || index + 1,
+    imageId: image.imageId || image.publicId,
+    publicId: image.publicId,
+    url: image.url,
+    altText: image.altText || "",
+    isPrimary: Boolean(image.isPrimary),
+    sortOrder: Number(image.sortOrder || index + 1),
+
+    isExisting: getImageIsExisting(image),
+    isTemporary: getImageIsTemporary(image),
+    assetState: getImageAssetState(image),
   }));
 };
 
@@ -138,7 +188,7 @@ export const buildProductPayload = ({
     seo: {
       metaTitle: cleanString(values.metaTitle),
       metaDescription: cleanString(values.metaDescription),
-      metaKeywords: splitCommaText(values.metaKeywords),
+      metaKeywords: normalizeMetaKeywords(values.metaKeywords),
     },
 
     pricing: {

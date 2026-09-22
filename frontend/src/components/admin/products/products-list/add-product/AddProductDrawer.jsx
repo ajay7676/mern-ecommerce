@@ -42,6 +42,7 @@ import { validateProductAttributeSnapshot } from "../../../../../utils/admin/pro
 import { getFirstProductFormError } from "../../../../../utils/admin/products/product/productFormErrorUtils";
 import { PRODUCT_FORM_MODE } from "../../../../../constants/admin/products/productFormMode.constants";
 import { mapAdminProductDetailToFormValues } from "../../../../../utils/admin/products/product/productEditFormMapper";
+import { useUpdateAdminProduct } from "../../../../../hooks/admin/mutations/products/useUpdateAdminProduct";
 
 const DRAWER_ANIMATION_MS = 500;
 
@@ -78,15 +79,14 @@ const AddProductDrawer = ({
     enabled: isOpen && isEditMode && Boolean(productId),
   });
 
+  console.log(editProduct);
+
   const loadedEditProductIdRef = useRef(null);
 
   const createProductMutation = useCreateAdminProduct();
+  const updateProductMutation = useUpdateAdminProduct();
 
-  const isCreatingProduct = createProductMutation.isPending;
   const deleteTemporaryProductImages = useDeleteTemporaryProductImages();
-
-  const isCleaningImages = deleteTemporaryProductImages.isPending;
-
   useEffect(() => {
     if (!isOpen || !isCreateMode) return;
 
@@ -203,78 +203,51 @@ const AddProductDrawer = ({
 
     if (!wizardValidation.isValid) {
       setActiveStep(wizardValidation.step);
-
       toast.error(wizardValidation.message);
-
       return;
     }
 
     const values = methods.getValues();
 
-    const attributeSnapshotCheck = validateProductAttributeSnapshot({
-      attributes: values.attributes,
-      variants: values.variants,
-    });
-
-    if (!attributeSnapshotCheck.isValid) {
-      methods.setError(attributeSnapshotCheck.field, {
-        type: "manual",
-        message: attributeSnapshotCheck.message,
-      });
-
-      setActiveStep(4);
-      toast.error(attributeSnapshotCheck.message);
-      return;
-    }
-
     const payload = buildProductPayload({
       values,
       action: "publish",
     });
+
     try {
-      const createdProduct = await createProductMutation.mutateAsync(payload);
-      localStorage.removeItem("addProductDraft");
-
-      toast.success("Product created successfully");
-
-      methods.reset(getAddProductDefaultValues());
-      setActiveStep(1);
-
-      handleCloseWithoutSavingOrReset();
-      console.log("Created product:", createdProduct);
-    } catch (error) {
-      const appliedFields = applyCreateProductApiErrors(methods, error);
-      const firstErrorStep = getFirstStepFromFields(appliedFields);
-
-      if (firstErrorStep) {
-        setActiveStep(firstErrorStep);
-      }
-
-      if (shouldCleanupImagesAfterCreateFailure(error)) {
-        await cleanupCurrentTempImages();
-
-        methods.setValue("images", [], {
-          shouldDirty: true,
-          shouldValidate: true,
+      if (isEditMode) {
+        await updateProductMutation.mutateAsync({
+          productId,
+          payload,
         });
 
-        methods.setError("images", {
-          type: "server",
-          message:
-            "Product image processing failed. Please upload images again.",
-        });
+        toast.success("Product updated successfully");
 
-        setActiveStep(3);
+        handleCloseWithoutSavingOrReset();
 
-        localStorage.removeItem("addProductDraft");
-
-        toast.error("Image processing failed. Please upload images again.");
         return;
       }
 
-      toast.error(getProductApiErrorMessage(error));
+      await createProductMutation.mutateAsync(payload);
 
-      console.error("Create product failed:", error);
+      localStorage.removeItem("addProductDraft");
+
+      methods.reset(getAddProductDefaultValues());
+
+      setActiveStep(1);
+
+      toast.success("Product created successfully");
+
+      handleCloseWithoutSavingOrReset();
+    } catch (error) {
+      applyCreateProductApiErrors(methods, error);
+
+      toast.error(
+        error?.response?.data?.message ||
+          (isEditMode
+            ? "Failed to update product"
+            : "Failed to create product"),
+      );
     }
   };
 
@@ -385,6 +358,21 @@ const AddProductDrawer = ({
     });
   };
 
+  const handleCancelEdit = async () => {
+    const values = methods.getValues();
+
+    try {
+      await cleanupTemporaryProductImagesSafely({
+        values,
+        deleteTemporaryImages: deleteTemporaryProductImages.mutateAsync,
+      });
+    } catch (error) {
+      console.error("Temporary edit images cleanup failed:", error);
+    } finally {
+      handleClose();
+    }
+  };
+
   {
     isEditMode && isEditProductLoading && (
       <div className="space-y-5 p-5">
@@ -485,19 +473,22 @@ const AddProductDrawer = ({
             onNext={handleNext}
             onSaveDraft={handleSaveDraft}
             onDiscardDraft={handleDiscardDraft}
+            onCancel={handleCancelEdit}
             onResetChanges={handleResetEditChanges}
             isEditMode={isEditMode}
+            showSaveDraft={isCreateMode}
             isSubmitting={
-              isCreateMode ? isCreatingProduct || isCleaningImages : false
+              isEditMode
+                ? updateProductMutation.isPending
+                : createProductMutation.isPending
             }
             primaryButtonLabel={
-              isEditMode && activeStep === totalSteps
-                ? "Update Product"
-                : activeStep === totalSteps
-                  ? "Publish Product"
-                  : "Save & Next"
+              activeStep === totalSteps
+                ? isEditMode
+                  ? "Update Product"
+                  : "Publish Product"
+                : "Save & Next"
             }
-            showSaveDraft={isCreateMode}
           />
 
           <ProductPayloadPreviewModal

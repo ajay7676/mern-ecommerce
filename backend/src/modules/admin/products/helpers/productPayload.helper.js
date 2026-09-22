@@ -98,14 +98,32 @@ export const buildScheduledAt = ({
 
 export const normalizeProductImages = (images = []) => {
   return images.map((image, index) => ({
-    publicId: cleanString(image.publicId),
-    url: cleanString(image.url),
-    altText: cleanString(image.altText) || "",
+    publicId: image.publicId || image.imageId,
+    url: image.url,
+    altText: image.altText || "",
     isPrimary: Boolean(image.isPrimary),
-    sortOrder: image.sortOrder || index + 1,
+    sortOrder: Number(image.sortOrder || index + 1),
   }));
 };
 
+export const normalizeVariantImage = (image) => {
+  if (!image?.publicId && !image?.url) return null;
+
+  return {
+    publicId: image.publicId || null,
+    url: image.url || null,
+  };
+};
+
+export const normalizeVariantImages = (images = []) => {
+  return images.map((image, index) => ({
+    publicId: image.publicId || image.imageId,
+    url: image.url,
+    altText: image.altText || "",
+    isPrimary: Boolean(image.isPrimary),
+    sortOrder: Number(image.sortOrder || index + 1),
+  }));
+};
 export const normalizeProductAttributes = (attributes = []) => {
   return attributes.map((attribute) => ({
     attributeId:
@@ -267,81 +285,151 @@ export const buildProductVariantDocuments = ({
   productId,
   adminId,
 }) => {
-  const inputVariants = payload.attributesAndVariations?.variants || [];
+  const variants = payload.attributesAndVariations?.variants || [];
+  const productImages = payload.media?.images || [];
 
-  if (!inputVariants.length) {
-    const primaryImage =
-      product.images.find((image) => image.isPrimary) || product.images[0];
+  const primaryProductImage =
+    productImages.find((image) => image.isPrimary) || productImages[0] || null;
 
+  // SIMPLE PRODUCT: create one default variant
+  if (!variants.length) {
     return [
       {
         product: productId,
-        name: "Default",
-        sku: product.inventory.sku,
-        price: product.pricing.finalPrice,
-        stock: product.inventory.stockQuantity,
-        status:
-          product.status === PRODUCT_STATUS.ACTIVE ? "active" : "inactive",
-        source: "manual",
-        image: {
-          publicId: primaryImage?.publicId || null,
-          url: primaryImage?.url || null,
-        },
-        images: primaryImage
-          ? [
-              {
-                publicId: primaryImage.publicId || null,
-                url: primaryImage.url,
-                isPrimary: true,
-                sortOrder: 1,
-              },
-            ]
-          : [],
-        attributes: [],
+
+        name: product.name,
+        sku: product.inventory?.sku,
+
+        price: Number(product.pricing?.finalPrice || product.pricing?.sellingPrice || 0),
+        stock: Number(product.inventory?.stockQuantity || 0),
+
+        status: product.status === "active" ? "active" : "inactive",
+
+        image: primaryProductImage
+          ? {
+              publicId: primaryProductImage.publicId,
+              url: primaryProductImage.url,
+            }
+          : null,
+
+        images: [],
+
+        attributeValues: [],
+
         optionSignature: "default",
+
         sortOrder: 1,
+
         createdBy: adminId,
-        updatedBy: null,
+        updatedBy: adminId,
       },
     ];
   }
 
-  return inputVariants.map((variant, index) => {
-    const variantAttributes = normalizeVariantAttributes(
-      variant.attributes || [],
-    );
-    const primaryVariantImage = variant.images?.find(
-      (image) => image.isPrimary,
+  // VARIABLE PRODUCT: create variants from payload
+  return variants.map((variantItem, index) => {
+    const normalizedVariantAttributes = normalizeVariantAttributes(
+      variantItem.attributeValues || variantItem.attributes || []
     );
 
     return {
       product: productId,
-      name: variant.name,
-      sku: variant.sku,
-      price: toNumberOrZero(variant.price),
-      stock: toNumberOrZero(variant.stock),
-      status: variant.status,
-      source: variant.source || "auto",
 
-      image: {
-        publicId:
-          variant.image?.publicId || primaryVariantImage?.publicId || null,
-        url: variant.image?.url || primaryVariantImage?.url || null,
-      },
+      name: variantItem.name,
+      sku: variantItem.sku,
 
-      images: (variant.images || []).map((image, imageIndex) => ({
-        publicId: image.publicId || null,
-        url: image.url,
-        isPrimary: image.isPrimary ?? imageIndex === 0,
-        sortOrder: image.sortOrder || imageIndex + 1,
-      })),
+      price: Number(variantItem.price || product.pricing?.finalPrice || 0),
+      stock: Number(variantItem.stock || 0),
 
-      attributes: variantAttributes,
-      optionSignature: buildVariantOptionSignature(variantAttributes),
-      sortOrder: variant.sortOrder || index + 1,
+      status:
+        variantItem.status === "active" || variantItem.status === true
+          ? "active"
+          : "inactive",
+
+      image: normalizeVariantImage(variantItem.image),
+
+      images: normalizeVariantImages(variantItem.images || []),
+
+      attributeValues: normalizedVariantAttributes,
+
+      optionSignature:
+        variantItem.optionSignature ||
+        buildVariantOptionSignature(normalizedVariantAttributes),
+
+      sortOrder: Number(variantItem.sortOrder || index + 1),
 
       createdBy: adminId,
-      updatedBy: null,
+      updatedBy: adminId,
+    };
+  });
+};
+
+export const buildProductUpdateDocument = ({ payload, adminId, productId }) => {
+  const productData = buildProductDocument({
+    payload,
+    adminId,
+    productId,
+  });
+
+  delete productData._id;
+  delete productData.createdBy;
+  delete productData.createdAt;
+
+  return {
+    ...productData,
+    updatedBy: adminId,
+    updatedAt: new Date(),
+  };
+};
+
+export const buildProductVariantUpdateDocuments = ({
+  payload,
+  product,
+  productId,
+  adminId,
+}) => {
+  const variants = payload.attributesAndVariations?.variants || [];
+
+  return variants.map((variant, index) => {
+    const variantId =
+      variant.variantId && mongoose.isValidObjectId(variant.variantId)
+        ? new mongoose.Types.ObjectId(variant.variantId)
+        : new mongoose.Types.ObjectId();
+
+    return {
+      _id: variantId,
+
+      product: productId,
+
+      name: variant.name,
+      sku: variant.sku,
+
+      price: Number(variant.price || product.pricing?.finalPrice || 0),
+      stock: Number(variant.stock || 0),
+
+      status: variant.status === "active" || variant.status === true
+        ? "active"
+        : "inactive",
+
+      image: variant.image || null,
+      images: variant.images || [],
+
+      attributeValues: normalizeVariantAttributes(
+        variant.attributeValues || variant.attributes || []
+      ),
+
+      optionSignature:
+        variant.optionSignature ||
+        buildVariantOptionSignature(
+          normalizeVariantAttributes(
+            variant.attributeValues || variant.attributes || []
+          )
+        ),
+
+      sortOrder: Number(variant.sortOrder || index + 1),
+
+      createdBy: adminId,
+      updatedBy: adminId,
     };
   });
 };

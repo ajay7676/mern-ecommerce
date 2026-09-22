@@ -1,7 +1,8 @@
 import {
   createAdminProductService,
   getAdminProductsService,
-  getAdminProductDetailService 
+  getAdminProductDetailService, 
+  updateAdminProductService
 } from "../services/adminProduct.service.js";
 
 export const createAdminProductController = async (req, res, next) => {
@@ -42,6 +43,24 @@ export const getAdminProductDetailController = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Product detail fetched successfully",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateAdminProductController = async (req, res, next) => {
+  try {
+    const data = await updateAdminProductService({
+      productId: req.params.productId,
+      payload: req.body,
+      adminId: req.user._id,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
       data,
     });
   } catch (error) {

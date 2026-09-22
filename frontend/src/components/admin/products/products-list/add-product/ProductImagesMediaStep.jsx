@@ -1,14 +1,19 @@
 // src/features/admin/products/add-product/components/ProductImagesMediaStep.jsx
 
 import { useState } from "react";
-import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
+import {
+  Controller,
+  useFieldArray,
+  useFormContext,
+  useWatch,
+} from "react-hook-form";
 import { ImageIcon } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 import ImageUploadDropzone from "../form/ImageUploadDropzone";
 import ProductImagesGrid from "../form/ProductImagesGrid";
 
-import { useUploadProductImages } from '../../../../../hooks/admin/mutations/products/useUploadProductImages'
+import { useUploadProductImages } from "../../../../../hooks/admin/mutations/products/useUploadProductImages";
 import { useDeleteTemporaryProductImages } from "../../../../../hooks/admin/mutations/products/useDeleteTemporaryProductImages";
 
 import {
@@ -18,10 +23,9 @@ import {
   validateProductImageFiles,
 } from "../../../../../utils/admin/products/product/productImageUtils";
 import {
-   MAX_PRODUCT_IMAGE_SIZE
-  , MAX_PRODUCT_IMAGES
- } from "../../../../../constants/admin/products/product.constants";
-
+  MAX_PRODUCT_IMAGE_SIZE,
+  MAX_PRODUCT_IMAGES,
+} from "../../../../../constants/admin/products/product.constants";
 
 const ProductImagesMediaStep = () => {
   const {
@@ -42,10 +46,11 @@ const ProductImagesMediaStep = () => {
     name: "images",
   });
 
-  const images = useWatch({
-    control,
-    name: "images",
-  }) || [];
+  const images =
+    useWatch({
+      control,
+      name: "images",
+    }) || [];
 
   const isUploading = uploadProductImages.isPending;
   const remainingSlots = Math.max(MAX_PRODUCT_IMAGE_SIZE - images.length, 0);
@@ -65,7 +70,7 @@ const ProductImagesMediaStep = () => {
 
     try {
       const uploadedImages = await uploadProductImages.mutateAsync(
-        validation.files
+        validation.files,
       );
 
       const formImages = uploadedImages.map((image, index) =>
@@ -73,7 +78,7 @@ const ProductImagesMediaStep = () => {
           image,
           index,
           currentImageCount: currentImages.length,
-        })
+        }),
       );
 
       append(formImages, {
@@ -85,45 +90,45 @@ const ProductImagesMediaStep = () => {
       toast.success("Product images uploaded successfully");
     } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Product image upload failed"
+        error?.response?.data?.message || "Product image upload failed",
       );
     }
+  };
+
+  const shouldDeleteImageImmediately = (image) => {
+    return image?.isTemporary === true || image?.assetState === "temporary";
   };
 
   const handleRemoveImage = async (index) => {
-    const currentImages = getValues("images") || [];
-    const selectedImage = currentImages[index];
+  const image = images[index];
 
-    if (!selectedImage) return;
+  if (!image) return;
 
-    try {
-      if (selectedImage.publicId) {
-        setDeletingPublicId(selectedImage.publicId);
-
-        await deleteTemporaryProductImages.mutateAsync({
-          publicIds: [selectedImage.publicId],
-        });
-      }
-
-      const nextImages = currentImages.filter((_, imageIndex) => {
-        return imageIndex !== index;
+  try {
+    if (shouldDeleteImageImmediately(image) && image.publicId) {
+      await deleteTemporaryProductImages.mutateAsync({
+        publicIds: [image.publicId],
       });
-
-      const normalizedImages = ensureOnePrimaryImage(
-        normalizeImageSortOrder(nextImages)
-      );
-
-      replace(normalizedImages);
-
-      toast.success("Image removed successfully");
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Image remove failed"
-      );
-    } finally {
-      setDeletingPublicId(null);
     }
-  };
+
+    const nextImages = images.filter((_, imageIndex) => imageIndex !== index);
+
+    const normalizedImages = nextImages.map((item, itemIndex) => ({
+      ...item,
+      sortOrder: itemIndex + 1,
+      isPrimary:
+        nextImages.some((nextImage) => nextImage.isPrimary)
+          ? item.isPrimary
+          : itemIndex === 0,
+    }));
+
+    replace(normalizedImages);
+  } catch (error) {
+    toast.error(
+      error?.response?.data?.message || "Failed to remove image"
+    );
+  }
+};
 
   const handleMakePrimary = (selectedIndex) => {
     const currentImages = getValues("images") || [];
@@ -170,9 +175,7 @@ const ProductImagesMediaStep = () => {
           />
 
           {errors.images?.message && (
-            <p className="mt-3 text-sm text-error">
-              {errors.images.message}
-            </p>
+            <p className="mt-3 text-sm text-error">{errors.images.message}</p>
           )}
 
           <div className="mt-6">
@@ -189,9 +192,7 @@ const ProductImagesMediaStep = () => {
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h3 className="text-base font-bold text-slate-900">
-            Media Settings
-          </h3>
+          <h3 className="text-base font-bold text-slate-900">Media Settings</h3>
 
           <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
             <Controller
@@ -323,8 +324,7 @@ const ProductImagesMediaStep = () => {
             <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
               <img
                 src={
-                  images.find((image) => image.isPrimary)?.url ||
-                  images[0]?.url
+                  images.find((image) => image.isPrimary)?.url || images[0]?.url
                 }
                 alt="Primary product"
                 className="aspect-square w-full object-cover"

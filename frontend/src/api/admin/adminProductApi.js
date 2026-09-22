@@ -41,3 +41,12 @@ export const getAdminProductDetailApi = async (productId) => {
 
   return data.data;
 };
+
+export const updateAdminProductApi = async ({ productId, payload }) => {
+  const { data } = await api.patch(
+    `/admin/products/${productId}`,
+    payload
+  );
+
+  return data.data;
+};

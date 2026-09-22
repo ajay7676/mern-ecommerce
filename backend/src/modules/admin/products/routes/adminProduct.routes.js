@@ -8,12 +8,14 @@ import {uploadProductImagesMiddleware} from '../../../../middleware/adminproduct
 import {
   adminProductIdParamSchema,
   createAdminProductSchema,
- getAdminProductsQuerySchema
+ getAdminProductsQuerySchema,
+ updateAdminProductSchema
  } from "../validations/adminProduct.validation.js";
 import { 
   createAdminProductController,
    getAdminProductDetailController,
-   getAdminProductsController
+   getAdminProductsController,
+   updateAdminProductController
  } from "../controllers/adminProduct.controller.js";
 import {
   deleteTemporaryProductImagesController,
@@ -59,6 +61,15 @@ router.get(
   adminOnly,
   validateParams(adminProductIdParamSchema),
   getAdminProductDetailController
+);
+
+router.patch(
+  "/admin/products/:productId",
+  userAuth,
+  adminOnly,
+  validateParams(adminProductIdParamSchema),
+  validate(updateAdminProductSchema),
+  updateAdminProductController
 );
 
 

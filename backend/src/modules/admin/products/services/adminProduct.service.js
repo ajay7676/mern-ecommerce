@@ -3,6 +3,8 @@ import HandleError from "../../../../utils/handleError.js";
 
 import {
   extractProductImagePublicIds,
+  buildProductImageUpdatePlan,
+  deleteRemovedPermanentProductImages,
   makeProductImagesPermanent,
   rollbackPermanentProductImages,
   verifyTemporaryProductImages,
@@ -21,6 +23,8 @@ import {
   assertValidObjectId,
   buildProductDocument,
   buildProductVariantDocuments,
+  buildProductUpdateDocument,
+  buildProductVariantUpdateDocuments,
 } from "../helpers/productPayload.helper.js";
 
 import {
@@ -32,12 +36,19 @@ import {
   findProductVariantsBySkus,
   findAdminProductById,
   findAdminProductVariantsByProductId,
+  findProductById,
+  findProductBySlugExceptId,
+  findProductByInventorySkuExceptId,
+  findVariantSkusExceptProduct,
+  updateProductById,
+  replaceProductVariants,
 } from "../repositories/adminProduct.repository.js";
 
 import {
   mapAdminCreatedProductResponse,
    mapAdminProductListResponse ,
    mapAdminProductDetailResponse,
+   mapAdminUpdatedProductResponse,
    
   } from "../mappers/adminProduct.mapper.js";
 import { uploadTemporaryImage } from "../../../../utils/cloudinary/uploadTemporaryImage.js";
@@ -190,7 +201,6 @@ const assertNoExistingVariantSkuConflict = async ({
 };
 
 const handleDuplicateKeyError = (error) => {
-  console.log(error);
   if (error?.code !== 11000) {
     return null;
   }
@@ -437,4 +447,151 @@ export const getAdminProductDetailService = async (productId) => {
     product,
     variants,
   });
+};
+
+export const updateAdminProductService = async ({
+  productId,
+  payload,
+  adminId,
+}) => {
+  const session = await mongoose.startSession();
+
+  let madePermanentPublicIds = [];
+  let removedPermanentPublicIds = [];
+
+  try {
+    const existingProduct = await findProductById(productId);
+
+
+    if (!existingProduct) {
+      throw new HandleError("Product not found", 404, {
+        productId: "Product does not exist",
+      });
+    }
+
+    const existingVariants = await findAdminProductVariantsByProductId(productId);
+
+    const imageUpdatePlan = buildProductImageUpdatePlan({
+      existingProduct,
+      existingVariants,
+      payload,
+    });
+
+    if (imageUpdatePlan.suspiciousNewPublicIds.length > 0) {
+      throw new HandleError("Invalid image update", 400, {
+        images:
+          "New images must be uploaded as temporary images before updating product",
+      });
+    }
+
+    await verifyTemporaryProductImages({
+      publicIds: imageUpdatePlan.newTemporaryPublicIds,
+      adminId,
+      required: false,
+    });
+
+    madePermanentPublicIds = await makeProductImagesPermanent({
+      publicIds: imageUpdatePlan.newTemporaryPublicIds,
+      adminId,
+      productId,
+    });
+
+    removedPermanentPublicIds = imageUpdatePlan.removedPermanentPublicIds;
+
+    const productUpdateData = buildProductUpdateDocument({
+      payload,
+      adminId,
+      productId,
+    });
+
+    const existingSlug = await findProductBySlugExceptId({
+      slug: productUpdateData.slug,
+      productId,
+    });
+
+    if (existingSlug) {
+      throw new HandleError("Product slug already exists", 409, {
+        productName: "A product with this name already exists",
+      });
+    }
+
+    const existingSku = await findProductByInventorySkuExceptId({
+      sku: productUpdateData.inventory?.sku,
+      productId,
+    });
+
+    if (existingSku) {
+      throw new HandleError("Product SKU already exists", 409, {
+        sku: "This product SKU is already used",
+      });
+    }
+
+    const variantsData = buildProductVariantDocuments({
+      payload,
+      product: productUpdateData,
+      productId,
+      adminId,
+    });
+
+    const variantSkus = variantsData
+      .map((variant) => variant.sku)
+      .filter(Boolean);
+
+    const uniqueVariantSkus = new Set(variantSkus);
+
+    if (variantSkus.length !== uniqueVariantSkus.size) {
+      throw new HandleError("Duplicate variant SKU", 400, {
+        variants: "Variant SKUs must be unique",
+      });
+    }
+
+    const externalVariantSkuConflicts = await findVariantSkusExceptProduct({
+      skus: variantSkus,
+      productId,
+    });
+
+    if (externalVariantSkuConflicts.length > 0) {
+      throw new HandleError("Variant SKU already exists", 409, {
+        variants: `Variant SKU already exists: ${externalVariantSkuConflicts[0].sku}`,
+      });
+    }
+
+    let updatedProduct;
+    let updatedVariants = [];
+
+    await session.withTransaction(async () => {
+      updatedProduct = await updateProductById({
+        productId,
+        update: productUpdateData,
+        session,
+      });
+
+      updatedVariants = await replaceProductVariants({
+        productId,
+        variantsData,
+        session,
+      });
+    });
+
+    await deleteRemovedPermanentProductImages(removedPermanentPublicIds);
+
+    return mapAdminUpdatedProductResponse({
+      product: updatedProduct,
+      variants: updatedVariants,
+    });
+  } catch (error) {
+    if (madePermanentPublicIds.length > 0) {
+      await rollbackPermanentProductImages(madePermanentPublicIds);
+    }
+
+    if (error?.code === 11000) {
+      throw new HandleError("Duplicate product data", 409, {
+        product: "Product with same unique field already exists",
+      });
+    }
+
+    throw error;
+  } finally {
+    session.endSession();
+  }
 };
