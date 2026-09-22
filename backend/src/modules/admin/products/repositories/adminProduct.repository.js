@@ -358,7 +358,7 @@ export const updateProductById = async ({ productId, update, session }) => {
       $set: update,
     },
     {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
       session,
     }
