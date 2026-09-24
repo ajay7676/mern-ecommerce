@@ -20,7 +20,6 @@ const ProductsTable = ({
   onEditProduct,
   onClearFilters,
 }) => {
-  
   if (isLoading) {
     return <ProductTableSkeleton />;
   }
@@ -34,15 +33,15 @@ const ProductsTable = ({
   }
 
   if (!products.length) {
-  return (
-    <ProductEmptyState
-      hasFilters={hasFilters}
-      onAddProduct={onAddProduct}
-      onClearFilters={onClearFilters}
-      isRefreshing={isFetching}
-    />
-  );
-}
+    return (
+      <ProductEmptyState
+        hasFilters={hasFilters}
+        onAddProduct={onAddProduct}
+        onClearFilters={onClearFilters}
+        isRefreshing={isFetching}
+      />
+    );
+  }
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       {isFetching && (
@@ -94,7 +93,8 @@ const ProductsTable = ({
                     <div className="h-16 w-16 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
                       <img
                         src={
-                          product?.image?.url || "../../../../../public/images/product-placeholder.png"
+                          product?.image?.url ||
+                          "../../../../../public/images/product-placeholder.png"
                         }
                         alt={product.name}
                         className="h-full w-full object-cover"
@@ -137,23 +137,23 @@ const ProductsTable = ({
                       </p>
                     )}
 
-                   <p className="mt-1">
-                     {product.discountType === "percentage" ? (
-                      <span className="badge badge-success">
-                        {product.discountValue}% OFF
-                      </span>
-                    ) : product.discountType === "fixed" ? (
-                      <span className="badge badge-info">
-                        ₹
-                        {Number(product.discountValue || 0).toLocaleString(
-                          "en-IN",
-                        )}{" "}
-                        OFF
-                      </span>
-                    ) : (
-                      <span className="badge badge-ghost">No discount</span>
-                    )}
-                   </p>
+                    <p className="mt-1">
+                      {product.discountType === "percentage" ? (
+                        <span className="badge badge-success">
+                          {product.discountValue}% OFF
+                        </span>
+                      ) : product.discountType === "fixed" ? (
+                        <span className="badge badge-info">
+                          ₹
+                          {Number(product.discountValue || 0).toLocaleString(
+                            "en-IN",
+                          )}{" "}
+                          OFF
+                        </span>
+                      ) : (
+                        <span className="badge badge-ghost">No discount</span>
+                      )}
+                    </p>
                   </div>
                 </td>
 
@@ -204,9 +204,10 @@ const ProductsTable = ({
                 </td>
 
                 <td className="px-5 py-4">
-                  <div 
-                  onClick={(event) => event.stopPropagation()}
-                  className="flex justify-end gap-3 text-slate-700">
+                  <div
+                    onClick={(event) => event.stopPropagation()}
+                    className="flex justify-end gap-3 text-slate-700"
+                  >
                     <button
                       type="button"
                       onClick={() => onViewProduct?.(product)}
@@ -223,12 +224,28 @@ const ProductsTable = ({
                       <Pencil className="h-4 w-4" />
                     </button>
 
-                    <button
+                    {/* <button
                       type="button"
                       className="rounded-lg p-1.5 hover:bg-slate-100 cursor-pointer"
                     >
                       <MoreVertical className="h-4 w-4" />
-                    </button>
+                    </button> */}
+                    <div className="dropdown dropdown-end">
+                      <div tabIndex={0} role="button" className="rounded-lg p-1.5 hover:bg-slate-100 cursor-pointer">
+                        <MoreVertical className="h-4 w-4" />
+                      </div>
+                      <ul
+                        tabIndex={-1}
+                        className="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+                      >
+                        <li>
+                          <a>Item 1</a>
+                        </li>
+                        <li>
+                          <a>Item 2</a>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </td>
               </tr>

@@ -456,7 +456,12 @@ const AddProductDrawer = ({
                   {activeStep === 1 && <ProductBasicInfoStep />}
                   {activeStep === 2 && <ProductPricingInventoryStep />}
                   {activeStep === 3 && <ProductImagesMediaStep />}
-                  {activeStep === 4 && <ProductAttributesVariationsStep />}
+                  {activeStep === 4 && 
+                  <ProductAttributesVariationsStep
+                     mode={mode}
+                     productId={productId}
+                  />
+                  }
                   {activeStep === 5 && <ProductAdditionalDetailsStep />}
 
                   {activeStep === 6 && (
