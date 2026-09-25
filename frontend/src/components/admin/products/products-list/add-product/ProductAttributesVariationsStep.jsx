@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import toast from "react-hot-toast";
@@ -11,69 +12,149 @@ import SelectedVariantPreviewCard from "../form/SelectedVariantPreviewCard";
 import VariationQuickActionsCard from "../form/VariationQuickActionsCard";
 import AttributeVariationTipsCard from "../form/AttributeVariationTipsCard";
 
+import VariantsRegenerationWarning from "../form/VariantsRegenerationWarning";
+import RemoveAttributeOptionModal from "../form/RemoveAttributeOptionModal";
+
+import { createManualVariant } from "../../../../../utils/admin/products/product/productVariationUtils";
+
 import {
-  createManualVariant,
-  generateVariantsFromAttributes,
-} from "../../../../../utils/admin/products/product/productVariationUtils";
-import {
+  addOptionToAttribute,
   createProductOnlyOption,
   hasDuplicateOptionValue,
-  updateProductAttributeOption,
+  removeOptionFromAttribute,
+  updateOptionInAttribute,
 } from "../../../../../utils/admin/products/product/productAttributeOptionUtils";
+
 import { countVariantsUsingOption } from "../../../../../utils/admin/products/product/productAttributeVariantUtils";
 
-import { useProductAttributeOptions } from "../../../../../hooks/admin/queries/products/product-list/useProductAttributeOptions";
-import { PRODUCT_FORM_MODE } from "../../../../../constants/admin/products/productFormMode.constants";
-import RemoveAttributeOptionModal from "../form/RemoveAttributeOptionModal";
-import VariantsRegenerationWarning from "../form/VariantsRegenerationWarning";
+import { reconcileProductVariants } from "../../../../../utils/admin/products/product/productVariantReconciliationUtils";
 
+import { useProductAttributeOptions } from "../../../../../hooks/admin/queries/products/product-list/useProductAttributeOptions";
+
+import VariantRegenerationConfirmModal from "../form/VariantRegenerationConfirmModal";
+/**
+ * Product Attributes & Variations Step
+ *
+ * Used for both:
+ *
+ * - Create Product
+ * - Edit Product
+ *
+ * React Hook Form remains the source of truth.
+ */
 const ProductAttributesVariationsStep = ({
-  mode = PRODUCT_FORM_MODE.CREATE,
+  mode = "create",
   productId = null,
 }) => {
+  /**
+   * -------------------------------------------------------
+   * LOCAL UI STATE
+   * -------------------------------------------------------
+   */
+
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
+
+  /**
+   * This stores the proposed variant state after
+   * reconcileProductVariants().
+   *
+   * IMPORTANT:
+   * We do NOT apply it immediately.
+   *
+   * Phase 9.7.6.5 will show confirmation modal.
+   */
+  const [pendingVariantRegeneration, setPendingVariantRegeneration] =
+    useState(null);
+
+  const [isApplyingRegeneration, setIsApplyingRegeneration] = useState(false);
+  /**
+   * Used when user removes an option.
+   *
+   * We first calculate how many variants use that option,
+   * then show confirmation.
+   */
   const [pendingOptionRemoval, setPendingOptionRemoval] = useState(null);
+
+  /**
+   * -------------------------------------------------------
+   * RHF
+   * -------------------------------------------------------
+   */
 
   const {
     control,
     getValues,
     register,
     setValue,
+    trigger,
+    clearErrors,
+
     formState: { errors },
   } = useFormContext();
 
-  const isEditMode = mode === PRODUCT_FORM_MODE.EDIT;
-  const isCreateMode = mode === PRODUCT_FORM_MODE.CREATE;
+  const isEditMode = mode === "edit";
+
+  /**
+   * -------------------------------------------------------
+   * GLOBAL ATTRIBUTE OPTIONS
+   * -------------------------------------------------------
+   *
+   * These come from the Attribute master table.
+   *
+   * ProductAttributesCard creates a snapshot before adding
+   * them to the product.
+   */
 
   const {
     data: attributeData,
+
     isLoading: isAttributesLoading,
+
     isError: isAttributesError,
+
     refetch: refetchAttributes,
   } = useProductAttributeOptions();
 
   const existingAttributes = useMemo(() => {
     return attributeData?.options ?? [];
   }, [attributeData?.options]);
+
+  /**
+   * -------------------------------------------------------
+   * ATTRIBUTE FIELD ARRAY
+   * -------------------------------------------------------
+   */
+
   const {
     fields: attributeFields,
+
     append: appendAttribute,
+
     remove: removeAttribute,
-    update: updateAttribute,
-    replace: replaceAttributes,
   } = useFieldArray({
     control,
     name: "attributes",
 
-    // Prevent confusion with backend _id / variantId.
+    /**
+     * Keep RHF internal id separate from:
+     *
+     * attributeId
+     * _id
+     * id
+     */
     keyName: "formFieldId",
   });
+
+  /**
+   * -------------------------------------------------------
+   * VARIANT FIELD ARRAY
+   * -------------------------------------------------------
+   */
 
   const {
     fields: variantFields,
     append: appendVariant,
     remove: removeVariant,
-    update: updateVariant,
     replace: replaceVariants,
   } = useFieldArray({
     control,
@@ -82,9 +163,9 @@ const ProductAttributesVariationsStep = ({
   });
 
   /**
-   * ------------------------------------------------------
-   * Watched form values
-   * ------------------------------------------------------
+   * -------------------------------------------------------
+   * WATCH ATTRIBUTES
+   * -------------------------------------------------------
    */
 
   const watchedAttributes =
@@ -93,6 +174,12 @@ const ProductAttributesVariationsStep = ({
       name: "attributes",
     }) || [];
 
+  /**
+   * -------------------------------------------------------
+   * WATCH VARIANTS
+   * -------------------------------------------------------
+   */
+
   // Inside your component:
   const variantsValue = useWatch({
     control,
@@ -100,6 +187,12 @@ const ProductAttributesVariationsStep = ({
   });
 
   const watchedVariants = useMemo(() => variantsValue ?? [], [variantsValue]);
+
+  /**
+   * -------------------------------------------------------
+   * WATCH PRODUCT VALUES USED FOR NEW VARIANTS
+   * -------------------------------------------------------
+   */
 
   const sku =
     useWatch({
@@ -125,17 +218,17 @@ const ProductAttributesVariationsStep = ({
       name: "lowStockThreshold",
     }) || "";
 
-  const productName =
-    useWatch({
-      control,
-      name: "productName",
-    }) || "";
-
   const productImages =
     useWatch({
       control,
       name: "images",
     }) || [];
+
+  /**
+   * -------------------------------------------------------
+   * WATCH ATTRIBUTE / VARIANT SYNC STATE
+   * -------------------------------------------------------
+   */
 
   const attributesChanged =
     useWatch({
@@ -156,28 +249,34 @@ const ProductAttributesVariationsStep = ({
     }) || null;
 
   /**
-   * ------------------------------------------------------
-   * Edit state
-   * ------------------------------------------------------
+   * -------------------------------------------------------
+   * DERIVED STATE
+   * -------------------------------------------------------
    */
-
-  const hasPersistedVariants = useMemo(() => {
-    return watchedVariants.some(
-      (variant) => Boolean(variant?.variantId) || variant?.isExisting === true,
-    );
-  }, [watchedVariants]);
 
   const hasAttributes = watchedAttributes.length > 0;
 
   const hasVariants = watchedVariants.length > 0;
 
+  const hasPersistedVariants = useMemo(() => {
+    return watchedVariants.some((variant) => {
+      return Boolean(variant?.variantId) || variant?.isExisting === true;
+    });
+  }, [watchedVariants]);
+
+  const selectedVariant =
+    watchedVariants[selectedVariantIndex] || watchedVariants[0] || null;
+
   /**
-   * If a variant is deleted or variants are regenerated,
-   * make sure selectedVariantIndex never points outside array.
+   * -------------------------------------------------------
+   * KEEP SELECTED VARIANT INDEX VALID
+   * -------------------------------------------------------
    */
+
   useEffect(() => {
     if (!watchedVariants.length) {
       setSelectedVariantIndex(0);
+
       return;
     }
 
@@ -187,117 +286,584 @@ const ProductAttributesVariationsStep = ({
   }, [watchedVariants.length, selectedVariantIndex]);
 
   /**
-   * When opening another product in edit mode,
-   * start preview from the first variant.
+   * Different edit product opened.
+   *
+   * Reset UI-only state.
    */
   useEffect(() => {
     setSelectedVariantIndex(0);
+
+    setPendingVariantRegeneration(null);
+
+    setPendingOptionRemoval(null);
   }, [productId, mode]);
 
-  const selectedVariant =
-    watchedVariants[selectedVariantIndex] || watchedVariants[0] || null;
-
   /**
-   * ------------------------------------------------------
-   * Common form update helper
-   * ------------------------------------------------------
+   * -------------------------------------------------------
+   * MARK VARIANTS AS STALE
+   * -------------------------------------------------------
+   *
+   * Call this whenever ATTRIBUTE STRUCTURE changes.
+   *
+   * Do NOT call for:
+   *
+   * - variant SKU change
+   * - price change
+   * - stock change
+   * - variant image change
+   * - status change
    */
 
-  const setProductFormValue = (fieldName, value) => {
-    setValue(fieldName, value, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true,
+  const markVariantsNeedRegeneration = (reason) => {
+    /**
+     * Any previous regeneration preview is now stale.
+     */
+    setPendingVariantRegeneration(null);
+
+    setValue("attributesChanged", true, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+
+    setValue("variantsNeedRegeneration", true, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+
+    setValue("variantRegenerationReason", reason || null, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+  };
+
+  const markVariantsSynchronized = () => {
+    setValue("attributesChanged", false, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+
+    setValue("variantsNeedRegeneration", false, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+
+    setValue("variantRegenerationReason", null, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
     });
   };
 
   /**
-   * ------------------------------------------------------
-   * Generate variants
-   * ------------------------------------------------------
+   * =======================================================
+   * ATTRIBUTE HANDLERS
+   * =======================================================
+   */
+
+  /**
+   * -------------------------------------------------------
+   * ADD EXISTING ATTRIBUTE SNAPSHOTS
+   * -------------------------------------------------------
+   *
+   * ProductAttributesCard already converts backend attribute
+   * into product snapshot using createProductAttributeSnapshot().
+   */
+
+  const handleAddProductAttributes = (newAttributes = []) => {
+    if (!newAttributes.length) {
+      return false;
+    }
+
+    appendAttribute(newAttributes);
+
+    markVariantsNeedRegeneration("attribute-added");
+
+    return true;
+  };
+
+  /**
+   * -------------------------------------------------------
+   * REMOVE FULL ATTRIBUTE
+   * -------------------------------------------------------
+   */
+
+  const handleRemoveProductAttribute = (attributeIndex) => {
+    const currentAttributes = getValues("attributes") || [];
+
+    const attribute = currentAttributes[attributeIndex];
+
+    if (!attribute) {
+      return;
+    }
+
+    removeAttribute(attributeIndex);
+
+    markVariantsNeedRegeneration("attribute-removed");
+
+    toast(
+      `${attribute.name} removed. Regenerate variants to synchronize combinations.`,
+      {
+        icon: "⚠️",
+      },
+    );
+  };
+
+  /**
+   * -------------------------------------------------------
+   * ADD PRODUCT-ONLY OPTION
+   * -------------------------------------------------------
+   */
+
+  const handleAddAttributeOption = ({
+    attributeIndex,
+    label,
+    colorCode = null,
+  }) => {
+    const currentAttributes = getValues("attributes") || [];
+
+    const currentAttribute = currentAttributes[attributeIndex];
+
+    if (!currentAttribute) {
+      toast.error("Attribute not found");
+
+      return false;
+    }
+
+    const cleanLabel = String(label || "").trim();
+
+    if (!cleanLabel) {
+      toast.error("Option label is required");
+
+      return false;
+    }
+
+    const currentOptions = currentAttribute.options || [];
+
+    /**
+     * For a new custom option, its value is generated
+     * from label, so duplicate-value check is correct.
+     */
+    if (hasDuplicateOptionValue(currentOptions, cleanLabel)) {
+      toast.error("This option already exists");
+
+      return false;
+    }
+
+    const newOption = createProductOnlyOption({
+      label: cleanLabel,
+
+      colorCode: currentAttribute.type === "switch" ? colorCode : null,
+    });
+
+    const updatedAttributes = addOptionToAttribute({
+      attributes: currentAttributes,
+
+      attributeIndex,
+
+      option: newOption,
+    });
+
+    const nextOptions = updatedAttributes[attributeIndex]?.options || [];
+
+    /**
+     * Update only this nested options array.
+     *
+     * Do NOT clear variants.
+     */
+    setValue(`attributes.${attributeIndex}.options`, nextOptions, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+
+    markVariantsNeedRegeneration("option-added");
+
+    toast.success(
+      `${cleanLabel} added. Regenerate variants to create the new combinations.`,
+    );
+
+    return true;
+  };
+
+  /**
+   * -------------------------------------------------------
+   * EDIT PRODUCT ATTRIBUTE OPTION
+   * -------------------------------------------------------
    *
    * IMPORTANT:
-   * In edit mode we DO NOT replace persisted variants yet.
    *
-   * Phase 9.7.6.4 will add:
-   * reconcileProductVariants()
+   * We allow changing:
    *
-   * which preserves:
-   * - variantId
-   * - SKU
-   * - price
-   * - stock
-   * - status
-   * - image
+   * label
+   * colorCode
+   *
+   * We KEEP option.value unchanged.
+   *
+   * That is what allows existing variants to keep the same
+   * optionSignature.
+   */
+
+  const handleEditAttributeOption = ({
+    attributeIndex,
+    optionId,
+    label,
+    colorCode,
+  }) => {
+    const currentAttributes = getValues("attributes") || [];
+
+    const currentAttribute = currentAttributes[attributeIndex];
+
+    if (!currentAttribute) {
+      toast.error("Attribute not found");
+
+      return false;
+    }
+
+    const currentOptions = currentAttribute.options || [];
+
+    const oldOption = currentOptions.find((option) => {
+      const currentOptionId = option.optionId || option.value;
+
+      return String(currentOptionId) === String(optionId);
+    });
+
+    if (!oldOption) {
+      toast.error("Option not found");
+
+      return false;
+    }
+
+    const cleanLabel = String(label || "").trim();
+
+    if (!cleanLabel) {
+      toast.error("Option label is required");
+
+      return false;
+    }
+
+    /**
+     * We check duplicate LABEL here.
+     *
+     * We do not generate a new option.value during edit.
+     */
+    const duplicateLabel = currentOptions.some((option) => {
+      const currentOptionId = option.optionId || option.value;
+
+      if (String(currentOptionId) === String(optionId)) {
+        return false;
+      }
+
+      return (
+        String(option.label || "")
+          .trim()
+          .toLowerCase() === cleanLabel.toLowerCase()
+      );
+    });
+
+    if (duplicateLabel) {
+      toast.error("Another option already uses this label");
+
+      return false;
+    }
+
+    /**
+     * updateOptionInAttribute() identifies old option
+     * using its stable value.
+     */
+    const updatedAttributes = updateOptionInAttribute({
+      attributes: currentAttributes,
+
+      attributeIndex,
+
+      optionValue: oldOption.value,
+
+      updatedOption: {
+        ...oldOption,
+
+        /**
+         * Editable snapshot values
+         */
+        label: cleanLabel,
+
+        colorCode:
+          currentAttribute.type === "switch"
+            ? colorCode || oldOption.colorCode || null
+            : oldOption.colorCode || null,
+
+        /**
+         * CRITICAL:
+         * Never change this just because label changed.
+         */
+        value: oldOption.value,
+
+        optionId: oldOption.optionId || oldOption.value,
+
+        /**
+         * Preserve original custom state.
+         */
+        isCustom: Boolean(oldOption.isCustom),
+      },
+    });
+
+    const nextOptions = updatedAttributes[attributeIndex]?.options || [];
+
+    setValue(`attributes.${attributeIndex}.options`, nextOptions, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+
+    /**
+     * Variant combination identity may remain the same,
+     * but variant snapshot needs refreshing:
+     *
+     * label
+     * colorCode
+     * display name
+     */
+    markVariantsNeedRegeneration("option-updated");
+
+    toast(
+      "Option updated. Regenerate variants to synchronize variant snapshots.",
+      {
+        icon: "ℹ️",
+      },
+    );
+
+    return true;
+  };
+
+  /**
+   * -------------------------------------------------------
+   * REQUEST REMOVE OPTION
+   * -------------------------------------------------------
+   */
+
+  const handleRequestRemoveAttributeOption = ({
+    attributeIndex,
+    optionIndex,
+  }) => {
+    const currentAttributes = getValues("attributes") || [];
+
+    const currentVariants = getValues("variants") || [];
+
+    const attribute = currentAttributes[attributeIndex];
+
+    const option = attribute?.options?.[optionIndex];
+
+    if (!attribute || !option) {
+      toast.error("Option not found");
+
+      return;
+    }
+
+    if (attribute.options.length <= 1) {
+      toast.error(
+        "At least one option is required. Remove the full attribute instead.",
+      );
+
+      return;
+    }
+
+    const affectedVariantsCount = countVariantsUsingOption({
+      variants: currentVariants,
+
+      attribute,
+
+      option,
+    });
+
+    setPendingOptionRemoval({
+      attributeIndex,
+      optionIndex,
+
+      attributeName: attribute.name,
+
+      option,
+
+      affectedVariantsCount,
+    });
+  };
+
+  /**
+   * -------------------------------------------------------
+   * CONFIRM REMOVE OPTION
+   * -------------------------------------------------------
+   */
+
+  const handleConfirmRemoveAttributeOption = () => {
+    if (!pendingOptionRemoval) {
+      return;
+    }
+
+    const { attributeIndex, option, affectedVariantsCount } =
+      pendingOptionRemoval;
+
+    const currentAttributes = getValues("attributes") || [];
+
+    const currentAttribute = currentAttributes[attributeIndex];
+
+    if (!currentAttribute) {
+      setPendingOptionRemoval(null);
+
+      return;
+    }
+
+    const updatedAttributes = removeOptionFromAttribute({
+      attributes: currentAttributes,
+
+      attributeIndex,
+
+      /**
+       * Your existing helper removes by option.value.
+       */
+      optionValue: option.value,
+    });
+
+    const nextOptions = updatedAttributes[attributeIndex]?.options || [];
+
+    /**
+     * Important:
+     *
+     * We remove the ATTRIBUTE OPTION only.
+     *
+     * We DO NOT remove old variants yet.
+     */
+    setValue(`attributes.${attributeIndex}.options`, nextOptions, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+
+    markVariantsNeedRegeneration("option-removed");
+
+    setPendingOptionRemoval(null);
+
+    if (affectedVariantsCount > 0) {
+      toast(
+        `${option.label} removed. ${affectedVariantsCount} variant${
+          affectedVariantsCount === 1 ? "" : "s"
+        } will be affected during regeneration.`,
+        {
+          icon: "⚠️",
+        },
+      );
+
+      return;
+    }
+
+    toast.success(`${option.label} removed`);
+  };
+
+  const handleCancelRemoveAttributeOption = () => {
+    setPendingOptionRemoval(null);
+  };
+
+  /**
+   * =======================================================
+   * VARIANT RECONCILIATION
+   * =======================================================
    */
 
   const handleGenerateVariants = () => {
-  if (!watchedAttributes.length) {
-    toast.error("Please select at least one attribute");
-    return;
-  }
+    if (!watchedAttributes.length) {
+      toast.error("Please select at least one attribute");
 
-  /**
-   * EDIT MODE
-   *
-   * We cannot safely regenerate yet because
-   * Phase 9.7.6.4 will preserve existing variant data.
-   */
-  if (isEditMode && hasPersistedVariants) {
-    toast(
-      "Safe regeneration of existing variants will preserve SKU, price, stock and images.",
-      {
-        icon: "⚠️",
-      }
-    );
+      return;
+    }
 
-    return;
-  }
-
-  const generatedVariants =
-    generateVariantsFromAttributes({
+    /**
+     * This function is SAFE for:
+     *
+     * Create mode
+     * Edit mode
+     *
+     * It does not mutate RHF values.
+     */
+    const result = reconcileProductVariants({
       attributes: watchedAttributes,
+
+      existingVariants: watchedVariants,
+
       baseSku: sku,
+
       sellingPrice,
+
       stockQuantity,
+
       productImages,
     });
 
-  const normalizedVariants =
-    generatedVariants.map(
-      (variant, index) => ({
-        ...variant,
+    if (!result.success) {
+      toast.error(result.error || "Unable to regenerate variants");
 
-        variantId:
-          variant.variantId || null,
+      return;
+    }
 
-        isExisting: false,
-        isNew: true,
+    /**
+     * IMPORTANT
+     * --------------------------------------------
+     *
+     * DO NOT:
+     *
+     * replaceVariants(result.nextVariants)
+     *
+     * here.
+     *
+     * We only prepare the proposed result.
+     *
+     * Phase 9.7.6.5 will show confirmation first.
+     */
+    setPendingVariantRegeneration(result);
 
-        sortOrder: index + 1,
-      })
+    if (result.warnings?.length) {
+      toast(result.warnings[0], {
+        icon: "⚠️",
+      });
+    }
+
+    /**
+     * Temporary useful feedback until
+     * Phase 9.7.6.5 modal is added.
+     */
+    toast(
+      `${result.report.preserved} preserved, ${result.report.created} new, ${result.report.removed} removed`,
+      {
+        icon: "🔄",
+      },
     );
+  };
 
-  replaceVariants(normalizedVariants);
-
-  setSelectedVariantIndex(0);
-
-  // Attributes and generated variants now match.
-  markVariantsSynchronized();
-
-  toast.success(
-    `${normalizedVariants.length} variants generated successfully`
-  );
-};
   /**
-   * ------------------------------------------------------
-   * Add manual variant
-   * ------------------------------------------------------
+   * =======================================================
+   * MANUAL VARIANT
+   * =======================================================
    */
 
   const handleAddManualVariantQuick = () => {
     if (!watchedAttributes.length) {
       toast.error("Please select at least one attribute");
+
+      return;
+    }
+
+    /**
+     * If attributes have changed and variants are stale,
+     * regenerate first.
+     */
+    if (variantsNeedRegeneration && watchedVariants.length > 0) {
+      toast(
+        "Regenerate existing variants before adding another manual variant.",
+        {
+          icon: "⚠️",
+        },
+      );
+
       return;
     }
 
@@ -306,11 +872,15 @@ const ProductAttributesVariationsStep = ({
     watchedAttributes.forEach((attribute) => {
       const firstOption = attribute.options?.[0];
 
-      if (!firstOption) return;
+      if (!firstOption) {
+        return;
+      }
 
-      const attributeKey = attribute.slug || attribute.name;
-
-      selectedOptions[attributeKey] = {
+      /**
+       * Keep same general structure your
+       * createManualVariant utility already uses.
+       */
+      selectedOptions[attribute.name] = {
         attributeId: attribute.attributeId || null,
 
         attributeName: attribute.name,
@@ -335,15 +905,18 @@ const ProductAttributesVariationsStep = ({
       return;
     }
 
-    const manualVariant = createManualVariant({
+    const variant = createManualVariant({
       selectedOptions,
+
       baseSku: sku,
-      price: sellingPrice || "",
+
+      price: sellingPrice || "999.00",
+
       stock: "0",
     });
 
     const nextVariant = {
-      ...manualVariant,
+      ...variant,
 
       variantId: null,
 
@@ -359,9 +932,9 @@ const ProductAttributesVariationsStep = ({
   };
 
   /**
-   * ------------------------------------------------------
-   * Remove variant
-   * ------------------------------------------------------
+   * =======================================================
+   * REMOVE VARIANT
+   * =======================================================
    */
 
   const handleRemoveVariant = (variantIndex) => {
@@ -385,9 +958,9 @@ const ProductAttributesVariationsStep = ({
   };
 
   /**
-   * ------------------------------------------------------
-   * Select variant
-   * ------------------------------------------------------
+   * =======================================================
+   * SELECT VARIANT
+   * =======================================================
    */
 
   const handleSelectVariant = (variantIndex) => {
@@ -398,319 +971,222 @@ const ProductAttributesVariationsStep = ({
     setSelectedVariantIndex(variantIndex);
   };
 
-  const handleAddAttributeOption = ({
-    attributeIndex,
-    label,
-    colorCode = null,
-  }) => {
-    const attributes = getValues("attributes") || [];
-
-    const attribute = attributes[attributeIndex];
-
-    if (!attribute) {
-      toast.error("Attribute not found");
-      return false;
+  const handleCancelVariantRegeneration = () => {
+    if (isApplyingRegeneration) {
+      return;
     }
 
-    const cleanLabel = String(label || "").trim();
-
-    if (!cleanLabel) {
-      toast.error("Option label is required");
-      return false;
-    }
-
-    const currentOptions = attribute.options || [];
-
-    if (hasDuplicateOptionValue(currentOptions, cleanLabel)) {
-      toast.error("This option already exists");
-
-      return false;
-    }
-
-    const newOption = createProductOnlyOption({
-      label: cleanLabel,
-      colorCode,
-    });
-
-    const nextOptions = [...currentOptions, newOption];
-
-    setValue(`attributes.${attributeIndex}.options`, nextOptions, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true,
-    });
-
-    markVariantsNeedRegeneration("option-added");
-
-    toast.success(
-      `${cleanLabel} added. Regenerate variants to apply the new combination.`,
-    );
-
-    return true;
+    setPendingVariantRegeneration(null);
   };
-  const handleEditAttributeOption = ({
-    attributeIndex,
-    optionId,
-    label,
-    colorCode,
-  }) => {
-    const attributes = getValues("attributes") || [];
 
-    const attribute = attributes[attributeIndex];
-
-    if (!attribute) {
-      toast.error("Attribute not found");
-      return false;
+  const handleApplyVariantRegeneration = async () => {
+    if (!pendingVariantRegeneration || isApplyingRegeneration) {
+      return;
     }
 
-    const options = attribute.options || [];
+    try {
+      setIsApplyingRegeneration(true);
 
-    const currentOption = options.find(
-      (option) => option.optionId === optionId,
-    );
+      /**
+       * Re-read latest form state.
+       *
+       * This protects against applying an old preview
+       * if something changed unexpectedly.
+       */
+      const currentValues = getValues();
 
-    if (!currentOption) {
-      toast.error("Option not found");
-      return false;
-    }
+      const latestResult = reconcileProductVariants({
+        attributes: currentValues.attributes || [],
 
-    const cleanLabel = String(label || "").trim();
+        existingVariants: currentValues.variants || [],
 
-    if (!cleanLabel) {
-      toast.error("Option label is required");
+        baseSku: currentValues.sku || "",
 
-      return false;
-    }
+        sellingPrice: currentValues.sellingPrice || "",
 
-    /**
-     * Don't compare by new label/value for an
-     * existing persisted option because its
-     * value intentionally remains stable.
-     *
-     * Here duplicate labels are checked separately.
-     */
-    const duplicateLabel = options.some((option) => {
-      if (option.optionId === optionId) {
-        return false;
+        stockQuantity: currentValues.stockQuantity || "0",
+
+        productImages: currentValues.images || [],
+      });
+
+      if (!latestResult.success) {
+        toast.error(
+          latestResult.error || "Unable to apply variant regeneration",
+        );
+
+        return;
       }
 
-      return (
-        String(option.label || "")
-          .trim()
-          .toLowerCase() === cleanLabel.toLowerCase()
+      /**
+       * Apply entire reconciled variant collection.
+       */
+      replaceVariants(latestResult.nextVariants);
+
+      /**
+       * Attributes and variants now match.
+       */
+      markVariantsSynchronized();
+
+      /**
+       * Remove previous validation errors.
+       * trigger() below will recalculate them.
+       */
+      clearErrors("variants");
+
+      setSelectedVariantIndex(0);
+
+      setPendingVariantRegeneration(null);
+
+      /**
+       * Validate updated arrays.
+       */
+      await trigger(["attributes", "variants"]);
+
+      const { preserved, created, removed } = latestResult.report;
+
+      toast.success(
+        `Variants regenerated: ${preserved} preserved, ${created} new, ${removed} removed`,
       );
-    });
+    } catch (error) {
+      console.error("Variant regeneration apply failed:", error);
 
-    if (duplicateLabel) {
-      toast.error("Another option already uses this label");
-
-      return false;
+      toast.error("Failed to apply variant regeneration");
+    } finally {
+      setIsApplyingRegeneration(false);
     }
-
-    const nextOptions = updateProductAttributeOption({
-      options,
-      optionId,
-      label: cleanLabel,
-      colorCode,
-    });
-
-    setValue(`attributes.${attributeIndex}.options`, nextOptions, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true,
-    });
-
-    toast.success("Option updated");
-
-    return true;
   };
 
-  const handleRequestRemoveAttributeOption = ({
-    attributeIndex,
-    optionIndex,
-  }) => {
-    const attributes = getValues("attributes") || [];
-
-    const variants = getValues("variants") || [];
-
-    const attribute = attributes[attributeIndex];
-
-    const option = attribute?.options?.[optionIndex];
-
-    if (!attribute || !option) {
-      toast.error("Option not found");
-      return;
-    }
-
-    if (attribute.options.length <= 1) {
-      toast.error(
-        "An attribute must contain at least one option. Remove the entire attribute instead.",
-      );
-
-      return;
-    }
-
-    const affectedVariantsCount = countVariantsUsingOption({
-      variants,
-      attribute,
-      option,
-    });
-
-    setPendingOptionRemoval({
-      attributeIndex,
-      optionIndex,
-
-      attributeName: attribute.name,
-
-      option,
-
-      affectedVariantsCount,
-    });
-  };
-  const handleConfirmRemoveAttributeOption = () => {
-    if (!pendingOptionRemoval) {
-      return;
-    }
-
-    const { attributeIndex, optionIndex, option, affectedVariantsCount } =
-      pendingOptionRemoval;
-
-    const attributes = getValues("attributes") || [];
-
-    const attribute = attributes[attributeIndex];
-
-    if (!attribute) {
-      setPendingOptionRemoval(null);
-      return;
-    }
-
-    const nextOptions = (attribute.options || []).filter(
-      (_, index) => index !== optionIndex,
-    );
-
-    setValue(`attributes.${attributeIndex}.options`, nextOptions, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true,
-    });
-
-    setPendingOptionRemoval(null);
-
-    if (affectedVariantsCount > 0) {
-      toast(
-        `${option.label} removed. ${affectedVariantsCount} variant${
-          affectedVariantsCount === 1 ? "" : "s"
-        } will need regeneration.`,
-        {
-          icon: "⚠️",
-        },
-      );
-
-      return;
-    }
-
-    toast.success(`${option.label} removed`);
-  };
-  const handleCancelRemoveAttributeOption = () => {
-    setPendingOptionRemoval(null);
-  };
-
-  const markVariantsNeedRegeneration = (reason) => {
-    setValue("attributesChanged", true, {
-      shouldDirty: false,
-      shouldValidate: false,
-    });
-
-    setValue("variantsNeedRegeneration", true, {
-      shouldDirty: false,
-      shouldValidate: false,
-    });
-
-    setValue("variantRegenerationReason", reason || null, {
-      shouldDirty: false,
-      shouldValidate: false,
-    });
-  };
-
-  const markVariantsSynchronized = () => {
-    setValue("attributesChanged", false, {
-      shouldDirty: false,
-      shouldValidate: false,
-    });
-
-    setValue("variantsNeedRegeneration", false, {
-      shouldDirty: false,
-      shouldValidate: false,
-    });
-
-    setValue("variantRegenerationReason", null, {
-      shouldDirty: false,
-      shouldValidate: false,
-    });
-  };
-
-  const handleAddProductAttributes = (newAttributes = []) => {
-    if (!newAttributes.length) return;
-
-    appendAttribute(newAttributes);
-
-    markVariantsNeedRegeneration("attribute-added");
-  };
-  const handleRemoveProductAttribute = (attributeIndex) => {
-    const currentAttributes = getValues("attributes") || [];
-
-    const attribute = currentAttributes[attributeIndex];
-
-    if (!attribute) {
-      return;
-    }
-
-    removeAttribute(attributeIndex);
-
-    markVariantsNeedRegeneration("attribute-removed");
-
-    toast(
-      `${attribute.name} removed. Regenerate variants to synchronize combinations.`,
-      {
-        icon: "⚠️",
-      },
-    );
-  };
   return (
     <>
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        {/* ========================================= */}
         {/* LEFT COLUMN */}
+        {/* ========================================= */}
+
         <div className="space-y-6">
           <ProductAttributesCard
+            mode={mode}
+            isEditMode={isEditMode}
             attributeFields={attributeFields}
             attributes={watchedAttributes}
-            appendAttribute={appendAttribute}
+            /**
+             * Attribute master selection
+             */
             onAddAttributes={handleAddProductAttributes}
             onRemoveAttribute={handleRemoveProductAttribute}
             existingAttributes={existingAttributes}
             isAttributesLoading={isAttributesLoading}
             isAttributesError={isAttributesError}
             refetchAttributes={refetchAttributes}
+            /**
+             * Product snapshot option handlers
+             */
             onAddOption={handleAddAttributeOption}
             onEditOption={handleEditAttributeOption}
             onRemoveOption={handleRequestRemoveAttributeOption}
           />
+
+          {/* ======================================= */}
+          {/* STALE VARIANT WARNING */}
+          {/* ======================================= */}
 
           <VariantsRegenerationWarning
             visible={variantsNeedRegeneration}
             reason={variantRegenerationReason}
             onRegenerate={handleGenerateVariants}
           />
+
+          {/* ======================================= */}
+          {/* TEMPORARY RECONCILIATION PREVIEW */}
+          {/* Phase 9.7.6.5 will replace this with */}
+          {/* the confirmation modal. */}
+          {/* ======================================= */}
+
+          {/* {pendingVariantRegeneration && (
+            <div className="rounded-2xl border border-info/20 bg-info/5 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-900">
+                    Variant regeneration preview ready
+                  </h4>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    Existing variants have not been changed yet.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-xs rounded-lg"
+                  onClick={() => setPendingVariantRegeneration(null)}
+                >
+                  Dismiss
+                </button>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="rounded-xl bg-white p-3">
+                  <p className="text-xs text-slate-500">Final</p>
+
+                  <p className="mt-1 text-lg font-bold">
+                    {pendingVariantRegeneration.report.total}
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-white p-3">
+                  <p className="text-xs text-slate-500">Preserved</p>
+
+                  <p className="mt-1 text-lg font-bold text-success">
+                    {pendingVariantRegeneration.report.preserved}
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-white p-3">
+                  <p className="text-xs text-slate-500">New</p>
+
+                  <p className="mt-1 text-lg font-bold text-info">
+                    {pendingVariantRegeneration.report.created}
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-white p-3">
+                  <p className="text-xs text-slate-500">Removed</p>
+
+                  <p className="mt-1 text-lg font-bold text-error">
+                    {pendingVariantRegeneration.report.removed}
+                  </p>
+                </div>
+              </div>
+
+              <p className="mt-3 text-xs text-slate-500">
+                The next phase will add Apply Regeneration and Cancel
+                confirmation.
+              </p>
+            </div>
+          )} */}
+
+          {/* ======================================= */}
+          {/* VARIANT GENERATION */}
+          {/* ======================================= */}
+
           <VariantCreationCard
             mode={mode}
             isEditMode={isEditMode}
             attributes={watchedAttributes}
             variants={watchedVariants}
             hasPersistedVariants={hasPersistedVariants}
-            replaceVariants={replaceVariants}
-            getValues={getValues}
+            /**
+             * Child only calls this.
+             *
+             * It must NOT generate or replace
+             * variants internally anymore.
+             */
             onGenerateVariants={handleGenerateVariants}
           />
+
+          {/* ======================================= */}
+          {/* VARIANT TABLE */}
+          {/* ======================================= */}
 
           <ProductVariantsCard
             mode={mode}
@@ -720,7 +1196,6 @@ const ProductAttributesVariationsStep = ({
             register={register}
             control={control}
             setValue={setValue}
-            updateVariant={updateVariant}
             remove={handleRemoveVariant}
             errors={errors}
             lowStockThreshold={lowStockThreshold}
@@ -729,7 +1204,10 @@ const ProductAttributesVariationsStep = ({
           />
         </div>
 
+        {/* ========================================= */}
         {/* RIGHT COLUMN */}
+        {/* ========================================= */}
+
         <aside className="space-y-6 xl:sticky xl:top-4 xl:self-start">
           <AttributesSummaryCard attributes={watchedAttributes} />
 
@@ -748,11 +1226,31 @@ const ProductAttributesVariationsStep = ({
           <AttributeVariationTipsCard />
         </aside>
       </div>
+
+      {/* =========================================== */}
+      {/* REMOVE OPTION CONFIRMATION */}
+      {/* =========================================== */}
+
       <RemoveAttributeOptionModal
-        open={Boolean(pendingOptionRemoval)}
-        data={pendingOptionRemoval}
-        onCancel={handleCancelRemoveAttributeOption}
-        onConfirm={handleConfirmRemoveAttributeOption}
+      open={Boolean(
+        pendingOptionRemoval
+      )}
+      data={
+        pendingOptionRemoval
+      }
+      onCancel={
+        handleCancelRemoveAttributeOption
+      }
+      onConfirm={
+        handleConfirmRemoveAttributeOption
+      }
+    />
+      <VariantRegenerationConfirmModal
+        open={Boolean(pendingVariantRegeneration)}
+        data={pendingVariantRegeneration}
+        isApplying={isApplyingRegeneration}
+        onCancel={handleCancelVariantRegeneration}
+        onConfirm={handleApplyVariantRegeneration}
       />
     </>
   );
