@@ -240,6 +240,14 @@ export const mapAdminProductDetailToFormValues = (product) => {
     attributes: mapAttributesToForm(product.attributes || []),
     variants: mapVariantsToForm(product.variants || []),
 
+    // Existing backend variants are synchronized when loaded.
+    attributesChanged: false,
+    variantsNeedRegeneration: false,
+    variantRegenerationReason: null,
+
+    editProductId: product.id || product._id || null,
+    isEditMode: true,
+
     // Step 5 — Additional Details
     productTypeDetail: additional.productTypeDetail || "",
     collection: additional.productCollection || additional.collection || "",
@@ -258,8 +266,5 @@ export const mapAdminProductDetailToFormValues = (product) => {
     scheduleDate: formatDateForInput(publishing.scheduledAt),
     scheduleTime: formatTimeForInput(publishing.scheduledAt),
 
-    // Edit metadata
-    editProductId: product.id || product._id || null,
-    isEditMode: true,
   };
 };

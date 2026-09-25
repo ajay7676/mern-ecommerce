@@ -25,6 +25,7 @@ import { countVariantsUsingOption } from "../../../../../utils/admin/products/pr
 import { useProductAttributeOptions } from "../../../../../hooks/admin/queries/products/product-list/useProductAttributeOptions";
 import { PRODUCT_FORM_MODE } from "../../../../../constants/admin/products/productFormMode.constants";
 import RemoveAttributeOptionModal from "../form/RemoveAttributeOptionModal";
+import VariantsRegenerationWarning from "../form/VariantsRegenerationWarning";
 
 const ProductAttributesVariationsStep = ({
   mode = PRODUCT_FORM_MODE.CREATE,
@@ -136,6 +137,24 @@ const ProductAttributesVariationsStep = ({
       name: "images",
     }) || [];
 
+  const attributesChanged =
+    useWatch({
+      control,
+      name: "attributesChanged",
+    }) ?? false;
+
+  const variantsNeedRegeneration =
+    useWatch({
+      control,
+      name: "variantsNeedRegeneration",
+    }) ?? false;
+
+  const variantRegenerationReason =
+    useWatch({
+      control,
+      name: "variantRegenerationReason",
+    }) || null;
+
   /**
    * ------------------------------------------------------
    * Edit state
@@ -213,23 +232,30 @@ const ProductAttributesVariationsStep = ({
    */
 
   const handleGenerateVariants = () => {
-    if (!watchedAttributes.length) {
-      toast.error("Please select at least one attribute");
-      return;
-    }
+  if (!watchedAttributes.length) {
+    toast.error("Please select at least one attribute");
+    return;
+  }
 
-    if (isEditMode && hasPersistedVariants) {
-      toast(
-        "Existing variants cannot be replaced directly. Use safe regeneration.",
-        {
-          icon: "⚠️",
-        },
-      );
+  /**
+   * EDIT MODE
+   *
+   * We cannot safely regenerate yet because
+   * Phase 9.7.6.4 will preserve existing variant data.
+   */
+  if (isEditMode && hasPersistedVariants) {
+    toast(
+      "Safe regeneration of existing variants will preserve SKU, price, stock and images.",
+      {
+        icon: "⚠️",
+      }
+    );
 
-      return;
-    }
+    return;
+  }
 
-    const generatedVariants = generateVariantsFromAttributes({
+  const generatedVariants =
+    generateVariantsFromAttributes({
       attributes: watchedAttributes,
       baseSku: sku,
       sellingPrice,
@@ -237,22 +263,32 @@ const ProductAttributesVariationsStep = ({
       productImages,
     });
 
-    const normalizedVariants = generatedVariants.map((variant, index) => ({
-      ...variant,
+  const normalizedVariants =
+    generatedVariants.map(
+      (variant, index) => ({
+        ...variant,
 
-      variantId: variant.variantId || null,
+        variantId:
+          variant.variantId || null,
 
-      isExisting: false,
-      isNew: true,
+        isExisting: false,
+        isNew: true,
 
-      sortOrder: index + 1,
-    }));
+        sortOrder: index + 1,
+      })
+    );
 
-    replaceVariants(normalizedVariants);
+  replaceVariants(normalizedVariants);
 
-    setSelectedVariantIndex(0);
-  };
+  setSelectedVariantIndex(0);
 
+  // Attributes and generated variants now match.
+  markVariantsSynchronized();
+
+  toast.success(
+    `${normalizedVariants.length} variants generated successfully`
+  );
+};
   /**
    * ------------------------------------------------------
    * Add manual variant
@@ -404,7 +440,11 @@ const ProductAttributesVariationsStep = ({
       shouldValidate: true,
     });
 
-    toast.success(`${cleanLabel} added to ${attribute.name}`);
+    markVariantsNeedRegeneration("option-added");
+
+    toast.success(
+      `${cleanLabel} added. Regenerate variants to apply the new combination.`,
+    );
 
     return true;
   };
@@ -574,19 +614,79 @@ const ProductAttributesVariationsStep = ({
   const handleCancelRemoveAttributeOption = () => {
     setPendingOptionRemoval(null);
   };
+
+  const markVariantsNeedRegeneration = (reason) => {
+    setValue("attributesChanged", true, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+
+    setValue("variantsNeedRegeneration", true, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+
+    setValue("variantRegenerationReason", reason || null, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+  };
+
+  const markVariantsSynchronized = () => {
+    setValue("attributesChanged", false, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+
+    setValue("variantsNeedRegeneration", false, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+
+    setValue("variantRegenerationReason", null, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+  };
+
+  const handleAddProductAttributes = (newAttributes = []) => {
+    if (!newAttributes.length) return;
+
+    appendAttribute(newAttributes);
+
+    markVariantsNeedRegeneration("attribute-added");
+  };
+  const handleRemoveProductAttribute = (attributeIndex) => {
+    const currentAttributes = getValues("attributes") || [];
+
+    const attribute = currentAttributes[attributeIndex];
+
+    if (!attribute) {
+      return;
+    }
+
+    removeAttribute(attributeIndex);
+
+    markVariantsNeedRegeneration("attribute-removed");
+
+    toast(
+      `${attribute.name} removed. Regenerate variants to synchronize combinations.`,
+      {
+        icon: "⚠️",
+      },
+    );
+  };
   return (
     <>
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* LEFT COLUMN */}
         <div className="space-y-6">
           <ProductAttributesCard
-            mode={mode}
-            isEditMode={isEditMode}
             attributeFields={attributeFields}
             attributes={watchedAttributes}
             appendAttribute={appendAttribute}
-            updateAttribute={updateAttribute}
-            removeAttribute={removeAttribute}
+            onAddAttributes={handleAddProductAttributes}
+            onRemoveAttribute={handleRemoveProductAttribute}
             existingAttributes={existingAttributes}
             isAttributesLoading={isAttributesLoading}
             isAttributesError={isAttributesError}
@@ -594,6 +694,12 @@ const ProductAttributesVariationsStep = ({
             onAddOption={handleAddAttributeOption}
             onEditOption={handleEditAttributeOption}
             onRemoveOption={handleRequestRemoveAttributeOption}
+          />
+
+          <VariantsRegenerationWarning
+            visible={variantsNeedRegeneration}
+            reason={variantRegenerationReason}
+            onRegenerate={handleGenerateVariants}
           />
           <VariantCreationCard
             mode={mode}

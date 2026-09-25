@@ -98,6 +98,8 @@ const customFieldSchema = z.object({
     .max(250, "Field value cannot exceed 250 characters"),
 });
 
+
+
 export const addProductSchema = z
   .object({
     productName: z
@@ -223,7 +225,15 @@ export const addProductSchema = z
     variants: z
       .array(productVariantSchema)
       .min(1, "Please create at least one variant"),
+    attributesChanged: z.boolean().optional().default(false),
 
+    variantsNeedRegeneration: z.boolean().optional().default(false),
+
+    variantRegenerationReason: z
+    .string()
+    .nullable()
+    .optional()
+    .default(null),  
     // Step 5: Additional Details
     productTypeDetail: z.string().trim().optional(),
 

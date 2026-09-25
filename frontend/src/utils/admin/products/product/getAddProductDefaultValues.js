@@ -55,8 +55,13 @@ export const getAddProductDefaultValues = () => {
     videoUrl: "",
 
     // Step 4
-    attributes: getDefaultSelectedAttributes(),
-    variants: getDefaultProductVariants(),
+    attributes: getDefaultSelectedAttributes() || [],
+    variants: getDefaultProductVariants() || [],
+
+     // Internal frontend-only variant sync state
+    attributesChanged: false,
+    variantsNeedRegeneration: false,
+    variantRegenerationReason: null,
 
     // Step 5: Additional Details
     productTypeDetail: "",

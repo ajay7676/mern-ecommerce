@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 
@@ -87,6 +87,14 @@ const AddProductDrawer = ({
   const updateProductMutation = useUpdateAdminProduct();
 
   const deleteTemporaryProductImages = useDeleteTemporaryProductImages();
+
+  const variantsNeedRegeneration =
+    useWatch({
+      control: methods.control,
+      name: "variantsNeedRegeneration",
+    }) ?? false;
+
+  const isCurrentStepBlocked = activeStep === 4 && variantsNeedRegeneration;
   useEffect(() => {
     if (!isOpen || !isCreateMode) return;
 
@@ -252,6 +260,18 @@ const AddProductDrawer = ({
   };
 
   const handleNext = async () => {
+     if (
+    activeStep === 4 &&
+    methods.getValues(
+      "variantsNeedRegeneration"
+    )
+  ) {
+    toast.error(
+      "Regenerate variants before continuing"
+    );
+
+    return;
+  }
     const isStepValid = await validateAllProductSteps(methods);
 
     if (!isStepValid) {
@@ -456,12 +476,12 @@ const AddProductDrawer = ({
                   {activeStep === 1 && <ProductBasicInfoStep />}
                   {activeStep === 2 && <ProductPricingInventoryStep />}
                   {activeStep === 3 && <ProductImagesMediaStep />}
-                  {activeStep === 4 && 
-                  <ProductAttributesVariationsStep
-                     mode={mode}
-                     productId={productId}
-                  />
-                  }
+                  {activeStep === 4 && (
+                    <ProductAttributesVariationsStep
+                      mode={mode}
+                      productId={productId}
+                    />
+                  )}
                   {activeStep === 5 && <ProductAdditionalDetailsStep />}
 
                   {activeStep === 6 && (
@@ -494,6 +514,7 @@ const AddProductDrawer = ({
                   : "Publish Product"
                 : "Save & Next"
             }
+            isNextDisabled={isCurrentStepBlocked}
           />
 
           <ProductPayloadPreviewModal

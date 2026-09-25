@@ -12,6 +12,8 @@ const AddProductDrawerFooter = ({
 
   primaryButtonLabel,
   showSaveDraft = true,
+
+  isNextDisabled = false,
 }) => {
   return (
     <div className="flex flex-none flex-col gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
@@ -64,14 +66,23 @@ const AddProductDrawerFooter = ({
             Save as Draft
           </button>
         )}
-
         <button
           type="button"
           onClick={onNext}
-          className="btn btn-primary h-11 min-h-11 rounded-xl px-6 text-white shadow-md"
+          disabled={isSubmitting || isNextDisabled}
+          className="btn btn-primary"
         >
-          {primaryButtonLabel}
-          <ArrowRight className="h-4 w-4" />
+          {isSubmitting ? (
+            <>
+              <span className="loading loading-spinner loading-sm" />
+              Saving...
+            </>
+          ) : (
+            <>
+              {primaryButtonLabel}
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
         </button>
       </div>
     </div>
