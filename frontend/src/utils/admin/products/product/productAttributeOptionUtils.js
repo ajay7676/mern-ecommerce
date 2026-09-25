@@ -14,7 +14,9 @@ export const createClientOptionId = (label = "") => {
     return `custom-${slug}-${crypto.randomUUID()}`;
   }
 
-  return `custom-${slug}-${Date.now()}`;
+  return `custom-${slug}-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2)}`;
 };
 
 export const createProductOnlyOption = ({
@@ -22,13 +24,12 @@ export const createProductOnlyOption = ({
   colorCode = null,
 }) => {
   const cleanLabel = String(label || "").trim();
-  const value = slugifyOptionValue(cleanLabel);
 
   return {
     optionId: createClientOptionId(cleanLabel),
     label: cleanLabel,
-    value,
-    colorCode,
+    value: slugifyOptionValue(cleanLabel),
+    colorCode: colorCode || null,
     isCustom: true,
   };
 };
@@ -36,81 +37,113 @@ export const createProductOnlyOption = ({
 export const normalizeAttributeOptions = (options = []) => {
   return options.map((option) => ({
     optionId: option.optionId || option.value,
-    label: option.label,
-    value: option.value || slugifyOptionValue(option.label),
+    label: option.label || "",
+    value:
+      option.value ||
+      slugifyOptionValue(option.label),
+
     colorCode: option.colorCode || null,
+
     isCustom: Boolean(option.isCustom),
   }));
 };
 
-export const hasDuplicateOptionValue = (options = [], value) => {
-  const normalizedValue = slugifyOptionValue(value);
+export const hasDuplicateOptionValue = (
+  options = [],
+  value,
+  ignoreOptionId = null
+) => {
+  const normalizedValue =
+    slugifyOptionValue(value);
 
   return options.some((option) => {
-    return String(option.value).toLowerCase() === normalizedValue;
+    if (
+      ignoreOptionId &&
+      option.optionId === ignoreOptionId
+    ) {
+      return false;
+    }
+
+    return (
+      String(option.value || "").toLowerCase() ===
+      normalizedValue.toLowerCase()
+    );
   });
 };
 
-export const addOptionToAttribute = ({
-  attributes = [],
-  attributeIndex,
-  option,
+/**
+ * Important:
+ * Copy backend/global attribute into the product form.
+ *
+ * Never append the raw React Query object directly.
+ */
+export const createProductAttributeSnapshot = (
+  attribute
+) => {
+  return {
+    attributeId:
+      attribute.attributeId ||
+      attribute._id ||
+      attribute.id ||
+      null,
+
+    name: attribute.name || "",
+
+    slug:
+      attribute.slug ||
+      slugifyOptionValue(attribute.name),
+
+    type: attribute.type || "dropdown",
+
+    source: "existing",
+
+    options: normalizeAttributeOptions(
+      attribute.options ||
+        attribute.values ||
+        []
+    ),
+  };
+};
+
+/**
+ * Only product snapshot fields are editable here.
+ *
+ * We intentionally do NOT change option.value.
+ *
+ * value participates in variant optionSignature,
+ * so changing it can break existing variants.
+ */
+export const updateProductAttributeOption = ({
+  options = [],
+  optionId,
+  label,
+  colorCode,
 }) => {
-  return attributes.map((attribute, index) => {
-    if (index !== attributeIndex) return attribute;
+  const cleanLabel = String(label || "").trim();
+
+  if (!cleanLabel) {
+    throw new Error("Option label is required");
+  }
+
+  return options.map((option) => {
+    if (option.optionId !== optionId) {
+      return option;
+    }
 
     return {
-      ...attribute,
-      options: [...(attribute.options || []), option],
+      ...option,
+
+      // editable product-level snapshot
+      label: cleanLabel,
+
+      colorCode:
+        colorCode !== undefined
+          ? colorCode || null
+          : option.colorCode,
+
+      // keep stable
+      value: option.value,
+      optionId: option.optionId,
     };
-  });
-};
-
-export const removeOptionFromAttribute = ({
-  attributes = [],
-  attributeIndex,
-  optionValue,
-}) => {
-  return attributes.map((attribute, index) => {
-    if (index !== attributeIndex) return attribute;
-
-    return {
-      ...attribute,
-      options: (attribute.options || []).filter((option) => {
-        return option.value !== optionValue;
-      }),
-    };
-  });
-};
-
-export const updateOptionInAttribute = ({
-  attributes = [],
-  attributeIndex,
-  optionValue,
-  updatedOption,
-}) => {
-  return attributes.map((attribute, index) => {
-    if (index !== attributeIndex) return attribute;
-
-    return {
-      ...attribute,
-      options: (attribute.options || []).map((option) => {
-        if (option.value !== optionValue) return option;
-
-        return {
-          ...option,
-          ...updatedOption,
-          value:
-            updatedOption.value ||
-            slugifyOptionValue(updatedOption.label || option.label),
-        };
-      }),
-    };
-  });
-};
-
-export const hasEmptyAttributeOptions = (attributes = []) => {
-  return attributes.some((attribute) => {
-    return !attribute.options || attribute.options.length === 0;
   });
 };

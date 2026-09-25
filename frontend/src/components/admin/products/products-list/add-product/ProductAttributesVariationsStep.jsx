@@ -1,9 +1,7 @@
-
 import { useEffect, useMemo, useState } from "react";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 import toast from "react-hot-toast";
-
 
 import ProductAttributesCard from "../form/ProductAttributesCard";
 import VariantCreationCard from "../form/VariantCreationCard";
@@ -17,14 +15,23 @@ import {
   createManualVariant,
   generateVariantsFromAttributes,
 } from "../../../../../utils/admin/products/product/productVariationUtils";
+import {
+  createProductOnlyOption,
+  hasDuplicateOptionValue,
+  updateProductAttributeOption,
+} from "../../../../../utils/admin/products/product/productAttributeOptionUtils";
+import { countVariantsUsingOption } from "../../../../../utils/admin/products/product/productAttributeVariantUtils";
+
 import { useProductAttributeOptions } from "../../../../../hooks/admin/queries/products/product-list/useProductAttributeOptions";
-import { PRODUCT_FORM_MODE } from '../../../../../constants/admin/products/productFormMode.constants'
+import { PRODUCT_FORM_MODE } from "../../../../../constants/admin/products/productFormMode.constants";
+import RemoveAttributeOptionModal from "../form/RemoveAttributeOptionModal";
 
 const ProductAttributesVariationsStep = ({
   mode = PRODUCT_FORM_MODE.CREATE,
   productId = null,
 }) => {
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
+  const [pendingOptionRemoval, setPendingOptionRemoval] = useState(null);
 
   const {
     control,
@@ -34,7 +41,7 @@ const ProductAttributesVariationsStep = ({
     formState: { errors },
   } = useFormContext();
 
- const isEditMode = mode === PRODUCT_FORM_MODE.EDIT;
+  const isEditMode = mode === PRODUCT_FORM_MODE.EDIT;
   const isCreateMode = mode === PRODUCT_FORM_MODE.CREATE;
 
   const {
@@ -47,7 +54,7 @@ const ProductAttributesVariationsStep = ({
   const existingAttributes = useMemo(() => {
     return attributeData?.options ?? [];
   }, [attributeData?.options]);
-const {
+  const {
     fields: attributeFields,
     append: appendAttribute,
     remove: removeAttribute,
@@ -61,7 +68,7 @@ const {
     keyName: "formFieldId",
   });
 
-    const {
+  const {
     fields: variantFields,
     append: appendVariant,
     remove: removeVariant,
@@ -73,7 +80,7 @@ const {
     keyName: "formFieldId",
   });
 
-   /**
+  /**
    * ------------------------------------------------------
    * Watched form values
    * ------------------------------------------------------
@@ -85,11 +92,13 @@ const {
       name: "attributes",
     }) || [];
 
-  const watchedVariants =
-    useWatch({
-      control,
-      name: "variants",
-    }) || [];
+  // Inside your component:
+  const variantsValue = useWatch({
+    control,
+    name: "variants",
+  });
+
+  const watchedVariants = useMemo(() => variantsValue ?? [], [variantsValue]);
 
   const sku =
     useWatch({
@@ -127,7 +136,7 @@ const {
       name: "images",
     }) || [];
 
-   /**
+  /**
    * ------------------------------------------------------
    * Edit state
    * ------------------------------------------------------
@@ -135,9 +144,7 @@ const {
 
   const hasPersistedVariants = useMemo(() => {
     return watchedVariants.some(
-      (variant) =>
-        Boolean(variant?.variantId) ||
-        variant?.isExisting === true
+      (variant) => Boolean(variant?.variantId) || variant?.isExisting === true,
     );
   }, [watchedVariants]);
 
@@ -169,9 +176,7 @@ const {
   }, [productId, mode]);
 
   const selectedVariant =
-    watchedVariants[selectedVariantIndex] ||
-    watchedVariants[0] ||
-    null;
+    watchedVariants[selectedVariantIndex] || watchedVariants[0] || null;
 
   /**
    * ------------------------------------------------------
@@ -218,7 +223,7 @@ const {
         "Existing variants cannot be replaced directly. Use safe regeneration.",
         {
           icon: "⚠️",
-        }
+        },
       );
 
       return;
@@ -232,18 +237,16 @@ const {
       productImages,
     });
 
-    const normalizedVariants = generatedVariants.map(
-      (variant, index) => ({
-        ...variant,
+    const normalizedVariants = generatedVariants.map((variant, index) => ({
+      ...variant,
 
-        variantId: variant.variantId || null,
+      variantId: variant.variantId || null,
 
-        isExisting: false,
-        isNew: true,
+      isExisting: false,
+      isNew: true,
 
-        sortOrder: index + 1,
-      })
-    );
+      sortOrder: index + 1,
+    }));
 
     replaceVariants(normalizedVariants);
 
@@ -269,38 +272,29 @@ const {
 
       if (!firstOption) return;
 
-      const attributeKey =
-        attribute.slug ||
-        attribute.name;
+      const attributeKey = attribute.slug || attribute.name;
 
       selectedOptions[attributeKey] = {
         attributeId: attribute.attributeId || null,
 
         attributeName: attribute.name,
 
-        attributeSlug:
-          attribute.slug || attribute.name,
+        attributeSlug: attribute.slug || attribute.name,
 
-        optionId:
-          firstOption.optionId ||
-          firstOption.value,
+        optionId: firstOption.optionId || firstOption.value,
 
         label: firstOption.label,
 
         value: firstOption.value,
 
-        colorCode:
-          firstOption.colorCode || null,
+        colorCode: firstOption.colorCode || null,
 
-        isCustom:
-          Boolean(firstOption.isCustom),
+        isCustom: Boolean(firstOption.isCustom),
       };
     });
 
     if (!Object.keys(selectedOptions).length) {
-      toast.error(
-        "Selected attributes do not contain any options"
-      );
+      toast.error("Selected attributes do not contain any options");
 
       return;
     }
@@ -335,10 +329,7 @@ const {
    */
 
   const handleRemoveVariant = (variantIndex) => {
-    if (
-      variantIndex < 0 ||
-      variantIndex >= watchedVariants.length
-    ) {
+    if (variantIndex < 0 || variantIndex >= watchedVariants.length) {
       return;
     }
 
@@ -349,10 +340,7 @@ const {
         return currentIndex - 1;
       }
 
-      if (
-        currentIndex === variantIndex &&
-        currentIndex > 0
-      ) {
+      if (currentIndex === variantIndex && currentIndex > 0) {
         return currentIndex - 1;
       }
 
@@ -367,90 +355,300 @@ const {
    */
 
   const handleSelectVariant = (variantIndex) => {
-    if (
-      variantIndex < 0 ||
-      variantIndex >= watchedVariants.length
-    ) {
+    if (variantIndex < 0 || variantIndex >= watchedVariants.length) {
       return;
     }
 
     setSelectedVariantIndex(variantIndex);
   };
 
+  const handleAddAttributeOption = ({
+    attributeIndex,
+    label,
+    colorCode = null,
+  }) => {
+    const attributes = getValues("attributes") || [];
 
+    const attribute = attributes[attributeIndex];
+
+    if (!attribute) {
+      toast.error("Attribute not found");
+      return false;
+    }
+
+    const cleanLabel = String(label || "").trim();
+
+    if (!cleanLabel) {
+      toast.error("Option label is required");
+      return false;
+    }
+
+    const currentOptions = attribute.options || [];
+
+    if (hasDuplicateOptionValue(currentOptions, cleanLabel)) {
+      toast.error("This option already exists");
+
+      return false;
+    }
+
+    const newOption = createProductOnlyOption({
+      label: cleanLabel,
+      colorCode,
+    });
+
+    const nextOptions = [...currentOptions, newOption];
+
+    setValue(`attributes.${attributeIndex}.options`, nextOptions, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+
+    toast.success(`${cleanLabel} added to ${attribute.name}`);
+
+    return true;
+  };
+  const handleEditAttributeOption = ({
+    attributeIndex,
+    optionId,
+    label,
+    colorCode,
+  }) => {
+    const attributes = getValues("attributes") || [];
+
+    const attribute = attributes[attributeIndex];
+
+    if (!attribute) {
+      toast.error("Attribute not found");
+      return false;
+    }
+
+    const options = attribute.options || [];
+
+    const currentOption = options.find(
+      (option) => option.optionId === optionId,
+    );
+
+    if (!currentOption) {
+      toast.error("Option not found");
+      return false;
+    }
+
+    const cleanLabel = String(label || "").trim();
+
+    if (!cleanLabel) {
+      toast.error("Option label is required");
+
+      return false;
+    }
+
+    /**
+     * Don't compare by new label/value for an
+     * existing persisted option because its
+     * value intentionally remains stable.
+     *
+     * Here duplicate labels are checked separately.
+     */
+    const duplicateLabel = options.some((option) => {
+      if (option.optionId === optionId) {
+        return false;
+      }
+
+      return (
+        String(option.label || "")
+          .trim()
+          .toLowerCase() === cleanLabel.toLowerCase()
+      );
+    });
+
+    if (duplicateLabel) {
+      toast.error("Another option already uses this label");
+
+      return false;
+    }
+
+    const nextOptions = updateProductAttributeOption({
+      options,
+      optionId,
+      label: cleanLabel,
+      colorCode,
+    });
+
+    setValue(`attributes.${attributeIndex}.options`, nextOptions, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+
+    toast.success("Option updated");
+
+    return true;
+  };
+
+  const handleRequestRemoveAttributeOption = ({
+    attributeIndex,
+    optionIndex,
+  }) => {
+    const attributes = getValues("attributes") || [];
+
+    const variants = getValues("variants") || [];
+
+    const attribute = attributes[attributeIndex];
+
+    const option = attribute?.options?.[optionIndex];
+
+    if (!attribute || !option) {
+      toast.error("Option not found");
+      return;
+    }
+
+    if (attribute.options.length <= 1) {
+      toast.error(
+        "An attribute must contain at least one option. Remove the entire attribute instead.",
+      );
+
+      return;
+    }
+
+    const affectedVariantsCount = countVariantsUsingOption({
+      variants,
+      attribute,
+      option,
+    });
+
+    setPendingOptionRemoval({
+      attributeIndex,
+      optionIndex,
+
+      attributeName: attribute.name,
+
+      option,
+
+      affectedVariantsCount,
+    });
+  };
+  const handleConfirmRemoveAttributeOption = () => {
+    if (!pendingOptionRemoval) {
+      return;
+    }
+
+    const { attributeIndex, optionIndex, option, affectedVariantsCount } =
+      pendingOptionRemoval;
+
+    const attributes = getValues("attributes") || [];
+
+    const attribute = attributes[attributeIndex];
+
+    if (!attribute) {
+      setPendingOptionRemoval(null);
+      return;
+    }
+
+    const nextOptions = (attribute.options || []).filter(
+      (_, index) => index !== optionIndex,
+    );
+
+    setValue(`attributes.${attributeIndex}.options`, nextOptions, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+
+    setPendingOptionRemoval(null);
+
+    if (affectedVariantsCount > 0) {
+      toast(
+        `${option.label} removed. ${affectedVariantsCount} variant${
+          affectedVariantsCount === 1 ? "" : "s"
+        } will need regeneration.`,
+        {
+          icon: "⚠️",
+        },
+      );
+
+      return;
+    }
+
+    toast.success(`${option.label} removed`);
+  };
+  const handleCancelRemoveAttributeOption = () => {
+    setPendingOptionRemoval(null);
+  };
   return (
-   <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-      {/* LEFT COLUMN */}
-      <div className="space-y-6">
-        <ProductAttributesCard
-          mode={mode}
-          isEditMode={isEditMode}
-          attributeFields={attributeFields}
-          attributes={watchedAttributes}
-          appendAttribute={appendAttribute}
-          updateAttribute={updateAttribute}
-          replaceAttributes={replaceAttributes}
-          removeAttribute={removeAttribute}
-          existingAttributes={existingAttributes}
-          isAttributesLoading={isAttributesLoading}
-          isAttributesError={isAttributesError}
-          refetchAttributes={refetchAttributes}
-          getValues={getValues}
-          setValue={setValue}
-          setProductFormValue={setProductFormValue}
-        />
+    <>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        {/* LEFT COLUMN */}
+        <div className="space-y-6">
+          <ProductAttributesCard
+            mode={mode}
+            isEditMode={isEditMode}
+            attributeFields={attributeFields}
+            attributes={watchedAttributes}
+            appendAttribute={appendAttribute}
+            updateAttribute={updateAttribute}
+            removeAttribute={removeAttribute}
+            existingAttributes={existingAttributes}
+            isAttributesLoading={isAttributesLoading}
+            isAttributesError={isAttributesError}
+            refetchAttributes={refetchAttributes}
+            onAddOption={handleAddAttributeOption}
+            onEditOption={handleEditAttributeOption}
+            onRemoveOption={handleRequestRemoveAttributeOption}
+          />
+          <VariantCreationCard
+            mode={mode}
+            isEditMode={isEditMode}
+            attributes={watchedAttributes}
+            variants={watchedVariants}
+            hasPersistedVariants={hasPersistedVariants}
+            replaceVariants={replaceVariants}
+            getValues={getValues}
+            onGenerateVariants={handleGenerateVariants}
+          />
 
-        <VariantCreationCard
-          mode={mode}
-          isEditMode={isEditMode}
-          attributes={watchedAttributes}
-          variants={watchedVariants}
-          hasPersistedVariants={hasPersistedVariants}
-          replaceVariants={replaceVariants}
-          getValues={getValues}
-          onGenerateVariants={handleGenerateVariants}
-        />
+          <ProductVariantsCard
+            mode={mode}
+            isEditMode={isEditMode}
+            fields={variantFields}
+            watchedVariants={watchedVariants}
+            register={register}
+            control={control}
+            setValue={setValue}
+            updateVariant={updateVariant}
+            remove={handleRemoveVariant}
+            errors={errors}
+            lowStockThreshold={lowStockThreshold}
+            selectedVariantIndex={selectedVariantIndex}
+            onSelectVariant={handleSelectVariant}
+          />
+        </div>
 
-        <ProductVariantsCard
-          mode={mode}
-          isEditMode={isEditMode}
-          fields={variantFields}
-          watchedVariants={watchedVariants}
-          register={register}
-          control={control}
-          setValue={setValue}
-          updateVariant={updateVariant}
-          remove={handleRemoveVariant}
-          errors={errors}
-          lowStockThreshold={lowStockThreshold}
-          selectedVariantIndex={selectedVariantIndex}
-          onSelectVariant={handleSelectVariant}
-        />
+        {/* RIGHT COLUMN */}
+        <aside className="space-y-6 xl:sticky xl:top-4 xl:self-start">
+          <AttributesSummaryCard attributes={watchedAttributes} />
+
+          <SelectedVariantPreviewCard variant={selectedVariant} />
+
+          <VariationQuickActionsCard
+            mode={mode}
+            isEditMode={isEditMode}
+            hasAttributes={hasAttributes}
+            hasVariants={hasVariants}
+            hasPersistedVariants={hasPersistedVariants}
+            onGenerateVariants={handleGenerateVariants}
+            onAddManualVariant={handleAddManualVariantQuick}
+          />
+
+          <AttributeVariationTipsCard />
+        </aside>
       </div>
-
-      {/* RIGHT COLUMN */}
-      <aside className="space-y-6 xl:sticky xl:top-4 xl:self-start">
-        <AttributesSummaryCard
-          attributes={watchedAttributes}
-        />
-
-        <SelectedVariantPreviewCard
-          variant={selectedVariant}
-        />
-
-        <VariationQuickActionsCard
-          mode={mode}
-          isEditMode={isEditMode}
-          hasAttributes={hasAttributes}
-          hasVariants={hasVariants}
-          hasPersistedVariants={hasPersistedVariants}
-          onGenerateVariants={handleGenerateVariants}
-          onAddManualVariant={handleAddManualVariantQuick}
-        />
-
-        <AttributeVariationTipsCard />
-      </aside>
-    </div>
+      <RemoveAttributeOptionModal
+        open={Boolean(pendingOptionRemoval)}
+        data={pendingOptionRemoval}
+        onCancel={handleCancelRemoveAttributeOption}
+        onConfirm={handleConfirmRemoveAttributeOption}
+      />
+    </>
   );
 };
 
