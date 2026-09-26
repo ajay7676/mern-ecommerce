@@ -1,4 +1,3 @@
-
 const toNumberOrZero = (value) => {
   const number = Number(value);
   return Number.isNaN(number) ? 0 : number;
@@ -63,16 +62,27 @@ const getImageIsTemporary = (image = {}) => {
 const getImageIsExisting = (image = {}) => {
   return image.isExisting === true && !getImageIsTemporary(image);
 };
-const mapVariantAttributes = (variant) => {
-  const attributeValues = variant.attributeValues || {};
 
-  return Object.values(attributeValues).map((item) => ({
+const mapVariantAttributes = (variant = {}) => {
+  const values = variant.attributeValues || {};
+
+  const valuesArray = Array.isArray(values) ? values : Object.values(values);
+
+  return valuesArray.map((item) => ({
     attributeId: item.attributeId || null,
-    attributeName: item.attributeName,
-    optionId: item.optionId || item.value,
-    label: item.label,
-    value: item.value,
+
+    attributeName: item.attributeName || "",
+
+    attributeSlug: item.attributeSlug || null,
+
+    optionId: item.optionId || item.value || null,
+
+    label: item.label || "",
+
+    value: item.value || "",
+
     colorCode: item.colorCode || null,
+
     isCustom: Boolean(item.isCustom),
   }));
 };
@@ -93,15 +103,21 @@ const mapProductImages = (images = []) => {
 };
 
 const mapVariantImage = (image) => {
-  if (!image?.publicId && !image?.url) return null;
+  if (!image?.publicId && !image?.url) {
+    return null;
+  }
 
   return {
     publicId: image.publicId || null,
+
     url: image.url || null,
 
-  isExisting: getImageIsExisting(image),
-    isTemporary: getImageIsTemporary(image),
-    assetState: getImageAssetState(image),
+    isExisting: Boolean(image.isExisting),
+
+    isTemporary: Boolean(image.isTemporary),
+
+    assetState:
+      image.assetState || (image.isTemporary ? "temporary" : "permanent"),
   };
 };
 
@@ -118,6 +134,42 @@ const mapVariantImages = (images = []) => {
     isTemporary: getImageIsTemporary(image),
     assetState: getImageAssetState(image),
   }));
+};
+
+const mapProductVariant = (variant, index) => {
+  return {
+    /**
+     * Existing DB variant:
+     * MongoDB id.
+     *
+     * New variant:
+     * null.
+     */
+    variantId: variant.variantId || variant.id || variant._id || null,
+
+    name: variant.name || "",
+
+    sku: String(variant.sku || "").trim(),
+
+    price: Number(variant.price || 0),
+
+    stock: Number(variant.stock || 0),
+
+    status:
+      variant.status === true || variant.status === "active"
+        ? "active"
+        : "inactive",
+
+    source: variant.source || "auto",
+
+    image: mapVariantImage(variant.image),
+
+    attributeValues: mapVariantAttributes(variant),
+
+    optionSignature: variant.optionSignature || null,
+
+    sortOrder: Number(variant.sortOrder || index + 1),
+  };
 };
 
 const mapProductVariants = (variants = []) => {
@@ -165,10 +217,7 @@ const mapProductAttributes = (attributes = []) => {
   }));
 };
 
-export const buildProductPayload = ({
-  values,
-  action = "draft",
-}) => {
+export const buildProductPayload = ({ values, action = "draft" }) => {
   const isDraft = action === "draft";
 
   return {
@@ -222,8 +271,9 @@ export const buildProductPayload = ({
     },
 
     attributesAndVariations: {
-      attributes: mapProductAttributes(values.attributes),
-      variants: mapProductVariants(values.variants),
+      attributes: mapProductAttributes(values.attributes || []),
+
+      variants: (values.variants || []).map(mapProductVariant),
     },
 
     additionalDetails: {

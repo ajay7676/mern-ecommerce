@@ -1,342 +1,366 @@
-// components/ProductVariantsCard.jsx
 
-import { useMemo, useState } from "react";
-import { Controller } from "react-hook-form";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Edit3,
+  ImageIcon,
   Trash2,
 } from "lucide-react";
 
-// import VariantImagePicker from "./VariantImagePicker";
-import VariantStatsCards from "./VariantStatsCards";
 
-import { calculateVariantStats } from "../../../../../utils/admin/products/product/productVariationUtils";
 import VariantImageUploader from "./VariantImageUploader";
+import {
+  getVariantAttributeValuesArray,
+  getVariantDisplayName,
+  isPersistedVariant,
+} from "../../../../../utils/admin/products/product/productVariantDisplayUtils";
 
-const PAGE_SIZE = 4;
 
 const ProductVariantsCard = ({
-  fields,
-  watchedVariants,
+  fields = [],
+  watchedVariants = [],
+
   register,
   control,
   setValue,
+
   remove,
-  errors,
-  lowStockThreshold,
-  selectedVariantIndex,
+
+  errors = {},
+
+  lowStockThreshold = 0,
+
+  selectedVariantIndex = 0,
   onSelectVariant,
 }) => {
-  const [page, setPage] = useState(1);
+  if (!fields.length) {
+    return (
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h3 className="font-bold text-slate-900">
+          Manage Variants
+        </h3>
 
-  const stats = useMemo(() => {
-    return calculateVariantStats(watchedVariants, lowStockThreshold);
-  }, [watchedVariants, lowStockThreshold]);
+        <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+          <ImageIcon className="mx-auto h-8 w-8 text-slate-400" />
 
-  const totalPages = Math.max(Math.ceil(fields.length / PAGE_SIZE), 1);
-  const startIndex = (page - 1) * PAGE_SIZE;
+          <p className="mt-3 text-sm font-semibold text-slate-700">
+            No variants generated yet
+          </p>
 
-  const currentRows = fields
-    .map((field, index) => ({ field, index }))
-    .slice(startIndex, startIndex + PAGE_SIZE);
-
-  return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div>
-          <h3 className="text-lg font-bold text-slate-950">Manage Variants</h3>
-
-          <p className="mt-1 text-sm font-medium text-slate-500">
-            Edit variant images, SKU, price, stock and status.
+          <p className="mt-1 text-xs text-slate-500">
+            Select attributes and generate variants first.
           </p>
         </div>
-
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            className="btn btn-outline btn-primary h-11 min-h-11 rounded-xl"
-          >
-            <Edit3 className="h-4 w-4" />
-            Bulk Edit
-          </button>
-
-          <button
-            type="button"
-            className="btn btn-outline btn-primary h-11 min-h-11 rounded-xl"
-          >
-            <Download className="h-4 w-4" />
-            Import / Export
-          </button>
-        </div>
       </div>
+    );
+  }
 
-      {errors.variants?.message && (
-        <p className="mt-3 text-xs font-medium text-error">
-          {errors.variants.message}
+  return (
+    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-200 p-5">
+        <h3 className="font-bold text-slate-900">
+          Manage Variants
+        </h3>
+
+        <p className="mt-1 text-sm text-slate-500">
+          Manage images, SKU, price, stock and status for each
+          variation.
         </p>
-      )}
-
-      <div className="mt-6">
-        <VariantStatsCards stats={stats} />
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200">
-        <table className="table w-full min-w-275">
+      <div className="overflow-x-auto">
+        <table className="table">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50 text-xs text-slate-500">
-              <th className="w-10">
-                <input
-                  type="checkbox"
-                  className="checkbox checkbox-sm rounded"
-                />
+            <tr>
+              <th>Variant</th>
+              <th>Attributes</th>
+              <th>Image</th>
+              <th className="min-w-[190px]">
+                SKU
               </th>
-              <th className="min-w-47.5">Variant</th>
-              <th className="min-w-52.5">Attributes</th>
-              <th className="min-w-32.5">Images</th>
-              <th className="min-w-47.5">SKU</th>
-              <th className="min-w-30">Price (₹)</th>
-              <th className="min-w-27.5">Stock</th>
-              <th className="min-w-30">Status</th>
-              <th className="w-24 text-right">Actions</th>
+              <th className="min-w-[130px]">
+                Price
+              </th>
+              <th className="min-w-[110px]">
+                Stock
+              </th>
+              <th>Status</th>
+              <th />
             </tr>
           </thead>
 
           <tbody>
-            {currentRows.map(({ field, index }) => {
-              const variant = watchedVariants?.[index] || {};
-              const isSelected = selectedVariantIndex === index;
+            {fields.map((field, index) => {
+              const variant =
+                watchedVariants[index] || field;
+
+              const attributeValues =
+                getVariantAttributeValuesArray(
+                  variant,
+                );
+
+              const persisted =
+                isPersistedVariant(
+                  variant,
+                );
+
+              const selected =
+                selectedVariantIndex ===
+                index;
+
+              const stock =
+                Number(
+                  variant.stock || 0,
+                );
+
+              const lowStock =
+                stock <=
+                  Number(
+                    lowStockThreshold || 0,
+                  ) &&
+                stock > 0;
+
               return (
                 <tr
-                  key={field.formFieldId}
-                  onClick={() => onSelectVariant(index)}
-                  className={`cursor-pointer border-b border-slate-100 ${
-                    isSelected ? "bg-primary/5" : "hover:bg-slate-50"
+                  key={
+                    field.formFieldId ||
+                    field.id ||
+                    variant.variantId ||
+                    `${variant.optionSignature}-${index}`
+                  }
+                  onClick={() =>
+                    onSelectVariant?.(
+                      index,
+                    )
+                  }
+                  className={`cursor-pointer ${
+                    selected
+                      ? "bg-primary/5"
+                      : ""
                   }`}
                 >
-                  <td onClick={(event) => event.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-sm rounded"
-                    />
-                  </td>
-
+                  {/* VARIANT */}
                   <td>
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={variant?.image?.url}
-                        alt={variant.name}
-                        className="h-12 w-12 rounded-xl border border-slate-200 object-cover"
-                      />
+                    <div className="min-w-[160px]">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {getVariantDisplayName(
+                          variant,
+                        )}
+                      </p>
 
-                      <div>
-                        <p className="text-sm font-bold text-slate-950">
-                          {variant.name || "Variant"}
-                        </p>
-
+                      <div className="mt-1 flex flex-wrap gap-1">
                         <span
-                          className={`mt-1 inline-flex rounded-lg px-2 py-0.5 text-[11px] font-bold ${
-                            variant.source === "manual"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-blue-100 text-blue-700"
+                          className={`badge badge-xs ${
+                            persisted
+                              ? "badge-success"
+                              : "badge-info"
                           }`}
                         >
-                          {variant.source === "manual" ? "Manual" : "Auto"}
+                          {persisted
+                            ? "Existing"
+                            : "New"}
                         </span>
+
+                        {variant.source && (
+                          <span className="badge badge-ghost badge-xs">
+                            {
+                              variant.source
+                            }
+                          </span>
+                        )}
                       </div>
                     </div>
                   </td>
 
+                  {/* ATTRIBUTES */}
                   <td>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.values(variant.attributeValues || {}).map(
-                        (item) => (
+                    <div className="flex min-w-[180px] flex-wrap gap-1.5">
+                      {attributeValues.map(
+                        (
+                          attribute,
+                          attributeIndex,
+                        ) => (
                           <span
-                            key={`${variant.variantId}-${item.attributeId}-${item.value}`}
-                            className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"
+                            key={
+                              attribute.optionId ||
+                              `${attribute.attributeName}-${attributeIndex}`
+                            }
+                            className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
                           >
-                            {item.colorCode && (
+                            {attribute.colorCode && (
                               <span
-                                className="h-2.5 w-2.5 rounded-full border border-slate-300"
-                                style={{ backgroundColor: item.colorCode }}
+                                className="h-2 w-2 rounded-full border"
+                                style={{
+                                  backgroundColor:
+                                    attribute.colorCode,
+                                }}
                               />
                             )}
-                            {item.label}
+
+                            {attribute.label ||
+                              attribute.value}
                           </span>
                         ),
                       )}
                     </div>
                   </td>
 
-                  {/* <td onClick={(event) => event.stopPropagation()}>
-                    <VariantImagePicker
-                      variant={variant}
-                      index={index}
-                      setValue={setValue}
-                    />
-                  </td> */}
-                  <td onClick={(event) => event.stopPropagation()}>
+                  {/* IMAGE */}
+                  <td
+                    onClick={(event) =>
+                      event.stopPropagation()
+                    }
+                  >
                     <VariantImageUploader
-                      variant={watchedVariants[index] || field}
-                      variantIndex={index}
-                      setValue={setValue}
+                      variant={variant}
+                      variantIndex={
+                        index
+                      }
+                      setValue={
+                        setValue
+                      }
                     />
                   </td>
 
-                  <td onClick={(event) => event.stopPropagation()}>
+                  {/* SKU */}
+                  <td
+                    onClick={(event) =>
+                      event.stopPropagation()
+                    }
+                  >
                     <input
-                      type="text"
-                      className="input input-bordered h-10 min-h-10 w-full rounded-xl border-slate-200 bg-white text-sm"
-                      {...register(`variants.${index}.sku`)}
+                      {...register(
+                        `variants.${index}.sku`,
+                      )}
+                      className={`input input-bordered input-sm w-full ${
+                        errors
+                          ?.variants?.[
+                            index
+                          ]?.sku
+                          ? "input-error"
+                          : ""
+                      }`}
                     />
 
-                    {errors.variants?.[index]?.sku?.message && (
-                      <p className="mt-1 text-xs font-medium text-error">
-                        {errors.variants[index].sku.message}
+                    {errors?.variants?.[
+                      index
+                    ]?.sku?.message && (
+                      <p className="mt-1 text-xs text-error">
+                        {
+                          errors.variants[
+                            index
+                          ].sku.message
+                        }
                       </p>
                     )}
                   </td>
 
-                  <td onClick={(event) => event.stopPropagation()}>
+                  {/* PRICE */}
+                  <td
+                    onClick={(event) =>
+                      event.stopPropagation()
+                    }
+                  >
                     <input
                       type="number"
+                      min="0"
                       step="0.01"
-                      className="input input-bordered h-10 min-h-10 w-full rounded-xl border-slate-200 bg-white text-sm"
-                      {...register(`variants.${index}.price`)}
+                      {...register(
+                        `variants.${index}.price`,
+                      )}
+                      className="input input-bordered input-sm w-full"
                     />
                   </td>
 
-                  <td onClick={(event) => event.stopPropagation()}>
+                  {/* STOCK */}
+                  <td
+                    onClick={(event) =>
+                      event.stopPropagation()
+                    }
+                  >
                     <input
                       type="number"
-                      className="input input-bordered h-10 min-h-10 w-full rounded-xl border-slate-200 bg-white text-sm"
-                      {...register(`variants.${index}.stock`)}
-                    />
-                  </td>
-
-                  <td onClick={(event) => event.stopPropagation()}>
-                    <Controller
-                      name={`variants.${index}.status`}
-                      control={control}
-                      render={({ field }) => (
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={field.value}
-                            onChange={(event) =>
-                              field.onChange(event.target.checked)
-                            }
-                            className="toggle toggle-primary toggle-sm"
-                          />
-
-                          <span className="text-xs font-bold text-slate-600">
-                            {field.value ? "Active" : "Inactive"}
-                          </span>
-                        </label>
+                      min="0"
+                      {...register(
+                        `variants.${index}.stock`,
                       )}
+                      className={`input input-bordered input-sm w-full ${
+                        lowStock
+                          ? "input-warning"
+                          : ""
+                      }`}
                     />
+
+                    {lowStock && (
+                      <p className="mt-1 text-[10px] font-medium text-warning">
+                        Low stock
+                      </p>
+                    )}
                   </td>
 
-                  <td onClick={(event) => event.stopPropagation()}>
-                    <div className="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-sm btn-circle"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </button>
+                  {/* STATUS */}
+                  <td
+                    onClick={(event) =>
+                      event.stopPropagation()
+                    }
+                  >
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="checkbox"
+                        className="toggle toggle-success toggle-sm"
+                        checked={
+                          variant.status ===
+                            true ||
+                          variant.status ===
+                            "active"
+                        }
+                        onChange={(
+                          event,
+                        ) => {
+                          setValue(
+                            `variants.${index}.status`,
+                            event.target
+                              .checked,
+                            {
+                              shouldDirty: true,
+                              shouldValidate: true,
+                            },
+                          );
+                        }}
+                      />
 
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="btn btn-ghost btn-sm btn-circle text-error"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
+                      <span className="text-xs">
+                        {variant.status ===
+                          true ||
+                        variant.status ===
+                          "active"
+                          ? "Active"
+                          : "Inactive"}
+                      </span>
+                    </label>
+                  </td>
+
+                  {/* REMOVE */}
+                  <td
+                    onClick={(event) =>
+                      event.stopPropagation()
+                    }
+                  >
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm btn-circle text-error"
+                      onClick={() =>
+                        remove(index)
+                      }
+                      title="Remove variant"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </td>
                 </tr>
               );
             })}
-
-            {!fields.length && (
-              <tr>
-                <td colSpan={9}>
-                  <div className="py-10 text-center">
-                    <p className="text-sm font-bold text-slate-700">
-                      No variants created yet
-                    </p>
-
-                    <p className="mt-1 text-sm text-slate-500">
-                      Generate automatically or add a variant manually.
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>
-
-      <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm font-medium text-slate-500">
-          Showing {fields.length ? startIndex + 1 : 0} to{" "}
-          {Math.min(startIndex + PAGE_SIZE, fields.length)} of {fields.length}{" "}
-          variants
-        </p>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="join">
-            <button
-              type="button"
-              disabled={page === 1}
-              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-              className="btn join-item h-10 min-h-10 border-slate-200 bg-white"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-
-            {Array.from({ length: Math.min(totalPages, 5) }).map(
-              (_, pageIndex) => {
-                const pageNumber = pageIndex + 1;
-
-                return (
-                  <button
-                    key={pageNumber}
-                    type="button"
-                    onClick={() => setPage(pageNumber)}
-                    className={`btn join-item h-10 min-h-10 border-slate-200 ${
-                      pageNumber === page
-                        ? "btn-primary text-white"
-                        : "bg-white"
-                    }`}
-                  >
-                    {pageNumber}
-                  </button>
-                );
-              },
-            )}
-
-            <button
-              type="button"
-              disabled={page === totalPages}
-              onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-              className="btn join-item h-10 min-h-10 border-slate-200 bg-white"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          <select className="select select-bordered h-10 min-h-10 rounded-xl border-slate-200 bg-white text-sm">
-            <option>4 / page</option>
-            <option>8 / page</option>
-            <option>12 / page</option>
-          </select>
-        </div>
-      </div>
-    </section>
+    </div>
   );
 };
 

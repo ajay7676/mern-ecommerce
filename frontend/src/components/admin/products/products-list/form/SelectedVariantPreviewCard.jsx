@@ -1,73 +1,181 @@
+import {
+  ImageOff,
+} from "lucide-react";
 
-const SelectedVariantPreviewCard = ({ variant }) => {
+import {
+  getVariantAttributeValuesArray,
+  getVariantDisplayName,
+  getVariantImageUrl,
+  isPersistedVariant,
+} from "../../../../../utils/admin/products/product/productVariantDisplayUtils";
+
+const SelectedVariantPreviewCard = ({
+  variant,
+}) => {
   if (!variant) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-950">
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="font-bold text-slate-900">
           Variant Preview
         </h3>
 
-        <div className="mt-5 rounded-2xl bg-slate-50 p-8 text-center text-sm text-slate-500">
-          No variant selected
+        <div className="mt-4 rounded-2xl bg-slate-50 p-6 text-center">
+          <p className="text-sm text-slate-500">
+            Select a variant to preview.
+          </p>
         </div>
       </div>
     );
   }
 
+  const imageUrl =
+    getVariantImageUrl(variant);
+
+  const attributes =
+    getVariantAttributeValuesArray(
+      variant,
+    );
+
+  const persisted =
+    isPersistedVariant(variant);
+
+  const isActive =
+    variant.status === true ||
+    variant.status === "active";
+
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h3 className="text-lg font-bold text-slate-950">
-        Variant Preview
-      </h3>
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-bold text-slate-900">
+          Variant Preview
+        </h3>
 
-      <div className="mt-5 rounded-2xl bg-slate-50 p-5 text-center">
-        <img
-          src={variant?.image?.url}
-          alt={variant.name}
-          className="mx-auto h-40 w-40 object-contain"
-        />
-
-        <h4 className="mt-4 text-lg font-extrabold text-slate-950">
-          {variant.name}
-        </h4>
-
-        <p className="mt-1 text-sm font-semibold text-slate-500">
-          SKU: {variant.sku}
-        </p>
+        <span
+          className={`badge badge-sm ${
+            persisted
+              ? "badge-success"
+              : "badge-info"
+          }`}
+        >
+          {persisted
+            ? "Existing"
+            : "New"}
+        </span>
       </div>
 
-      <div className="mt-4 divide-y divide-slate-200">
-        <PreviewRow label="Price (₹)" value={variant.price || "0.00"} />
-        <PreviewRow label="Stock" value={variant.stock || "0"} />
+      <div className="mt-4 flex min-h-48 items-center justify-center rounded-2xl bg-slate-50 p-4">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={getVariantDisplayName(
+              variant,
+            )}
+            className="max-h-44 w-full object-contain"
+          />
+        ) : (
+          <div className="text-center text-slate-400">
+            <ImageOff className="mx-auto h-8 w-8" />
 
-        <div className="flex items-center justify-between py-3">
-          <span className="text-sm font-medium text-slate-500">
-            Status
-          </span>
+            <p className="mt-2 text-xs">
+              No variant image
+            </p>
+          </div>
+        )}
+      </div>
 
-          <span
-            className={`rounded-lg px-3 py-1 text-xs font-bold ${
-              variant.status
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-slate-100 text-slate-500"
-            }`}
-          >
-            {variant.status ? "Active" : "Inactive"}
-          </span>
-        </div>
+      <h4 className="mt-4 text-center text-base font-bold text-slate-900">
+        {getVariantDisplayName(
+          variant,
+        )}
+      </h4>
+
+      <p className="mt-1 break-all text-center text-xs text-slate-500">
+        SKU: {variant.sku || "—"}
+      </p>
+
+      <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+        {attributes.map(
+          (attribute, index) => (
+            <span
+              key={
+                attribute.optionId ||
+                index
+              }
+              className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs"
+            >
+              {attribute.colorCode && (
+                <span
+                  className="h-2 w-2 rounded-full border"
+                  style={{
+                    backgroundColor:
+                      attribute.colorCode,
+                  }}
+                />
+              )}
+
+              {attribute.label ||
+                attribute.value}
+            </span>
+          ),
+        )}
+      </div>
+
+      <div className="mt-5 divide-y divide-slate-100 rounded-2xl border border-slate-200">
+        <PreviewRow
+          label="Price"
+          value={
+            variant.price
+              ? `₹${variant.price}`
+              : "—"
+          }
+        />
+
+        <PreviewRow
+          label="Stock"
+          value={
+            variant.stock ?? "0"
+          }
+        />
+
+        <PreviewRow
+          label="Status"
+          value={
+            isActive
+              ? "Active"
+              : "Inactive"
+          }
+          valueClassName={
+            isActive
+              ? "text-success"
+              : "text-slate-500"
+          }
+        />
+
+        <PreviewRow
+          label="Source"
+          value={
+            variant.source || "auto"
+          }
+        />
       </div>
     </div>
   );
 };
 
-const PreviewRow = ({ label, value }) => {
+const PreviewRow = ({
+  label,
+  value,
+  valueClassName = "",
+}) => {
   return (
-    <div className="flex items-center justify-between py-3">
-      <span className="text-sm font-medium text-slate-500">
+    <div className="flex items-center justify-between gap-4 px-4 py-3">
+      <span className="text-xs text-slate-500">
         {label}
       </span>
 
-      <span className="text-sm font-bold text-slate-950">
+      <span
+        className={`text-sm font-semibold text-slate-900 ${valueClassName}`}
+      >
         {value}
       </span>
     </div>
