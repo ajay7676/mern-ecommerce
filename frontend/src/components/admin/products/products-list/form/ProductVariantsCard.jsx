@@ -108,10 +108,9 @@ const ProductVariantsCard = ({
             {currentRows.map(({ field, index }) => {
               const variant = watchedVariants?.[index] || {};
               const isSelected = selectedVariantIndex === index;
-
               return (
                 <tr
-                  key={field.id}
+                  key={field.formFieldId}
                   onClick={() => onSelectVariant(index)}
                   className={`cursor-pointer border-b border-slate-100 ${
                     isSelected ? "bg-primary/5" : "hover:bg-slate-50"
@@ -124,7 +123,7 @@ const ProductVariantsCard = ({
                   <td>
                     <div className="flex items-center gap-3">
                       <img
-                        src={variant.imageUrl}
+                        src={variant.image.url}
                         alt={variant.name}
                         className="h-12 w-12 rounded-xl border border-slate-200 object-cover"
                       />

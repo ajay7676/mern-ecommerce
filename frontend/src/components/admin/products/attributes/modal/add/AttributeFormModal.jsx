@@ -137,9 +137,7 @@ const AttributeFormModal = ({ isOpen, onClose }) => {
   const onSubmit = async (values) => {
     try {
       const payload = buildAttributePayload(values);
-
       await createAttributeMutation.mutateAsync(payload);
-
       reset(getAttributeDefaultValues());
       onClose();
     } catch (error) {
@@ -354,7 +352,9 @@ const AttributeFormModal = ({ isOpen, onClose }) => {
                       append={append}
                       remove={remove}
                       register={register}
+                      setValue={setValue}
                       errors={errors}
+
                     />
 
                     {/* Additional Settings */}

@@ -34,7 +34,7 @@ const VariantImagePicker = ({
   return (
     <div className="flex items-center gap-2">
       <img
-        src={variant.imageUrl}
+        src={variant.image.url}
         alt={variant.name || "Variant"}
         className="h-12 w-12 rounded-xl border border-slate-200 object-cover"
       />

@@ -9,6 +9,7 @@ const toNumberOrNull = (value) => {
 };
 
 export const buildAttributePayload = (values) => {
+   console.log(values)
   const payload = {
     name: values.name.trim(),
     slug: values.slug.trim().toLowerCase(),

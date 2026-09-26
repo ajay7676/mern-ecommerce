@@ -3,10 +3,12 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
+import { generateAttributeOptionValue } from "../../../../../../utils/admin/products/attribute/attributeOptionUtils";
 
 const AttributeTypeFields = ({
   type,
   fields,
+  setValue,
   append,
   remove,
   register,
@@ -31,7 +33,27 @@ const AttributeTypeFields = ({
               <div className="flex-1">
                 <input
                   type="text"
-                  {...register(`values.${index}.label`)}
+                  {...register(`values.${index}.label`,
+
+                    {
+                    onChange: (event) => {
+                      const label = event.target.value;
+
+                      const generatedValue =
+                        generateAttributeOptionValue(label);
+
+                      setValue(
+                        `values.${index}.value`,
+                        generatedValue,
+                        {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        }
+                      );
+                    },
+                  }
+                  )}
+                  
                   placeholder="e.g. XL"
                   className="input input-bordered h-11 w-full bg-white"
                 />

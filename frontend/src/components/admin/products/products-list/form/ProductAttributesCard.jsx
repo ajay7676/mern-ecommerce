@@ -10,21 +10,20 @@ import {
 } from "../../../../../utils/admin/products/product/productAttributeOptionUtils";
 
 const ProductAttributesCard = ({
-  attributes,
   attributeFields,
+  attributes,
 
-  appendAttribute,
-  removeAttribute,
+  onAddAttributes,
+  onRemoveAttribute,
 
-  existingAttributes,
+  existingAttributes = [],
+  isAttributesLoading = false,
+  isAttributesError = false,
+  refetchAttributes,
 
   onAddOption,
   onEditOption,
   onRemoveOption,
-
-  isAttributesLoading,
-  isAttributesError,
-  refetchAttributes,
 }) => {
   const [isExistingModalOpen, setIsExistingModalOpen] =
     useState(false);
@@ -109,7 +108,7 @@ const ProductAttributesCard = ({
     /**
      * RHF useFieldArray append supports array.
      */
-    appendAttribute(snapshots);
+   onAddAttributes?.(snapshots);
 
     toast.success(
       `${snapshots.length} attribute${
@@ -460,11 +459,7 @@ const ProductAttributesCard = ({
 
                     <button
                       type="button"
-                      onClick={() =>
-                        removeAttribute(
-                          index
-                        )
-                      }
+                      onClick={() => onRemoveAttribute?.(index)}
                       className="btn btn-xs btn-outline btn-error rounded-lg"
                     >
                       Remove

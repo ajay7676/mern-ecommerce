@@ -771,6 +771,10 @@ const ProductAttributesVariationsStep = ({
    */
 
   const handleGenerateVariants = () => {
+    const watchedAttributes = getValues("attributes") || [];
+
+    const watchedVariants = getValues("variants") || [];
+
     if (!watchedAttributes.length) {
       toast.error("Please select at least one attribute");
 
@@ -1232,19 +1236,11 @@ const ProductAttributesVariationsStep = ({
       {/* =========================================== */}
 
       <RemoveAttributeOptionModal
-      open={Boolean(
-        pendingOptionRemoval
-      )}
-      data={
-        pendingOptionRemoval
-      }
-      onCancel={
-        handleCancelRemoveAttributeOption
-      }
-      onConfirm={
-        handleConfirmRemoveAttributeOption
-      }
-    />
+        open={Boolean(pendingOptionRemoval)}
+        data={pendingOptionRemoval}
+        onCancel={handleCancelRemoveAttributeOption}
+        onConfirm={handleConfirmRemoveAttributeOption}
+      />
       <VariantRegenerationConfirmModal
         open={Boolean(pendingVariantRegeneration)}
         data={pendingVariantRegeneration}
