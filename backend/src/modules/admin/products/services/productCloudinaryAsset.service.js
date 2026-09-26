@@ -19,14 +19,25 @@ const getImagePublicId = (image) => {
 };
 
 
-const getVariantImagePublicIds = (variant = {}) => {
-  const mainImagePublicId = getImagePublicId(variant.image);
+const getVariantImagePublicIds = (
+  variant = {},
+) => {
+  const mainImagePublicId =
+    getImagePublicId(
+      variant.image,
+    );
 
-  const extraImagePublicIds = (variant.images || [])
-    .map(getImagePublicId)
-    .filter(Boolean);
+  const extraImagePublicIds =
+    (
+      variant.images || []
+    )
+      .map(getImagePublicId)
+      .filter(Boolean);
 
-  return [mainImagePublicId, ...extraImagePublicIds].filter(Boolean);
+  return [
+    mainImagePublicId,
+    ...extraImagePublicIds,
+  ].filter(Boolean);
 };
 
 export const getUniquePublicIds = (publicIds = []) => {
@@ -63,47 +74,77 @@ export const extractProductImagePublicIdsFromPayload = (payload) => {
   return getUniquePublicIds([...productImagePublicIds, ...variantImagePublicIds]);
 };
 
-export const extractProductImageItemsFromPayload = (payload) => {
-  const productImages = (payload.media?.images || []).map((image) => ({
-    ...image,
-    usage: "product",
-  }));
-
-  const variantImages = (payload.attributesAndVariations?.variants || [])
-    .flatMap((variant) => {
-      const mainImage = variant.image
-        ? [
-            {
-              ...variant.image,
-              usage: "variant-main",
-            },
-          ]
-        : [];
-
-      const extraImages = (variant.images || []).map((image) => ({
+export const extractProductImageItemsFromPayload =
+  (payload) => {
+    const productImages =
+      (
+        payload.media?.images ||
+        []
+      ).map((image) => ({
         ...image,
-        usage: "variant-extra",
+        usage: "product",
       }));
 
-      return [...mainImage, ...extraImages];
-    })
-    .filter((image) => image?.publicId || image?.imageId);
+    const variantImages =
+      (
+        payload
+          .attributesAndVariations
+          ?.variants || []
+      ).flatMap((variant) => {
+        const mainImage =
+          variant.image?.publicId
+            ? [
+                {
+                  ...variant.image,
+                  usage:
+                    "variant-main",
+                },
+              ]
+            : [];
 
-  return [...productImages, ...variantImages];
-};
+        const extraImages =
+          (
+            variant.images || []
+          ).map((image) => ({
+            ...image,
+            usage:
+              "variant-extra",
+          }));
 
-export const extractExistingProductImagePublicIds = ({
-  product,
-  variants = [],
-}) => {
-  const productImagePublicIds = (product.images || [])
-    .map(getImagePublicId)
-    .filter(Boolean);
+        return [
+          ...mainImage,
+          ...extraImages,
+        ];
+      });
 
-  const variantImagePublicIds = (variants || []).flatMap(getVariantImagePublicIds);
+    return [
+      ...productImages,
+      ...variantImages,
+    ];
+  };
 
-  return getUniquePublicIds([...productImagePublicIds, ...variantImagePublicIds]);
-};
+export const extractExistingProductImagePublicIds =
+  ({
+    product,
+    variants = [],
+  }) => {
+    const productImagePublicIds =
+      (
+        product.images || []
+      )
+        .map(getImagePublicId)
+        .filter(Boolean);
+
+    const variantImagePublicIds =
+      variants.flatMap(
+        getVariantImagePublicIds,
+      );
+
+    return getUniquePublicIds([
+      ...productImagePublicIds,
+      ...variantImagePublicIds,
+    ]);
+  };
 
 export const verifyTemporaryProductImages = async ({
   publicIds,

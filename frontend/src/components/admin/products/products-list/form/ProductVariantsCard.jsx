@@ -10,7 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 
-import VariantImagePicker from "./VariantImagePicker";
+// import VariantImagePicker from "./VariantImagePicker";
 import VariantStatsCards from "./VariantStatsCards";
 
 import { calculateVariantStats } from "../../../../../utils/admin/products/product/productVariationUtils";
@@ -179,7 +179,7 @@ const ProductVariantsCard = ({
                   </td> */}
                   <td onClick={(event) => event.stopPropagation()}>
                     <VariantImageUploader
-                      variant={variant}
+                      variant={watchedVariants[index] || field}
                       variantIndex={index}
                       setValue={setValue}
                     />

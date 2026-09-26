@@ -32,6 +32,14 @@ import { reconcileProductVariants } from "../../../../../utils/admin/products/pr
 import { useProductAttributeOptions } from "../../../../../hooks/admin/queries/products/product-list/useProductAttributeOptions";
 
 import VariantRegenerationConfirmModal from "../form/VariantRegenerationConfirmModal";
+
+import {
+  getTemporaryVariantImagesToCleanup,
+} from "../../../../../utils/admin/products/product/productVariantImageLifecycleUtils";
+
+import {
+  useDeleteTemporaryProductImages,
+} from "../../../../../hooks/admin/mutations/products/useDeleteTemporaryProductImages";
 /**
  * Product Attributes & Variations Step
  *
@@ -91,6 +99,9 @@ const ProductAttributesVariationsStep = ({
 
     formState: { errors },
   } = useFormContext();
+
+  const deleteTempImagesMutation =
+  useDeleteTemporaryProductImages();
 
   const isEditMode = mode === "edit";
 
@@ -983,80 +994,154 @@ const ProductAttributesVariationsStep = ({
     setPendingVariantRegeneration(null);
   };
 
-  const handleApplyVariantRegeneration = async () => {
-    if (!pendingVariantRegeneration || isApplyingRegeneration) {
+const handleApplyVariantRegeneration =
+  async () => {
+    if (
+      !pendingVariantRegeneration ||
+      isApplyingRegeneration
+    ) {
       return;
     }
 
     try {
-      setIsApplyingRegeneration(true);
+      setIsApplyingRegeneration(
+        true,
+      );
+
+      const currentValues =
+        getValues();
 
       /**
-       * Re-read latest form state.
-       *
-       * This protects against applying an old preview
-       * if something changed unexpectedly.
+       * Re-run against latest values.
        */
-      const currentValues = getValues();
+      const latestResult =
+        reconcileProductVariants({
+          attributes:
+            currentValues.attributes ||
+            [],
 
-      const latestResult = reconcileProductVariants({
-        attributes: currentValues.attributes || [],
+          existingVariants:
+            currentValues.variants ||
+            [],
 
-        existingVariants: currentValues.variants || [],
+          baseSku:
+            currentValues.sku ||
+            "",
 
-        baseSku: currentValues.sku || "",
+          sellingPrice:
+            currentValues.sellingPrice ||
+            "",
 
-        sellingPrice: currentValues.sellingPrice || "",
+          stockQuantity:
+            currentValues.stockQuantity ||
+            "0",
 
-        stockQuantity: currentValues.stockQuantity || "0",
-
-        productImages: currentValues.images || [],
-      });
+          productImages:
+            currentValues.images ||
+            [],
+        });
 
       if (!latestResult.success) {
         toast.error(
-          latestResult.error || "Unable to apply variant regeneration",
+          latestResult.error ||
+            "Unable to regenerate variants",
         );
 
         return;
       }
 
       /**
-       * Apply entire reconciled variant collection.
+       * -------------------------------------------
+       * CLEAN TEMP IMAGES OF REMOVED VARIANTS
+       * -------------------------------------------
        */
-      replaceVariants(latestResult.nextVariants);
+      const temporaryImagesToCleanup =
+        getTemporaryVariantImagesToCleanup(
+          {
+            removedVariants:
+              latestResult.removedVariants,
+
+            nextVariants:
+              latestResult.nextVariants,
+
+            productImages:
+              currentValues.images ||
+              [],
+          },
+        );
+
+      if (
+        temporaryImagesToCleanup.length >
+        0
+      ) {
+        try {
+          await deleteTempImagesMutation.mutateAsync(
+            {
+              publicIds:
+                temporaryImagesToCleanup,
+            },
+          );
+        } catch (error) {
+          console.error(
+            "Temporary variant cleanup failed:",
+            error,
+          );
+
+          toast.error(
+            "Unable to clean temporary images from removed variants",
+          );
+
+          return;
+        }
+      }
 
       /**
-       * Attributes and variants now match.
+       * -------------------------------------------
+       * APPLY RECONCILIATION
+       * -------------------------------------------
        */
+      replaceVariants(
+        latestResult.nextVariants,
+      );
+
       markVariantsSynchronized();
 
-      /**
-       * Remove previous validation errors.
-       * trigger() below will recalculate them.
-       */
       clearErrors("variants");
 
       setSelectedVariantIndex(0);
 
-      setPendingVariantRegeneration(null);
+      setPendingVariantRegeneration(
+        null,
+      );
 
-      /**
-       * Validate updated arrays.
-       */
-      await trigger(["attributes", "variants"]);
+      await trigger([
+        "attributes",
+        "variants",
+      ]);
 
-      const { preserved, created, removed } = latestResult.report;
+      const {
+        preserved,
+        created,
+        removed,
+      } =
+        latestResult.report;
 
       toast.success(
         `Variants regenerated: ${preserved} preserved, ${created} new, ${removed} removed`,
       );
     } catch (error) {
-      console.error("Variant regeneration apply failed:", error);
+      console.error(
+        "Variant regeneration failed:",
+        error,
+      );
 
-      toast.error("Failed to apply variant regeneration");
+      toast.error(
+        "Failed to regenerate variants",
+      );
     } finally {
-      setIsApplyingRegeneration(false);
+      setIsApplyingRegeneration(
+        false,
+      );
     }
   };
 
