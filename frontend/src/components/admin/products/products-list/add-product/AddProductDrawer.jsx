@@ -273,9 +273,12 @@ const AddProductDrawer = ({
     return;
   }
     const isStepValid = await validateAllProductSteps(methods);
+     console.log(isStepValid);
 
     if (!isStepValid) {
       const firstError = getFirstProductFormError(methods.formState.errors);
+
+      console.log(firstError)
 
       if (firstError.step) {
         setActiveStep(firstError.step);

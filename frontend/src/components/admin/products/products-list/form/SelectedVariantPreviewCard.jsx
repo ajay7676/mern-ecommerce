@@ -22,7 +22,7 @@ const SelectedVariantPreviewCard = ({ variant }) => {
 
       <div className="mt-5 rounded-2xl bg-slate-50 p-5 text-center">
         <img
-          src={variant.imageUrl}
+          src={variant?.image?.url}
           alt={variant.name}
           className="mx-auto h-40 w-40 object-contain"
         />

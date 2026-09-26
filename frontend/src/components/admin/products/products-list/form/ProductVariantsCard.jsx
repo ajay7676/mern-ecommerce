@@ -13,9 +13,8 @@ import {
 import VariantImagePicker from "./VariantImagePicker";
 import VariantStatsCards from "./VariantStatsCards";
 
-import {
-    calculateVariantStats 
-} from '../../../../../utils/admin/products/product/productVariationUtils'
+import { calculateVariantStats } from "../../../../../utils/admin/products/product/productVariationUtils";
+import VariantImageUploader from "./VariantImageUploader";
 
 const PAGE_SIZE = 4;
 
@@ -48,9 +47,7 @@ const ProductVariantsCard = ({
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <h3 className="text-lg font-bold text-slate-950">
-            Manage Variants
-          </h3>
+          <h3 className="text-lg font-bold text-slate-950">Manage Variants</h3>
 
           <p className="mt-1 text-sm font-medium text-slate-500">
             Edit variant images, SKU, price, stock and status.
@@ -91,7 +88,10 @@ const ProductVariantsCard = ({
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-xs text-slate-500">
               <th className="w-10">
-                <input type="checkbox" className="checkbox checkbox-sm rounded" />
+                <input
+                  type="checkbox"
+                  className="checkbox checkbox-sm rounded"
+                />
               </th>
               <th className="min-w-47.5">Variant</th>
               <th className="min-w-52.5">Attributes</th>
@@ -117,13 +117,16 @@ const ProductVariantsCard = ({
                   }`}
                 >
                   <td onClick={(event) => event.stopPropagation()}>
-                    <input type="checkbox" className="checkbox checkbox-sm rounded" />
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-sm rounded"
+                    />
                   </td>
 
                   <td>
                     <div className="flex items-center gap-3">
                       <img
-                        src={variant.image.url}
+                        src={variant?.image?.url}
                         alt={variant.name}
                         className="h-12 w-12 rounded-xl border border-slate-200 object-cover"
                       />
@@ -148,27 +151,36 @@ const ProductVariantsCard = ({
 
                   <td>
                     <div className="flex flex-wrap gap-2">
-                      {Object.values(variant.attributeValues || {}).map((item) => (
-                        <span
-                          key={`${variant.variantId}-${item.attributeId}-${item.value}`}
-                          className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"
-                        >
-                          {item.colorCode && (
-                            <span
-                              className="h-2.5 w-2.5 rounded-full border border-slate-300"
-                              style={{ backgroundColor: item.colorCode }}
-                            />
-                          )}
-                          {item.label}
-                        </span>
-                      ))}
+                      {Object.values(variant.attributeValues || {}).map(
+                        (item) => (
+                          <span
+                            key={`${variant.variantId}-${item.attributeId}-${item.value}`}
+                            className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"
+                          >
+                            {item.colorCode && (
+                              <span
+                                className="h-2.5 w-2.5 rounded-full border border-slate-300"
+                                style={{ backgroundColor: item.colorCode }}
+                              />
+                            )}
+                            {item.label}
+                          </span>
+                        ),
+                      )}
                     </div>
                   </td>
 
-                  <td onClick={(event) => event.stopPropagation()}>
+                  {/* <td onClick={(event) => event.stopPropagation()}>
                     <VariantImagePicker
                       variant={variant}
                       index={index}
+                      setValue={setValue}
+                    />
+                  </td> */}
+                  <td onClick={(event) => event.stopPropagation()}>
+                    <VariantImageUploader
+                      variant={variant}
+                      variantIndex={index}
                       setValue={setValue}
                     />
                   </td>
@@ -213,7 +225,9 @@ const ProductVariantsCard = ({
                           <input
                             type="checkbox"
                             checked={field.value}
-                            onChange={(event) => field.onChange(event.target.checked)}
+                            onChange={(event) =>
+                              field.onChange(event.target.checked)
+                            }
                             className="toggle toggle-primary toggle-sm"
                           />
 
@@ -269,7 +283,8 @@ const ProductVariantsCard = ({
       <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm font-medium text-slate-500">
           Showing {fields.length ? startIndex + 1 : 0} to{" "}
-          {Math.min(startIndex + PAGE_SIZE, fields.length)} of {fields.length} variants
+          {Math.min(startIndex + PAGE_SIZE, fields.length)} of {fields.length}{" "}
+          variants
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -283,22 +298,26 @@ const ProductVariantsCard = ({
               <ChevronLeft className="h-4 w-4" />
             </button>
 
-            {Array.from({ length: Math.min(totalPages, 5) }).map((_, pageIndex) => {
-              const pageNumber = pageIndex + 1;
+            {Array.from({ length: Math.min(totalPages, 5) }).map(
+              (_, pageIndex) => {
+                const pageNumber = pageIndex + 1;
 
-              return (
-                <button
-                  key={pageNumber}
-                  type="button"
-                  onClick={() => setPage(pageNumber)}
-                  className={`btn join-item h-10 min-h-10 border-slate-200 ${
-                    pageNumber === page ? "btn-primary text-white" : "bg-white"
-                  }`}
-                >
-                  {pageNumber}
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={pageNumber}
+                    type="button"
+                    onClick={() => setPage(pageNumber)}
+                    className={`btn join-item h-10 min-h-10 border-slate-200 ${
+                      pageNumber === page
+                        ? "btn-primary text-white"
+                        : "bg-white"
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              },
+            )}
 
             <button
               type="button"

@@ -71,7 +71,7 @@ const productAttributeSchema = z.object({
 });
 
 const productVariantSchema = z.object({
-  variantId: z.string().optional(),
+  variantId: z.string().nullable().optional(),
   name: z.string().trim().min(1, "Variant name is required"),
   sku: z.string().trim().min(1, "Variant SKU is required"),
   price: z.string().trim().min(1, "Price is required"),
