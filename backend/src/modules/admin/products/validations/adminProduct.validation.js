@@ -606,8 +606,9 @@ const variantAttributeValuesSchema = z.union([
 ]);
 
 const updateVariantSchema = z.object({
-  variantId: optionalString.optional().default(null),
-
+  variantId: optionalObjectIdString
+    .optional()
+    .default(null),
   name: requiredString("Variant name is required"),
 
   sku: requiredString("Variant SKU is required"),

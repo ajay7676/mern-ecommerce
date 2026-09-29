@@ -28,6 +28,16 @@ import {
 } from "../helpers/productPayload.helper.js";
 
 import {
+  buildProductVariantPersistencePlan,
+  preserveSimpleDefaultVariantId,
+} from "../helpers/productVariantPersistence.helper.js";
+
+import {
+  findProductVariantsByProductId,
+  persistProductVariantPlan,
+} from "../repositories/adminProduct.repository.js";
+
+import {
   createProduct,
   createProductVariants,
   findAdminProducts,
@@ -46,11 +56,10 @@ import {
 
 import {
   mapAdminCreatedProductResponse,
-   mapAdminProductListResponse ,
-   mapAdminProductDetailResponse,
-   mapAdminUpdatedProductResponse,
-   
-  } from "../mappers/adminProduct.mapper.js";
+  mapAdminProductListResponse,
+  mapAdminProductDetailResponse,
+  mapAdminUpdatedProductResponse,
+} from "../mappers/adminProduct.mapper.js";
 import { uploadTemporaryImage } from "../../../../utils/cloudinary/uploadTemporaryImage.js";
 import { PRODUCT_IMAGE_CONFIG } from "../constants/productImage.constants.js";
 import { verifyTemporaryCloudinaryAsset } from "../../../../utils/cloudinary/cloudinaryTemporaryAsset.js";
@@ -409,7 +418,6 @@ export const deleteTemporaryProductImagesService = async ({
   };
 };
 
-
 export const getAdminProductsService = async (query) => {
   const page = Number(query.page || 1);
   const limit = Number(query.limit || 10);
@@ -462,14 +470,14 @@ export const updateAdminProductService = async ({
   try {
     const existingProduct = await findProductById(productId);
 
-
     if (!existingProduct) {
       throw new HandleError("Product not found", 404, {
         productId: "Product does not exist",
       });
     }
 
-    const existingVariants = await findAdminProductVariantsByProductId(productId);
+    const existingVariants =
+      await findAdminProductVariantsByProductId(productId);
 
     const imageUpdatePlan = buildProductImageUpdatePlan({
       existingProduct,
@@ -560,15 +568,66 @@ export const updateAdminProductService = async ({
     let updatedVariants = [];
 
     await session.withTransaction(async () => {
+      /**
+       * Re-read variants inside transaction.
+       *
+       * This is safer than relying entirely on data
+       * fetched before the transaction.
+       */
+      const currentDbVariants = await findProductVariantsByProductId(
+        productId,
+        session,
+      );
+
+      /**
+       * If simple products have an internal default
+       * variant, preserve its existing MongoDB _id.
+       */
+      const normalizedVariantsData = preserveSimpleDefaultVariantId({
+        productType: productUpdateData.productType,
+
+        existingVariants: currentDbVariants,
+
+        incomingVariants: variantsData,
+      });
+
+      /**
+       * Determine:
+       *
+       * update
+       * create
+       * delete
+       */
+      const variantPlan = buildProductVariantPersistencePlan({
+        productId,
+
+        existingVariants: currentDbVariants,
+
+        incomingVariants: normalizedVariantsData,
+      });
+
+      console.log("Variant persistence plan:", variantPlan.report);
+
+      /**
+       * Update main product.
+       */
       updatedProduct = await updateProductById({
         productId,
+
         update: productUpdateData,
+
         session,
       });
 
-      updatedVariants = await replaceProductVariants({
+      /**
+       * Apply variant diff without recreating
+       * existing variants.
+       */
+      updatedVariants = await persistProductVariantPlan({
         productId,
-        variantsData,
+
+        ...variantPlan,
+
         session,
       });
     });

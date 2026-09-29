@@ -388,48 +388,116 @@ export const buildProductVariantUpdateDocuments = ({
   productId,
   adminId,
 }) => {
-  const variants = payload.attributesAndVariations?.variants || [];
+  const variants =
+    payload.attributesAndVariations?.variants || [];
 
   return variants.map((variant, index) => {
-    const variantId =
-      variant.variantId && mongoose.isValidObjectId(variant.variantId)
-        ? new mongoose.Types.ObjectId(variant.variantId)
-        : new mongoose.Types.ObjectId();
+    const normalizedAttributes =
+      normalizeVariantAttributes(
+        variant.attributeValues ||
+          variant.attributes ||
+          []
+      );
 
-    return {
-      _id: variantId,
+    /**
+     * Existing DB variant:
+     * preserve its MongoDB _id.
+     *
+     * New variant:
+     * do NOT create _id here.
+     */
+    const persistedVariantId =
+      variant.variantId &&
+      mongoose.isValidObjectId(variant.variantId)
+        ? new mongoose.Types.ObjectId(
+            variant.variantId
+          )
+        : null;
 
-      product: productId,
-
-      name: variant.name,
-      sku: variant.sku,
-
-      price: Number(variant.price || product.pricing?.finalPrice || 0),
-      stock: Number(variant.stock || 0),
-
-      status: variant.status === "active" || variant.status === true
-        ? "active"
-        : "inactive",
-
-      image: variant.image || null,
-      images: variant.images || [],
-
-      attributeValues: normalizeVariantAttributes(
-        variant.attributeValues || variant.attributes || []
+    const variantDocument = {
+      product: new mongoose.Types.ObjectId(
+        productId
       ),
+
+      name: String(
+        variant.name || ""
+      ).trim(),
+
+      sku: String(
+        variant.sku || ""
+      ).trim(),
+
+      price: Number(
+        variant.price ??
+          product.pricing?.finalPrice ??
+          product.pricing?.sellingPrice ??
+          0
+      ),
+
+      stock: Number(
+        variant.stock ?? 0
+      ),
+
+      status:
+        variant.status === "active" ||
+        variant.status === true
+          ? "active"
+          : "inactive",
+
+      source:
+        variant.source || "auto",
+
+      image:
+        normalizeVariantImage(
+          variant.image
+        ),
+
+      images:
+        normalizeVariantImages(
+          variant.images || []
+        ),
+
+      attributeValues:
+        normalizedAttributes,
 
       optionSignature:
         variant.optionSignature ||
         buildVariantOptionSignature(
-          normalizeVariantAttributes(
-            variant.attributeValues || variant.attributes || []
-          )
+          normalizedAttributes
         ),
 
-      sortOrder: Number(variant.sortOrder || index + 1),
+      sortOrder: Number(
+        variant.sortOrder ??
+          index + 1
+      ),
 
-      createdBy: adminId,
-      updatedBy: adminId,
+      updatedBy:
+        new mongoose.Types.ObjectId(
+          adminId
+        ),
     };
+
+    /**
+     * Existing variant:
+     *
+     * _id is included so persistence planner knows
+     * which DB document must be updated.
+     */
+    if (persistedVariantId) {
+      variantDocument._id =
+        persistedVariantId;
+    } else {
+      /**
+       * New variant:
+       *
+       * MongoDB will create _id during insertMany().
+       */
+      variantDocument.createdBy =
+        new mongoose.Types.ObjectId(
+          adminId
+        );
+    }
+
+    return variantDocument;
   });
 };

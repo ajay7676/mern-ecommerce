@@ -385,3 +385,169 @@ export const replaceProductVariants = async ({
 
   return variants;
 };
+
+export const persistProductVariantPlan =
+  async ({
+    productId,
+
+    variantsToUpdate = [],
+    variantsToCreate = [],
+    variantsToDelete = [],
+
+    session,
+  }) => {
+    /**
+     * ============================================
+     * DELETE REMOVED VARIANTS
+     * ============================================
+     *
+     * Delete first inside the transaction.
+     *
+     * This also frees SKU / optionSignature unique
+     * constraints that may be reused by new variants.
+     *
+     * If later operation fails, transaction rollback
+     * restores these documents.
+     */
+
+    if (
+      variantsToDelete.length
+    ) {
+      const deleteIds =
+        variantsToDelete.map(
+          (variant) =>
+            variant._id
+        );
+
+      await ProductVariant.deleteMany(
+        {
+          _id: {
+            $in: deleteIds,
+          },
+
+          product:
+            productId,
+        },
+        {
+          session,
+        }
+      );
+    }
+
+    /**
+     * ============================================
+     * UPDATE EXISTING VARIANTS
+     * ============================================
+     */
+
+    if (
+      variantsToUpdate.length
+    ) {
+      const updateOperations =
+        variantsToUpdate.map(
+          ({
+            variantId,
+            update,
+          }) => ({
+            updateOne: {
+              filter: {
+                _id:
+                  variantId,
+
+                product:
+                  productId,
+              },
+
+              update: {
+                $set: {
+                  ...update,
+
+                  updatedAt:
+                    new Date(),
+                },
+              },
+            },
+          })
+        );
+
+      const updateResult =
+        await ProductVariant.bulkWrite(
+          updateOperations,
+          {
+            session,
+            ordered: true,
+          }
+        );
+
+      /**
+       * No incoming existing variant should vanish
+       * between planning and persistence.
+       */
+      if (
+        updateResult.matchedCount !==
+        variantsToUpdate.length
+      ) {
+        throw new Error(
+          "One or more product variants could not be updated"
+        );
+      }
+    }
+
+    /**
+     * ============================================
+     * CREATE NEW VARIANTS
+     * ============================================
+     */
+
+    if (
+      variantsToCreate.length
+    ) {
+      await ProductVariant.insertMany(
+        variantsToCreate,
+        {
+          session,
+          ordered: true,
+        }
+      );
+    }
+
+    /**
+     * ============================================
+     * RETURN FINAL COLLECTION
+     * ============================================
+     */
+
+    const query =
+      ProductVariant.find({
+        product:
+          productId,
+      }).sort({
+        sortOrder: 1,
+        createdAt: 1,
+      });
+
+    query.session(session);
+
+    return query.lean();
+  };
+
+export const findProductVariantsByProductId =
+  async (
+    productId,
+    session = null
+  ) => {
+    const query =
+      ProductVariant.find({
+        product:
+          productId,
+      }).sort({
+        sortOrder: 1,
+        createdAt: 1,
+      });
+
+    if (session) {
+      query.session(session);
+    }
+
+    return query.lean();
+  };
