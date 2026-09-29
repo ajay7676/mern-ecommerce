@@ -532,22 +532,23 @@ export const persistProductVariantPlan =
   };
 
 export const findProductVariantsByProductId =
-  async (
+  async ({
     productId,
-    session = null
-  ) => {
+    session = null,
+  }) => {
     const query =
       ProductVariant.find({
-        product:
-          productId,
-      }).sort({
-        sortOrder: 1,
-        createdAt: 1,
-      });
+        product: productId,
+      })
+        .sort({
+          sortOrder: 1,
+          createdAt: 1,
+        })
+        .lean();
 
     if (session) {
       query.session(session);
     }
 
-    return query.lean();
+    return query;
   };

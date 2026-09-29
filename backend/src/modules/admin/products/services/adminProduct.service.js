@@ -462,195 +462,702 @@ export const updateAdminProductService = async ({
   payload,
   adminId,
 }) => {
-  const session = await mongoose.startSession();
-
+  /**
+   * Newly promoted Cloudinary images.
+   *
+   * If DB transaction fails,
+   * these need rollback.
+   */
   let madePermanentPublicIds = [];
+
+  /**
+   * Old permanent images removed from
+   * the new product payload.
+   *
+   * Delete only AFTER DB commit.
+   */
   let removedPermanentPublicIds = [];
 
+  /**
+   * Very important.
+   *
+   * Once MongoDB transaction commits,
+   * we must NEVER rollback the newly
+   * permanent images.
+   */
+  let transactionCommitted = false;
+
+  let session = null;
+
   try {
-    const existingProduct = await findProductById(productId);
+    /**
+     * =================================================
+     * 1. LOAD EXISTING PRODUCT
+     * =================================================
+     */
+
+    const existingProduct =
+      await findProductById(
+        productId,
+      );
 
     if (!existingProduct) {
-      throw new HandleError("Product not found", 404, {
-        productId: "Product does not exist",
-      });
+      throw new HandleError(
+        "Product not found",
+        404,
+        {
+          productId:
+            "Product does not exist",
+        },
+      );
     }
+
+    /**
+     * =================================================
+     * 2. LOAD EXISTING VARIANTS
+     * =================================================
+     *
+     * These variants are trusted DB data.
+     *
+     * We need them for:
+     *
+     * variantId ownership
+     * permanent image ownership
+     * differential update
+     */
 
     const existingVariants =
-      await findAdminProductVariantsByProductId(productId);
-
-    const imageUpdatePlan = buildProductImageUpdatePlan({
-      existingProduct,
-      existingVariants,
-      payload,
-    });
-
-    if (imageUpdatePlan.suspiciousNewPublicIds.length > 0) {
-      throw new HandleError("Invalid image update", 400, {
-        images:
-          "New images must be uploaded as temporary images before updating product",
+      await findProductVariantsByProductId({
+        productId,
       });
+
+    /**
+     * =================================================
+     * 3. GET INCOMING ATTRIBUTE + VARIANT DATA
+     * =================================================
+     */
+
+    const incomingAttributes =
+      payload.attributesAndVariations
+        ?.attributes || [];
+
+    const incomingVariants =
+      payload.attributesAndVariations
+        ?.variants || [];
+
+    /**
+     * Product type can come from update payload.
+     *
+     * If missing, fall back to current DB product.
+     */
+    const productType =
+      payload.productType ||
+      existingProduct.productType;
+
+    /**
+     * =================================================
+     * 4. VALIDATE VARIANT INTEGRITY
+     * =================================================
+     *
+     * Checks:
+     *
+     * variantId belongs to product
+     * duplicate variantId
+     * attribute exists
+     * option exists
+     * complete combination
+     * duplicate SKU
+     * duplicate combination
+     * blob/data URL
+     *
+     * Also creates trusted canonical optionSignature.
+     */
+
+    const variantIntegrity =
+      await validateProductVariantUpdateIntegrity({
+        variants:
+          incomingVariants,
+
+        attributes:
+          incomingAttributes,
+
+        existingVariants,
+
+        product:
+          existingProduct,
+
+        productType,
+      });
+
+    /**
+     * =================================================
+     * 5. BUILD TRUSTED PAYLOAD
+     * =================================================
+     *
+     * Replace raw frontend variants with
+     * backend-validated variants.
+     *
+     * Particularly important for:
+     *
+     * optionSignature
+     */
+
+    const validatedPayload = {
+      ...payload,
+
+      attributesAndVariations: {
+        ...payload.attributesAndVariations,
+
+        variants:
+          variantIntegrity.variants,
+      },
+    };
+
+    /**
+     * =================================================
+     * 6. BUILD IMAGE UPDATE PLAN
+     * =================================================
+     *
+     * This MUST use validated payload.
+     *
+     * Image plan should include:
+     *
+     * product images
+     * variant.image
+     * variant.images
+     */
+
+    const imageUpdatePlan =
+      buildProductImageUpdatePlan({
+        existingProduct,
+        existingVariants,
+
+        payload:
+          validatedPayload,
+      });
+
+    /**
+     * An unknown publicId that is neither:
+     *
+     * existing permanent image
+     * nor new temporary image
+     *
+     * is suspicious.
+     */
+
+    if (
+      imageUpdatePlan
+        .suspiciousNewPublicIds
+        .length > 0
+    ) {
+      throw new HandleError(
+        "Invalid image update",
+        400,
+        {
+          images:
+            "New images must be uploaded as temporary images before updating product",
+        },
+      );
     }
 
+    /**
+     * =================================================
+     * 7. VERIFY NEW TEMP IMAGES
+     * =================================================
+     *
+     * Reuse YOUR existing function.
+     *
+     * No getCloudinaryImageResource() needed here.
+     *
+     * This function should validate:
+     *
+     * resource exists
+     * product-image tag
+     * temporary tag
+     * uploaded_by === adminId
+     * asset_state === temporary
+     */
+
     await verifyTemporaryProductImages({
-      publicIds: imageUpdatePlan.newTemporaryPublicIds,
+      publicIds:
+        imageUpdatePlan
+          .newTemporaryPublicIds,
+
       adminId,
+
       required: false,
     });
 
-    madePermanentPublicIds = await makeProductImagesPermanent({
-      publicIds: imageUpdatePlan.newTemporaryPublicIds,
-      adminId,
-      productId,
-    });
+    /**
+     * Remember old images that will become unused.
+     *
+     * DO NOT delete them yet.
+     */
+    removedPermanentPublicIds =
+      imageUpdatePlan
+        .removedPermanentPublicIds;
 
-    removedPermanentPublicIds = imageUpdatePlan.removedPermanentPublicIds;
+    /**
+     * =================================================
+     * 8. BUILD PRODUCT UPDATE DATA
+     * =================================================
+     */
 
-    const productUpdateData = buildProductUpdateDocument({
-      payload,
-      adminId,
-      productId,
-    });
+    const productUpdateData =
+      buildProductUpdateDocument({
+        payload:
+          validatedPayload,
 
-    const existingSlug = await findProductBySlugExceptId({
-      slug: productUpdateData.slug,
-      productId,
-    });
+        adminId,
+        productId,
+      });
+
+    /**
+     * =================================================
+     * 9. PRODUCT SLUG VALIDATION
+     * =================================================
+     */
+
+    const existingSlug =
+      await findProductBySlugExceptId({
+        slug:
+          productUpdateData.slug,
+
+        productId,
+      });
 
     if (existingSlug) {
-      throw new HandleError("Product slug already exists", 409, {
-        productName: "A product with this name already exists",
-      });
+      throw new HandleError(
+        "Product slug already exists",
+        409,
+        {
+          productName:
+            "A product with this name already exists",
+        },
+      );
     }
 
-    const existingSku = await findProductByInventorySkuExceptId({
-      sku: productUpdateData.inventory?.sku,
-      productId,
-    });
+    /**
+     * =================================================
+     * 10. BASE PRODUCT SKU VALIDATION
+     * =================================================
+     */
 
-    if (existingSku) {
-      throw new HandleError("Product SKU already exists", 409, {
-        sku: "This product SKU is already used",
-      });
+    const inventorySku =
+      productUpdateData.inventory
+        ?.sku;
+
+    if (inventorySku) {
+      const existingSku =
+        await findProductByInventorySkuExceptId({
+          sku:
+            inventorySku,
+
+          productId,
+        });
+
+      if (existingSku) {
+        throw new HandleError(
+          "Product SKU already exists",
+          409,
+          {
+            sku:
+              "This product SKU is already used",
+          },
+        );
+      }
     }
 
-    const variantsData = buildProductVariantDocuments({
-      payload,
-      product: productUpdateData,
-      productId,
-      adminId,
-    });
+    /**
+     * =================================================
+     * 11. BUILD VARIANT UPDATE DOCUMENTS
+     * =================================================
+     *
+     * IMPORTANT:
+     *
+     * Use buildProductVariantUpdateDocuments,
+     * NOT buildProductVariantDocuments.
+     */
 
-    const variantSkus = variantsData
-      .map((variant) => variant.sku)
-      .filter(Boolean);
+    const variantsData =
+      buildProductVariantUpdateDocuments({
+        payload:
+          validatedPayload,
 
-    const uniqueVariantSkus = new Set(variantSkus);
+        product:
+          productUpdateData,
 
-    if (variantSkus.length !== uniqueVariantSkus.size) {
-      throw new HandleError("Duplicate variant SKU", 400, {
-        variants: "Variant SKUs must be unique",
+        productId,
+
+        adminId,
       });
+
+    /**
+     * =================================================
+     * 12. VARIANT SKU CONFLICT WITH OTHER PRODUCTS
+     * =================================================
+     *
+     * Duplicate SKU inside this payload has already
+     * been checked by integrity validation.
+     *
+     * Now check against OTHER products.
+     */
+
+    const variantSkus =
+      variantsData
+        .map(
+          (variant) =>
+            variant.sku,
+        )
+        .filter(Boolean);
+
+    if (
+      variantSkus.length > 0
+    ) {
+      const externalVariantSkuConflicts =
+        await findVariantSkusExceptProduct({
+          skus:
+            variantSkus,
+
+          productId,
+        });
+
+      if (
+        externalVariantSkuConflicts
+          .length > 0
+      ) {
+        throw new HandleError(
+          "Variant SKU already exists",
+          409,
+          {
+            variants:
+              `Variant SKU already exists: ${externalVariantSkuConflicts[0].sku}`,
+          },
+        );
+      }
     }
 
-    const externalVariantSkuConflicts = await findVariantSkusExceptProduct({
-      skus: variantSkus,
-      productId,
-    });
+    /**
+     * =================================================
+     * 13. PROMOTE NEW TEMP IMAGES
+     * =================================================
+     *
+     * Do this AFTER all normal validation.
+     *
+     * Why?
+     *
+     * If slug/SKU/variant validation fails,
+     * we don't unnecessarily change Cloudinary.
+     *
+     * If DB fails AFTER promotion,
+     * catch() rolls them back.
+     */
 
-    if (externalVariantSkuConflicts.length > 0) {
-      throw new HandleError("Variant SKU already exists", 409, {
-        variants: `Variant SKU already exists: ${externalVariantSkuConflicts[0].sku}`,
-      });
+    if (
+      imageUpdatePlan
+        .newTemporaryPublicIds
+        .length > 0
+    ) {
+      madePermanentPublicIds =
+        await makeProductImagesPermanent({
+          publicIds:
+            imageUpdatePlan
+              .newTemporaryPublicIds,
+
+          adminId,
+          productId,
+        });
     }
 
-    let updatedProduct;
+    /**
+     * =================================================
+     * 14. START SESSION ONLY WHEN READY TO WRITE
+     * =================================================
+     */
+
+    session =
+      await mongoose.startSession();
+
+    let updatedProduct = null;
     let updatedVariants = [];
 
-    await session.withTransaction(async () => {
-      /**
-       * Re-read variants inside transaction.
-       *
-       * This is safer than relying entirely on data
-       * fetched before the transaction.
-       */
-      const currentDbVariants = await findProductVariantsByProductId(
-        productId,
-        session,
-      );
+    /**
+     * =================================================
+     * 15. DATABASE TRANSACTION
+     * =================================================
+     */
 
-      /**
-       * If simple products have an internal default
-       * variant, preserve its existing MongoDB _id.
-       */
-      const normalizedVariantsData = preserveSimpleDefaultVariantId({
-        productType: productUpdateData.productType,
+    await session.withTransaction(
+      async () => {
+        /**
+         * Re-read variants inside transaction.
+         *
+         * Important because validation happened
+         * before transaction and DB could theoretically
+         * change meanwhile.
+         */
 
-        existingVariants: currentDbVariants,
+        const currentDbVariants =
+          await findProductVariantsByProductId({
+            productId,
+            session,
+          });
 
-        incomingVariants: variantsData,
-      });
+        /**
+         * ---------------------------------------------
+         * SIMPLE PRODUCT
+         * ---------------------------------------------
+         *
+         * If simple products use an internal default
+         * ProductVariant, preserve its MongoDB ID.
+         */
 
-      /**
-       * Determine:
-       *
-       * update
-       * create
-       * delete
-       */
-      const variantPlan = buildProductVariantPersistencePlan({
-        productId,
+        const normalizedVariantsData =
+          preserveSimpleDefaultVariantId({
+            productType:
+              productUpdateData
+                .productType,
 
-        existingVariants: currentDbVariants,
+            existingVariants:
+              currentDbVariants,
 
-        incomingVariants: normalizedVariantsData,
-      });
+            incomingVariants:
+              variantsData,
+          });
 
-      console.log("Variant persistence plan:", variantPlan.report);
+        /**
+         * ---------------------------------------------
+         * CREATE DIFFERENTIAL VARIANT PLAN
+         * ---------------------------------------------
+         *
+         * Existing _id:
+         * → UPDATE
+         *
+         * No _id:
+         * → CREATE
+         *
+         * DB variant absent from incoming:
+         * → DELETE
+         */
 
-      /**
-       * Update main product.
-       */
-      updatedProduct = await updateProductById({
-        productId,
+        const variantPlan =
+          buildProductVariantPersistencePlan({
+            productId,
 
-        update: productUpdateData,
+            existingVariants:
+              currentDbVariants,
 
-        session,
-      });
+            incomingVariants:
+              normalizedVariantsData,
+          });
 
-      /**
-       * Apply variant diff without recreating
-       * existing variants.
-       */
-      updatedVariants = await persistProductVariantPlan({
-        productId,
+        console.log(
+          "Variant persistence plan:",
+          variantPlan.report,
+        );
 
-        ...variantPlan,
+        /**
+         * ---------------------------------------------
+         * UPDATE MAIN PRODUCT
+         * ---------------------------------------------
+         */
 
-        session,
-      });
-    });
+        updatedProduct =
+          await updateProductById({
+            productId,
 
-    await deleteRemovedPermanentProductImages(removedPermanentPublicIds);
+            update:
+              productUpdateData,
 
-    return mapAdminUpdatedProductResponse({
-      product: updatedProduct,
-      variants: updatedVariants,
-    });
-  } catch (error) {
-    if (madePermanentPublicIds.length > 0) {
-      await rollbackPermanentProductImages(madePermanentPublicIds);
+            session,
+          });
+
+        if (!updatedProduct) {
+          throw new HandleError(
+            "Product update failed",
+            500,
+          );
+        }
+
+        /**
+         * ---------------------------------------------
+         * UPDATE / CREATE / DELETE VARIANTS
+         * ---------------------------------------------
+         */
+
+        updatedVariants =
+          await persistProductVariantPlan({
+            productId,
+
+            ...variantPlan,
+
+            session,
+          });
+      },
+    );
+
+    /**
+     * MongoDB has successfully committed.
+     *
+     * This changes catch() behavior.
+     */
+    transactionCommitted = true;
+
+    /**
+     * =================================================
+     * 16. DELETE REMOVED OLD PERMANENT IMAGES
+     * =================================================
+     *
+     * IMPORTANT:
+     *
+     * Only after DB transaction succeeds.
+     *
+     * If cleanup fails now, DO NOT rollback
+     * the newly permanent images because DB
+     * already references them.
+     */
+
+    if (
+      removedPermanentPublicIds.length >
+      0
+    ) {
+      try {
+        await deleteRemovedPermanentProductImages(
+          removedPermanentPublicIds,
+        );
+      } catch (cleanupError) {
+        /**
+         * Product update already succeeded.
+         *
+         * Therefore don't fail/rollback database state.
+         *
+         * Later you can add:
+         *
+         * cleanup queue
+         * cron cleanup
+         * retry job
+         */
+
+        console.error(
+          "Old product image cleanup failed:",
+          cleanupError,
+        );
+      }
     }
 
-    if (error?.code === 11000) {
-      throw new HandleError("Duplicate product data", 409, {
-        product: "Product with same unique field already exists",
-      });
+    /**
+     * =================================================
+     * 17. RETURN UPDATED PRODUCT
+     * =================================================
+     */
+
+    return mapAdminUpdatedProductResponse({
+      product:
+        updatedProduct,
+
+      variants:
+        updatedVariants,
+    });
+  } catch (error) {
+    /**
+     * =================================================
+     * CLOUDINARY ROLLBACK
+     * =================================================
+     *
+     * Rollback newly promoted images ONLY when
+     * MongoDB transaction has NOT committed.
+     *
+     * This condition is very important.
+     */
+
+    if (
+      !transactionCommitted &&
+      madePermanentPublicIds.length >
+        0
+    ) {
+      try {
+        await rollbackPermanentProductImages(
+          madePermanentPublicIds,
+        );
+      } catch (rollbackError) {
+        console.error(
+          "Product image rollback failed:",
+          rollbackError,
+        );
+      }
+    }
+
+    /**
+     * Mongo duplicate key fallback.
+     */
+    if (
+      error?.code === 11000
+    ) {
+      const duplicateField =
+        Object.keys(
+          error.keyPattern || {},
+        )[0];
+
+      if (
+        duplicateField === "sku"
+      ) {
+        throw new HandleError(
+          "Duplicate SKU",
+          409,
+          {
+            sku:
+              "This SKU is already in use",
+          },
+        );
+      }
+
+      if (
+        duplicateField ===
+        "optionSignature"
+      ) {
+        throw new HandleError(
+          "Duplicate variant combination",
+          409,
+          {
+            variants:
+              "This variant combination already exists",
+          },
+        );
+      }
+
+      if (
+        duplicateField ===
+        "slug"
+      ) {
+        throw new HandleError(
+          "Product slug already exists",
+          409,
+          {
+            productName:
+              "A product with this name already exists",
+          },
+        );
+      }
+
+      throw new HandleError(
+        "Duplicate product data",
+        409,
+        {
+          product:
+            "Product with the same unique field already exists",
+        },
+      );
     }
 
     throw error;
   } finally {
-    session.endSession();
+    /**
+     * Session only exists after all validation
+     * and Cloudinary promotion succeed.
+     */
+
+    if (session) {
+      await session.endSession();
+    }
   }
 };

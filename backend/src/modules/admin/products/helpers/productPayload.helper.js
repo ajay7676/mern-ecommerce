@@ -9,6 +9,7 @@ import {
 } from "../constants/product.constants.js";
 
 import HandleError from "../../../../utils/handleError.js";
+import { normalizeKey } from "./productVariantIntegrity.helper.js";
 
 const cleanString = (value) => {
   if (value === null || value === undefined) return null;
@@ -124,26 +125,49 @@ export const normalizeVariantImages = (images = []) => {
     sortOrder: Number(image.sortOrder || index + 1),
   }));
 };
-export const normalizeProductAttributes = (attributes = []) => {
-  return attributes.map((attribute) => ({
-    attributeId:
-      attribute.source === "existing" &&
-      mongoose.isValidObjectId(attribute.attributeId)
-        ? attribute.attributeId
-        : null,
 
-    name: cleanString(attribute.name),
-    type: cleanString(attribute.type),
-    source: attribute.source || "existing",
+const normalizeProductAttributes = (
+  attributes = [],
+) => {
+  return attributes.map((attribute) => {
+    const attributeKey =
+      normalizeKey(attribute.slug) ||
+      normalizeKey(attribute.attributeId) ||
+      normalizeKey(attribute.name);
 
-    options: (attribute.options || []).map((option) => ({
-      optionId: cleanString(option.optionId),
-      label: cleanString(option.label),
-      value: cleanString(option.value),
-      colorCode: cleanString(option.colorCode),
-      isCustom: Boolean(option.isCustom),
-    })),
-  }));
+    return {
+      attributeId:
+        attribute.attributeId
+          ? String(attribute.attributeId)
+          : null,
+
+      name:
+        cleanString(attribute.name),
+
+      slug:
+        cleanString(attribute.slug),
+
+      attributeKey,
+
+      options: (attribute.options || []).map(
+        (option) => ({
+          optionId:
+            option.optionId
+              ? String(option.optionId)
+              : null,
+
+          label:
+            cleanString(option.label),
+
+          value:
+            cleanString(option.value),
+
+          normalizedValue:
+            normalizeKey(option.value),
+        }),
+      ),
+    };
+  });
 };
 
 export const buildVariantOptionSignature = (attributes = []) => {
