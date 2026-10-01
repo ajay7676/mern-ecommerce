@@ -5,6 +5,7 @@ import { PRODUCT_IMAGE_CONFIG } from "../constants/productImage.constants.js";
 import { getCloudinaryAsset } from '../../../../utils/cloudinary/cloudinaryAsset.js'
 import { makeCloudinaryAssetPermanent } from '../../../../utils/cloudinary/makeAssetPermanent.js'
 import { safeDeleteCloudinaryAsset } from '../../../../utils/cloudinary/safeDeleteCloudinaryAsset.js'
+import { collectExistingImageItems, collectIncomingImageItems, isTemporaryImage, uniquePublicIds } from '../helpers/productImageUpdatePlan.helper.js';
 
 
 const getAssetOwnerId = (asset) => {
@@ -251,77 +252,206 @@ export const buildProductImageUpdatePlan = ({
   existingVariants = [],
   payload,
 }) => {
-  const existingProductObject =
-    typeof existingProduct?.toObject === "function"
-      ? existingProduct.toObject()
-      : existingProduct;
+  /**
+   * ================================================
+   * 1. COLLECT TRUSTED OLD DB IMAGES
+   * ================================================
+   */
 
-  const oldPublicIds = extractExistingProductImagePublicIds({
-    product: existingProductObject || {},
-    variants: existingVariants,
-  });
+  const existingItems =
+    collectExistingImageItems({
+      existingProduct,
+      existingVariants,
+    });
 
-  const oldPublicIdSet = new Set(oldPublicIds);
-
-  const payloadImageItems = extractProductImageItemsFromPayload(payload);
-
-  const nextPublicIds = getUniquePublicIds(
-    payloadImageItems.map(getImagePublicId)
-  );
-
-  const nextPublicIdSet = new Set(nextPublicIds);
-
-  const removedPermanentPublicIds = oldPublicIds.filter(
-    (publicId) => !nextPublicIdSet.has(publicId)
-  );
+  const oldPermanentPublicIds =
+    uniquePublicIds(
+      existingItems.map(
+        (item) =>
+          item.publicId,
+      ),
+    );
 
   /**
-   * Important:
-   * Same publicId may appear in product images and variant image.
-   * If it is marked temporary anywhere, consider that publicId temporary.
+   * ================================================
+   * 2. COLLECT INCOMING IMAGE REFERENCES
+   * ================================================
    */
-  const temporaryPublicIdSet = new Set();
 
-  payloadImageItems.forEach((image) => {
-    const publicId = getImagePublicId(image);
+  const incomingItems =
+    collectIncomingImageItems(
+      payload,
+    );
 
-    if (!publicId) return;
+  const nextPublicIds =
+    uniquePublicIds( 
+      incomingItems.map(
+        (item) =>
+          item.publicId,
+      ),
+    );
 
-    const isTemporaryImage =
-      image.isTemporary === true || image.assetState === "temporary";
+  /**
+   * Faster membership checks.
+   */
 
-    if (isTemporaryImage) {
-      temporaryPublicIdSet.add(publicId);
+  const oldPublicIdSet =
+    new Set(
+      oldPermanentPublicIds,
+    );
+
+  const nextPublicIdSet =
+    new Set(
+      nextPublicIds,
+    );
+
+  /**
+   * ================================================
+   * 3. NEW PUBLIC IDS
+   * ================================================
+   *
+   * These are present in incoming payload
+   * but do not exist in current product DB state.
+   */
+
+  const newPublicIds =
+    nextPublicIds.filter(
+      (publicId) =>
+        !oldPublicIdSet.has(
+          publicId,
+        ),
+    );
+
+  /**
+   * ================================================
+   * 4. CLASSIFY NEW IMAGES
+   * ================================================
+   *
+   * Same publicId may appear in multiple places.
+   *
+   * If ANY incoming reference marks it temporary,
+   * treat it as a temporary candidate.
+   */
+
+  const newTemporaryPublicIds =
+    [];
+
+  const suspiciousNewPublicIds =
+    [];
+
+  for (
+    const publicId of
+    newPublicIds
+  ) {
+    const matchingItems =
+      incomingItems.filter(
+        (item) =>
+          item.publicId ===
+          publicId,
+      );
+
+    const hasTemporaryClaim =
+      matchingItems.some(
+        (item) =>
+          isTemporaryImage(
+            item.image,
+          ),
+      );
+
+    if (
+      hasTemporaryClaim
+    ) {
+      newTemporaryPublicIds.push(
+        publicId,
+      );
+
+      continue;
     }
-  });
 
-  const newTemporaryPublicIds = nextPublicIds.filter((publicId) => {
-    const alreadyBelongsToProduct = oldPublicIdSet.has(publicId);
+    /**
+     * Unknown image + not marked temporary.
+     *
+     * Could be somebody trying to attach:
+     *
+     * another product's permanent image
+     * arbitrary Cloudinary image
+     * fake publicId
+     */
+    suspiciousNewPublicIds.push(
+      publicId,
+    );
+  }
 
-    if (alreadyBelongsToProduct) return false;
+  /**
+   * ================================================
+   * 5. OLD IMAGES REMOVED FROM NEXT STATE
+   * ================================================
+   *
+   * IMPORTANT:
+   *
+   * Because this comparison is against the complete
+   * next product + variant image set, a shared image
+   * will NOT be deleted if another reference still
+   * uses it.
+   */
 
-    return temporaryPublicIdSet.has(publicId);
-  });
+  const removedPermanentPublicIds =
+    oldPermanentPublicIds.filter(
+      (publicId) =>
+        !nextPublicIdSet.has(
+          publicId,
+        ),
+    );
 
-  const suspiciousNewPublicIds = nextPublicIds.filter((publicId) => {
-    const alreadyBelongsToProduct = oldPublicIdSet.has(publicId);
+  /**
+   * ================================================
+   * 6. RETAINED IMAGES
+   * ================================================
+   *
+   * Useful for debugging/tests.
+   */
 
-    if (alreadyBelongsToProduct) return false;
-
-    const markedTemporarySomewhere = temporaryPublicIdSet.has(publicId);
-
-    return !markedTemporarySomewhere;
-  });
+  const retainedPublicIds =
+    oldPermanentPublicIds.filter(
+      (publicId) =>
+        nextPublicIdSet.has(
+          publicId,
+        ),
+    );
 
   return {
-    oldPublicIds,
+    oldPermanentPublicIds,
+
     nextPublicIds,
-    removedPermanentPublicIds,
-    newTemporaryPublicIds,
-    suspiciousNewPublicIds,
+
+    newTemporaryPublicIds:
+      uniquePublicIds(
+        newTemporaryPublicIds,
+      ),
+
+    removedPermanentPublicIds:
+      uniquePublicIds(
+        removedPermanentPublicIds,
+      ),
+
+    suspiciousNewPublicIds:
+      uniquePublicIds(
+        suspiciousNewPublicIds,
+      ),
+
+    retainedPublicIds:
+      uniquePublicIds(
+        retainedPublicIds,
+      ),
+
+    /**
+     * Useful while developing/debugging.
+     * You may remove these later.
+     */
+    existingItems,
+    incomingItems,
   };
 };
-
 
 
 

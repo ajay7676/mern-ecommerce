@@ -65,6 +65,7 @@ import { PRODUCT_IMAGE_CONFIG } from "../constants/productImage.constants.js";
 import { verifyTemporaryCloudinaryAsset } from "../../../../utils/cloudinary/cloudinaryTemporaryAsset.js";
 import { isCloudinaryResourceNotFound } from "../../../../utils/cloudinary/cloudinaryError.js";
 import { deleteCloudinaryAssets } from "../../../../utils/cloudinary/cloudinaryDelete.js";
+import { validateProductVariantUpdateIntegrity } from "./productVariantIntegrity.service.js";
 
 const assertUniqueVariantSkusInPayload = (variants = []) => {
   const skus = variants.map((variant) => variant.sku).filter(Boolean);
@@ -496,20 +497,12 @@ export const updateAdminProductService = async ({
      * =================================================
      */
 
-    const existingProduct =
-      await findProductById(
-        productId,
-      );
+    const existingProduct = await findProductById(productId);
 
     if (!existingProduct) {
-      throw new HandleError(
-        "Product not found",
-        404,
-        {
-          productId:
-            "Product does not exist",
-        },
-      );
+      throw new HandleError("Product not found", 404, {
+        productId: "Product does not exist",
+      });
     }
 
     /**
@@ -526,10 +519,9 @@ export const updateAdminProductService = async ({
      * differential update
      */
 
-    const existingVariants =
-      await findProductVariantsByProductId({
-        productId,
-      });
+    const existingVariants = await findProductVariantsByProductId({
+      productId,
+    });
 
     /**
      * =================================================
@@ -538,21 +530,16 @@ export const updateAdminProductService = async ({
      */
 
     const incomingAttributes =
-      payload.attributesAndVariations
-        ?.attributes || [];
+      payload.attributesAndVariations?.attributes || [];
 
-    const incomingVariants =
-      payload.attributesAndVariations
-        ?.variants || [];
+    const incomingVariants = payload.attributesAndVariations?.variants || [];
 
     /**
      * Product type can come from update payload.
      *
      * If missing, fall back to current DB product.
      */
-    const productType =
-      payload.productType ||
-      existingProduct.productType;
+    const productType = payload.productType || existingProduct.productType;
 
     /**
      * =================================================
@@ -573,21 +560,17 @@ export const updateAdminProductService = async ({
      * Also creates trusted canonical optionSignature.
      */
 
-    const variantIntegrity =
-      await validateProductVariantUpdateIntegrity({
-        variants:
-          incomingVariants,
+    const variantIntegrity = await validateProductVariantUpdateIntegrity({
+      variants: incomingVariants,
 
-        attributes:
-          incomingAttributes,
+      attributes: incomingAttributes,
 
-        existingVariants,
+      existingVariants,
 
-        product:
-          existingProduct,
+      product: existingProduct,
 
-        productType,
-      });
+      productType,
+    });
 
     /**
      * =================================================
@@ -608,8 +591,7 @@ export const updateAdminProductService = async ({
       attributesAndVariations: {
         ...payload.attributesAndVariations,
 
-        variants:
-          variantIntegrity.variants,
+        variants: variantIntegrity.variants,
       },
     };
 
@@ -627,14 +609,12 @@ export const updateAdminProductService = async ({
      * variant.images
      */
 
-    const imageUpdatePlan =
-      buildProductImageUpdatePlan({
-        existingProduct,
-        existingVariants,
+    const imageUpdatePlan = buildProductImageUpdatePlan({
+      existingProduct,
+      existingVariants,
 
-        payload:
-          validatedPayload,
-      });
+      payload: validatedPayload,
+    });
 
     /**
      * An unknown publicId that is neither:
@@ -645,19 +625,11 @@ export const updateAdminProductService = async ({
      * is suspicious.
      */
 
-    if (
-      imageUpdatePlan
-        .suspiciousNewPublicIds
-        .length > 0
-    ) {
-      throw new HandleError(
-        "Invalid image update",
-        400,
-        {
-          images:
-            "New images must be uploaded as temporary images before updating product",
-        },
-      );
+    if (imageUpdatePlan.suspiciousNewPublicIds.length > 0) {
+      throw new HandleError("Invalid image update", 400, {
+        images:
+          "New images must be uploaded as temporary images before updating product",
+      });
     }
 
     /**
@@ -679,9 +651,7 @@ export const updateAdminProductService = async ({
      */
 
     await verifyTemporaryProductImages({
-      publicIds:
-        imageUpdatePlan
-          .newTemporaryPublicIds,
+      publicIds: imageUpdatePlan.newTemporaryPublicIds,
 
       adminId,
 
@@ -693,9 +663,7 @@ export const updateAdminProductService = async ({
      *
      * DO NOT delete them yet.
      */
-    removedPermanentPublicIds =
-      imageUpdatePlan
-        .removedPermanentPublicIds;
+    removedPermanentPublicIds = imageUpdatePlan.removedPermanentPublicIds;
 
     /**
      * =================================================
@@ -703,14 +671,12 @@ export const updateAdminProductService = async ({
      * =================================================
      */
 
-    const productUpdateData =
-      buildProductUpdateDocument({
-        payload:
-          validatedPayload,
+    const productUpdateData = buildProductUpdateDocument({
+      payload: validatedPayload,
 
-        adminId,
-        productId,
-      });
+      adminId,
+      productId,
+    });
 
     /**
      * =================================================
@@ -718,23 +684,16 @@ export const updateAdminProductService = async ({
      * =================================================
      */
 
-    const existingSlug =
-      await findProductBySlugExceptId({
-        slug:
-          productUpdateData.slug,
+    const existingSlug = await findProductBySlugExceptId({
+      slug: productUpdateData.slug,
 
-        productId,
-      });
+      productId,
+    });
 
     if (existingSlug) {
-      throw new HandleError(
-        "Product slug already exists",
-        409,
-        {
-          productName:
-            "A product with this name already exists",
-        },
-      );
+      throw new HandleError("Product slug already exists", 409, {
+        productName: "A product with this name already exists",
+      });
     }
 
     /**
@@ -743,28 +702,19 @@ export const updateAdminProductService = async ({
      * =================================================
      */
 
-    const inventorySku =
-      productUpdateData.inventory
-        ?.sku;
+    const inventorySku = productUpdateData.inventory?.sku;
 
     if (inventorySku) {
-      const existingSku =
-        await findProductByInventorySkuExceptId({
-          sku:
-            inventorySku,
+      const existingSku = await findProductByInventorySkuExceptId({
+        sku: inventorySku,
 
-          productId,
-        });
+        productId,
+      });
 
       if (existingSku) {
-        throw new HandleError(
-          "Product SKU already exists",
-          409,
-          {
-            sku:
-              "This product SKU is already used",
-          },
-        );
+        throw new HandleError("Product SKU already exists", 409, {
+          sku: "This product SKU is already used",
+        });
       }
     }
 
@@ -779,18 +729,15 @@ export const updateAdminProductService = async ({
      * NOT buildProductVariantDocuments.
      */
 
-    const variantsData =
-      buildProductVariantUpdateDocuments({
-        payload:
-          validatedPayload,
+    const variantsData = buildProductVariantUpdateDocuments({
+      payload: validatedPayload,
 
-        product:
-          productUpdateData,
+      product: productUpdateData,
 
-        productId,
+      productId,
 
-        adminId,
-      });
+      adminId,
+    });
 
     /**
      * =================================================
@@ -803,37 +750,21 @@ export const updateAdminProductService = async ({
      * Now check against OTHER products.
      */
 
-    const variantSkus =
-      variantsData
-        .map(
-          (variant) =>
-            variant.sku,
-        )
-        .filter(Boolean);
+    const variantSkus = variantsData
+      .map((variant) => variant.sku)
+      .filter(Boolean);
 
-    if (
-      variantSkus.length > 0
-    ) {
-      const externalVariantSkuConflicts =
-        await findVariantSkusExceptProduct({
-          skus:
-            variantSkus,
+    if (variantSkus.length > 0) {
+      const externalVariantSkuConflicts = await findVariantSkusExceptProduct({
+        skus: variantSkus,
 
-          productId,
+        productId,
+      });
+
+      if (externalVariantSkuConflicts.length > 0) {
+        throw new HandleError("Variant SKU already exists", 409, {
+          variants: `Variant SKU already exists: ${externalVariantSkuConflicts[0].sku}`,
         });
-
-      if (
-        externalVariantSkuConflicts
-          .length > 0
-      ) {
-        throw new HandleError(
-          "Variant SKU already exists",
-          409,
-          {
-            variants:
-              `Variant SKU already exists: ${externalVariantSkuConflicts[0].sku}`,
-          },
-        );
       }
     }
 
@@ -853,20 +784,13 @@ export const updateAdminProductService = async ({
      * catch() rolls them back.
      */
 
-    if (
-      imageUpdatePlan
-        .newTemporaryPublicIds
-        .length > 0
-    ) {
-      madePermanentPublicIds =
-        await makeProductImagesPermanent({
-          publicIds:
-            imageUpdatePlan
-              .newTemporaryPublicIds,
+    if (imageUpdatePlan.newTemporaryPublicIds.length > 0) {
+      madePermanentPublicIds = await makeProductImagesPermanent({
+        publicIds: imageUpdatePlan.newTemporaryPublicIds,
 
-          adminId,
-          productId,
-        });
+        adminId,
+        productId,
+      });
     }
 
     /**
@@ -875,8 +799,7 @@ export const updateAdminProductService = async ({
      * =================================================
      */
 
-    session =
-      await mongoose.startSession();
+    session = await mongoose.startSession();
 
     let updatedProduct = null;
     let updatedVariants = [];
@@ -887,114 +810,94 @@ export const updateAdminProductService = async ({
      * =================================================
      */
 
-    await session.withTransaction(
-      async () => {
-        /**
-         * Re-read variants inside transaction.
-         *
-         * Important because validation happened
-         * before transaction and DB could theoretically
-         * change meanwhile.
-         */
+    await session.withTransaction(async () => {
+      /**
+       * Re-read variants inside transaction.
+       *
+       * Important because validation happened
+       * before transaction and DB could theoretically
+       * change meanwhile.
+       */
 
-        const currentDbVariants =
-          await findProductVariantsByProductId({
-            productId,
-            session,
-          });
+      const currentDbVariants = await findProductVariantsByProductId({
+        productId,
+        session,
+      });
 
-        /**
-         * ---------------------------------------------
-         * SIMPLE PRODUCT
-         * ---------------------------------------------
-         *
-         * If simple products use an internal default
-         * ProductVariant, preserve its MongoDB ID.
-         */
+      /**
+       * ---------------------------------------------
+       * SIMPLE PRODUCT
+       * ---------------------------------------------
+       *
+       * If simple products use an internal default
+       * ProductVariant, preserve its MongoDB ID.
+       */
 
-        const normalizedVariantsData =
-          preserveSimpleDefaultVariantId({
-            productType:
-              productUpdateData
-                .productType,
+      const normalizedVariantsData = preserveSimpleDefaultVariantId({
+        productType: productUpdateData.productType,
 
-            existingVariants:
-              currentDbVariants,
+        existingVariants: currentDbVariants,
 
-            incomingVariants:
-              variantsData,
-          });
+        incomingVariants: variantsData,
+      });
 
-        /**
-         * ---------------------------------------------
-         * CREATE DIFFERENTIAL VARIANT PLAN
-         * ---------------------------------------------
-         *
-         * Existing _id:
-         * → UPDATE
-         *
-         * No _id:
-         * → CREATE
-         *
-         * DB variant absent from incoming:
-         * → DELETE
-         */
+      /**
+       * ---------------------------------------------
+       * CREATE DIFFERENTIAL VARIANT PLAN
+       * ---------------------------------------------
+       *
+       * Existing _id:
+       * → UPDATE
+       *
+       * No _id:
+       * → CREATE
+       *
+       * DB variant absent from incoming:
+       * → DELETE
+       */
 
-        const variantPlan =
-          buildProductVariantPersistencePlan({
-            productId,
+      const variantPlan = buildProductVariantPersistencePlan({
+        productId,
 
-            existingVariants:
-              currentDbVariants,
+        existingVariants: currentDbVariants,
 
-            incomingVariants:
-              normalizedVariantsData,
-          });
+        incomingVariants: normalizedVariantsData,
+      });
 
-        console.log(
-          "Variant persistence plan:",
-          variantPlan.report,
-        );
+      console.log("Variant persistence plan:", variantPlan.report);
 
-        /**
-         * ---------------------------------------------
-         * UPDATE MAIN PRODUCT
-         * ---------------------------------------------
-         */
+      /**
+       * ---------------------------------------------
+       * UPDATE MAIN PRODUCT
+       * ---------------------------------------------
+       */
 
-        updatedProduct =
-          await updateProductById({
-            productId,
+      updatedProduct = await updateProductById({
+        productId,
 
-            update:
-              productUpdateData,
+        update: productUpdateData,
 
-            session,
-          });
+        session,
+      });
 
-        if (!updatedProduct) {
-          throw new HandleError(
-            "Product update failed",
-            500,
-          );
-        }
+      if (!updatedProduct) {
+        throw new HandleError("Product update failed", 500);
+      }
 
-        /**
-         * ---------------------------------------------
-         * UPDATE / CREATE / DELETE VARIANTS
-         * ---------------------------------------------
-         */
+      /**
+       * ---------------------------------------------
+       * UPDATE / CREATE / DELETE VARIANTS
+       * ---------------------------------------------
+       */
 
-        updatedVariants =
-          await persistProductVariantPlan({
-            productId,
+      updatedVariants = await persistProductVariantPlan({
+        productId,
 
-            ...variantPlan,
+        ...variantPlan,
 
-            session,
-          });
-      },
-    );
+        session,
+      });
+    });
 
     /**
      * MongoDB has successfully committed.
@@ -1017,14 +920,9 @@ export const updateAdminProductService = async ({
      * already references them.
      */
 
-    if (
-      removedPermanentPublicIds.length >
-      0
-    ) {
+    if (removedPermanentPublicIds.length > 0) {
       try {
-        await deleteRemovedPermanentProductImages(
-          removedPermanentPublicIds,
-        );
+        await deleteRemovedPermanentProductImages(removedPermanentPublicIds);
       } catch (cleanupError) {
         /**
          * Product update already succeeded.
@@ -1038,10 +936,7 @@ export const updateAdminProductService = async ({
          * retry job
          */
 
-        console.error(
-          "Old product image cleanup failed:",
-          cleanupError,
-        );
+        console.error("Old product image cleanup failed:", cleanupError);
       }
     }
 
@@ -1052,11 +947,9 @@ export const updateAdminProductService = async ({
      */
 
     return mapAdminUpdatedProductResponse({
-      product:
-        updatedProduct,
+      product: updatedProduct,
 
-      variants:
-        updatedVariants,
+      variants: updatedVariants,
     });
   } catch (error) {
     /**
@@ -1070,83 +963,41 @@ export const updateAdminProductService = async ({
      * This condition is very important.
      */
 
-    if (
-      !transactionCommitted &&
-      madePermanentPublicIds.length >
-        0
-    ) {
+    if (!transactionCommitted && madePermanentPublicIds.length > 0) {
       try {
-        await rollbackPermanentProductImages(
-          madePermanentPublicIds,
-        );
+        await rollbackPermanentProductImages(madePermanentPublicIds);
       } catch (rollbackError) {
-        console.error(
-          "Product image rollback failed:",
-          rollbackError,
-        );
+        console.error("Product image rollback failed:", rollbackError);
       }
     }
 
     /**
      * Mongo duplicate key fallback.
      */
-    if (
-      error?.code === 11000
-    ) {
-      const duplicateField =
-        Object.keys(
-          error.keyPattern || {},
-        )[0];
+    if (error?.code === 11000) {
+      const duplicateField = Object.keys(error.keyPattern || {})[0];
 
-      if (
-        duplicateField === "sku"
-      ) {
-        throw new HandleError(
-          "Duplicate SKU",
-          409,
-          {
-            sku:
-              "This SKU is already in use",
-          },
-        );
+      if (duplicateField === "sku") {
+        throw new HandleError("Duplicate SKU", 409, {
+          sku: "This SKU is already in use",
+        });
       }
 
-      if (
-        duplicateField ===
-        "optionSignature"
-      ) {
-        throw new HandleError(
-          "Duplicate variant combination",
-          409,
-          {
-            variants:
-              "This variant combination already exists",
-          },
-        );
+      if (duplicateField === "optionSignature") {
+        throw new HandleError("Duplicate variant combination", 409, {
+          variants: "This variant combination already exists",
+        });
       }
 
-      if (
-        duplicateField ===
-        "slug"
-      ) {
-        throw new HandleError(
-          "Product slug already exists",
-          409,
-          {
-            productName:
-              "A product with this name already exists",
-          },
-        );
+      if (duplicateField === "slug") {
+        throw new HandleError("Product slug already exists", 409, {
+          productName: "A product with this name already exists",
+        });
       }
 
-      throw new HandleError(
-        "Duplicate product data",
-        409,
-        {
-          product:
-            "Product with the same unique field already exists",
-        },
-      );
+      throw new HandleError("Duplicate product data", 409, {
+        product: "Product with the same unique field already exists",
+      });
     }
 
     throw error;

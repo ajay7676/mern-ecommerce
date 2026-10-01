@@ -76,3 +76,23 @@ const verifyTemporaryImageOwnership = async ({ publicId, adminId }) => {
 
   return true;
 };
+
+
+export const validateProductVariantUpdateIntegrity = async ({
+  variants = [],
+  attributes = [],
+  existingVariants = [],
+  product,
+  productType,
+}) => {
+  const result =
+    validateProductVariantIntegrity({
+      variants,
+      attributes,
+      existingVariants,
+      product,
+      productType,
+    });
+
+  return result;
+};

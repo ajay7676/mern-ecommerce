@@ -684,20 +684,17 @@ const collectExistingProductImageIds = ({
  * MAIN PURE VALIDATOR
  * -----------------------------------------------------
  */
-
 export const validateProductVariantIntegrity = ({
   variants = [],
   attributes = [],
   existingVariants = [],
   product,
+  productType,
 }) => {
-  const productAttributes =
-    normalizeProductAttributes(
-      attributes,
-    );
-
   /**
-   * 1. Existing Mongo variant IDs.
+   * ---------------------------------------------
+   * 1. Variant IDs always need validation.
+   * ---------------------------------------------
    */
   validateVariantIds({
     variants,
@@ -705,8 +702,69 @@ export const validateProductVariantIntegrity = ({
   });
 
   /**
-   * 2. Attribute / option validation.
+   * ---------------------------------------------
+   * 2. SKU validation applies to all variants.
+   * ---------------------------------------------
    */
+  validateUniqueVariantSkus(
+    variants,
+  );
+
+  /**
+   * ---------------------------------------------
+   * 3. Never allow browser-only URLs.
+   * ---------------------------------------------
+   */
+  validateVariantImageUrls(
+    variants,
+  );
+
+  /**
+   * ---------------------------------------------
+   * SIMPLE PRODUCT
+   * ---------------------------------------------
+   *
+   * Simple product does not need attribute
+   * combination validation.
+   */
+  if (productType === "simple") {
+    const validatedVariants =
+      variants.map((variant) => ({
+        ...variant,
+
+        optionSignature:
+          variant.optionSignature ||
+          "default",
+      }));
+
+    return {
+      variants:
+        validatedVariants,
+
+      variantImages:
+        collectVariantImages(
+          validatedVariants,
+        ),
+
+      existingProductImageIds:
+        collectExistingProductImageIds({
+          product,
+          existingVariants,
+        }),
+    };
+  }
+
+  /**
+   * ---------------------------------------------
+   * VARIABLE PRODUCT
+   * ---------------------------------------------
+   */
+
+  const productAttributes =
+    normalizeProductAttributes(
+      attributes,
+    );
+
   variants.forEach(
     (variant, variantIndex) => {
       validateVariantOptions({
@@ -724,51 +782,27 @@ export const validateProductVariantIntegrity = ({
   );
 
   /**
-   * 3. Duplicate SKU validation.
-   */
-  validateUniqueVariantSkus(
-    variants,
-  );
-
-  /**
-   * 4. Reject browser URLs.
-   */
-  validateVariantImageUrls(
-    variants,
-  );
-
-  /**
-   * 5. Generate trusted signatures and
-   * reject duplicate combinations.
+   * Backend generates trusted signatures
+   * and validates duplicate combinations.
    */
   const validatedVariants =
     buildValidatedVariants(
       variants,
     );
 
-  /**
-   * 6. Collect incoming images.
-   */
-  const variantImages =
-    collectVariantImages(
-      validatedVariants,
-    );
-
-  /**
-   * 7. Trusted existing product images.
-   */
-  const existingProductImageIds =
-    collectExistingProductImageIds({
-      product,
-      existingVariants,
-    });
-
   return {
     variants:
       validatedVariants,
 
-    variantImages,
+    variantImages:
+      collectVariantImages(
+        validatedVariants,
+      ),
 
-    existingProductImageIds,
+    existingProductImageIds:
+      collectExistingProductImageIds({
+        product,
+        existingVariants,
+      }),
   };
 };
