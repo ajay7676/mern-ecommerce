@@ -33,7 +33,9 @@ const normalizeSku = (value = "") => {
  * attributeValues: {}
  */
 
-const getVariantAttributeValues = (variant = {}) => {
+const getVariantAttributeValues = (
+  variant = {},
+) => {
   const values =
     variant.attributeValues ||
     variant.attributes ||
@@ -43,7 +45,19 @@ const getVariantAttributeValues = (variant = {}) => {
     return values;
   }
 
-  return Object.values(values);
+  return Object.entries(values).map(
+    ([key, value]) => ({
+      ...value,
+
+      /**
+       * Important when object shape does not
+       * contain attributeSlug internally.
+       */
+      attributeSlug:
+        value.attributeSlug ||
+        key,
+    }),
+  );
 };
 
 /**
@@ -369,17 +383,21 @@ const validateCompleteAutoVariant = ({
 export const buildCanonicalVariantSignature = (
   variant = {},
 ) => {
-  return getVariantAttributeValues(
-    variant,
-  )
+  const values =
+    getVariantAttributeValues(
+      variant,
+    );
+
+  return values
     .map((item) => ({
       attributeKey:
         getAttributeKey(item),
 
-      value:
-        normalizeValue(
-          item.value,
-        ),
+      value: String(
+        item.value || "",
+      )
+        .trim()
+        .toLowerCase(),
     }))
     .filter(
       (item) =>
@@ -422,7 +440,7 @@ const buildValidatedVariants = (
           "Invalid variant combination",
           400,
           {
-            [`variants.${index}.optionSignature`]:
+            [`attributesAndVariations.variants.${index}.attributeValues`]:
               "Variant combination cannot be empty",
           },
         );
@@ -433,12 +451,17 @@ const buildValidatedVariants = (
           signature,
         )
       ) {
+        const previousIndex =
+          seenSignatures.get(
+            signature,
+          );
+
         throw new HandleError(
           "Duplicate variant combination",
           400,
           {
-            [`variants.${index}.optionSignature`]:
-              "Same variant combination already exists",
+            [`attributesAndVariations.variants.${index}`]:
+              `This combination duplicates variant ${previousIndex + 1}`,
           },
         );
       }
@@ -448,15 +471,12 @@ const buildValidatedVariants = (
         index,
       );
 
-      /**
-       * IMPORTANT:
-       *
-       * Ignore frontend optionSignature.
-       * Backend creates a trusted one.
-       */
       return {
         ...variant,
 
+        /**
+         * Replace whatever frontend sent.
+         */
         optionSignature:
           signature,
       };

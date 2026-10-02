@@ -10,6 +10,8 @@ const AddProductDrawerFooter = ({
   isSubmitting = false,
   isEditMode = false,
 
+  onCancel,
+
   primaryButtonLabel,
   showSaveDraft = true,
 

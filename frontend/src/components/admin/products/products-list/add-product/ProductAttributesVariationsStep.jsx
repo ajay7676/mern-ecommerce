@@ -33,13 +33,10 @@ import { useProductAttributeOptions } from "../../../../../hooks/admin/queries/p
 
 import VariantRegenerationConfirmModal from "../form/VariantRegenerationConfirmModal";
 
-import {
-  getTemporaryVariantImagesToCleanup,
-} from "../../../../../utils/admin/products/product/productVariantImageLifecycleUtils";
+import { getTemporaryVariantImagesToCleanup } from "../../../../../utils/admin/products/product/productVariantImageLifecycleUtils";
 
-import {
-  useDeleteTemporaryProductImages,
-} from "../../../../../hooks/admin/mutations/products/useDeleteTemporaryProductImages";
+import { useDeleteTemporaryProductImages } from "../../../../../hooks/admin/mutations/products/useDeleteTemporaryProductImages";
+import { PRODUCT_FORM_MODE } from "../../../../../constants/admin/products/productFormMode.constants";
 /**
  * Product Attributes & Variations Step
  *
@@ -53,6 +50,7 @@ import {
 const ProductAttributesVariationsStep = ({
   mode = "create",
   productId = null,
+  editResetVersion = 0,
 }) => {
   /**
    * -------------------------------------------------------
@@ -100,8 +98,7 @@ const ProductAttributesVariationsStep = ({
     formState: { errors },
   } = useFormContext();
 
-  const deleteTempImagesMutation =
-  useDeleteTemporaryProductImages();
+  const deleteTempImagesMutation = useDeleteTemporaryProductImages();
 
   const isEditMode = mode === "edit";
 
@@ -258,6 +255,20 @@ const ProductAttributesVariationsStep = ({
       control,
       name: "variantRegenerationReason",
     }) || null;
+
+  useEffect(() => {
+    if (mode !== PRODUCT_FORM_MODE.EDIT) {
+      return;
+    }
+
+    setSelectedVariantIndex(0);
+
+    setPendingVariantRegeneration(null);
+
+    setPendingOptionRemoval(null);
+
+    setIsApplyingRegeneration(false);
+  }, [editResetVersion, mode]);
 
   /**
    * -------------------------------------------------------
@@ -994,58 +1005,45 @@ const ProductAttributesVariationsStep = ({
     setPendingVariantRegeneration(null);
   };
 
-const handleApplyVariantRegeneration =
-  async () => {
-    if (
-      !pendingVariantRegeneration ||
-      isApplyingRegeneration
-    ) {
+  const handleApplyVariantRegeneration = async () => {
+    if (!pendingVariantRegeneration || isApplyingRegeneration) {
       return;
     }
 
     try {
-      setIsApplyingRegeneration(
-        true,
-      );
+      setIsApplyingRegeneration(true);
 
-      const currentValues =
-        getValues();
+      const currentValues = getValues();
 
       /**
        * Re-run against latest values.
        */
-      const latestResult =
-        reconcileProductVariants({
-          attributes:
-            currentValues.attributes ||
-            [],
+      const latestResult = reconcileProductVariants({
+        attributes: currentValues.attributes || [],
 
-          existingVariants:
-            currentValues.variants ||
-            [],
+        existingVariants: currentValues.variants || [],
 
-          baseSku:
-            currentValues.sku ||
-            "",
+        baseSku: currentValues.sku || "",
 
-          sellingPrice:
-            currentValues.sellingPrice ||
-            "",
+        sellingPrice: currentValues.sellingPrice || "",
 
-          stockQuantity:
-            currentValues.stockQuantity ||
-            "0",
+        stockQuantity: currentValues.stockQuantity || "0",
 
-          productImages:
-            currentValues.images ||
-            [],
-        });
+        productImages: currentValues.images || [],
+      });
+
+      console.table(
+        latestResult.nextVariants.map((variant, index) => ({
+          index,
+          name: variant.name,
+          sku: variant.sku,
+          optionSignature: variant.optionSignature,
+          attributes: JSON.stringify(variant.attributeValues),
+        })),
+      );
 
       if (!latestResult.success) {
-        toast.error(
-          latestResult.error ||
-            "Unable to regenerate variants",
-        );
+        toast.error(latestResult.error || "Unable to regenerate variants");
 
         return;
       }
@@ -1055,41 +1053,23 @@ const handleApplyVariantRegeneration =
        * CLEAN TEMP IMAGES OF REMOVED VARIANTS
        * -------------------------------------------
        */
-      const temporaryImagesToCleanup =
-        getTemporaryVariantImagesToCleanup(
-          {
-            removedVariants:
-              latestResult.removedVariants,
+      const temporaryImagesToCleanup = getTemporaryVariantImagesToCleanup({
+        removedVariants: latestResult.removedVariants,
 
-            nextVariants:
-              latestResult.nextVariants,
+        nextVariants: latestResult.nextVariants,
 
-            productImages:
-              currentValues.images ||
-              [],
-          },
-        );
+        productImages: currentValues.images || [],
+      });
 
-      if (
-        temporaryImagesToCleanup.length >
-        0
-      ) {
+      if (temporaryImagesToCleanup.length > 0) {
         try {
-          await deleteTempImagesMutation.mutateAsync(
-            {
-              publicIds:
-                temporaryImagesToCleanup,
-            },
-          );
+          await deleteTempImagesMutation.mutateAsync({
+            publicIds: temporaryImagesToCleanup,
+          });
         } catch (error) {
-          console.error(
-            "Temporary variant cleanup failed:",
-            error,
-          );
+          console.error("Temporary variant cleanup failed:", error);
 
-          toast.error(
-            "Unable to clean temporary images from removed variants",
-          );
+          toast.error("Unable to clean temporary images from removed variants");
 
           return;
         }
@@ -1100,9 +1080,7 @@ const handleApplyVariantRegeneration =
        * APPLY RECONCILIATION
        * -------------------------------------------
        */
-      replaceVariants(
-        latestResult.nextVariants,
-      );
+      replaceVariants(latestResult.nextVariants);
 
       markVariantsSynchronized();
 
@@ -1110,38 +1088,21 @@ const handleApplyVariantRegeneration =
 
       setSelectedVariantIndex(0);
 
-      setPendingVariantRegeneration(
-        null,
-      );
+      setPendingVariantRegeneration(null);
 
-      await trigger([
-        "attributes",
-        "variants",
-      ]);
+      await trigger(["attributes", "variants"]);
 
-      const {
-        preserved,
-        created,
-        removed,
-      } =
-        latestResult.report;
+      const { preserved, created, removed } = latestResult.report;
 
       toast.success(
         `Variants regenerated: ${preserved} preserved, ${created} new, ${removed} removed`,
       );
     } catch (error) {
-      console.error(
-        "Variant regeneration failed:",
-        error,
-      );
+      console.error("Variant regeneration failed:", error);
 
-      toast.error(
-        "Failed to regenerate variants",
-      );
+      toast.error("Failed to regenerate variants");
     } finally {
-      setIsApplyingRegeneration(
-        false,
-      );
+      setIsApplyingRegeneration(false);
     }
   };
 

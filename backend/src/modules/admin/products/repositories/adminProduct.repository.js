@@ -42,9 +42,21 @@ export const createProductVariants = async ({ variantsData, session }) => {
   });
 };
 
-export const deleteProductById = async ({ productId, session }) => {
-  return Product.findByIdAndDelete(productId).session(session || null);
-};
+export const deleteProductById =
+  async ({
+    productId,
+    session,
+  }) => {
+    return Product.findOneAndDelete(
+      {
+        _id:
+          productId,
+      },
+      {
+        session,
+      },
+    );
+  }; 
 
 export const deleteProductVariantsByProductId = async ({
   productId,
@@ -552,3 +564,5 @@ export const findProductVariantsByProductId =
 
     return query;
   };
+
+  

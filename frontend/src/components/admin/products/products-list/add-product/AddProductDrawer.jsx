@@ -43,6 +43,7 @@ import { getFirstProductFormError } from "../../../../../utils/admin/products/pr
 import { PRODUCT_FORM_MODE } from "../../../../../constants/admin/products/productFormMode.constants";
 import { mapAdminProductDetailToFormValues } from "../../../../../utils/admin/products/product/productEditFormMapper";
 import { useUpdateAdminProduct } from "../../../../../hooks/admin/mutations/products/useUpdateAdminProduct";
+import { collectTemporaryProductImagePublicIds } from "../../../../../utils/admin/products/product/productTemporaryImageUtils";
 
 const DRAWER_ANIMATION_MS = 500;
 
@@ -60,6 +61,11 @@ const AddProductDrawer = ({
     title: "",
     payload: null,
   });
+  const originalEditValuesRef = useRef(null);
+
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
+
+  const [editResetVersion, setEditResetVersion] = useState(0);
 
   const isEditMode = mode === PRODUCT_FORM_MODE.EDIT;
   const isCreateMode = mode === PRODUCT_FORM_MODE.CREATE;
@@ -78,8 +84,6 @@ const AddProductDrawer = ({
   } = useAdminProductDetail(productId, {
     enabled: isOpen && isEditMode && Boolean(productId),
   });
-
-  console.log(editProduct);
 
   const loadedEditProductIdRef = useRef(null);
 
@@ -160,23 +164,41 @@ const AddProductDrawer = ({
     };
   }, [isOpen]);
 
+  // useEffect(() => {
+  //   if (!isOpen || !isEditMode || !editProduct) return;
+
+  //   const currentProductId = editProduct.id || productId;
+
+  //   if (loadedEditProductIdRef.current === currentProductId) {
+  //     return;
+  //   }
+
+  //   const mappedValues = mapAdminProductDetailToFormValues(editProduct);
+
+  //   methods.reset(mappedValues);
+
+  //   setActiveStep(1);
+
+  //   loadedEditProductIdRef.current = currentProductId;
+  // }, [isOpen, isEditMode, editProduct, productId, methods]);
+
   useEffect(() => {
-    if (!isOpen || !isEditMode || !editProduct) return;
-
-    const currentProductId = editProduct.id || productId;
-
-    if (loadedEditProductIdRef.current === currentProductId) {
+    if (mode !== PRODUCT_FORM_MODE.EDIT || !editProduct) {
       return;
     }
 
     const mappedValues = mapAdminProductDetailToFormValues(editProduct);
 
+    /**
+     * Keep the original server state.
+     *
+     * This is what "Reset Changes"
+     * returns to.
+     */
+    originalEditValuesRef.current = structuredClone(mappedValues);
+
     methods.reset(mappedValues);
-
-    setActiveStep(1);
-
-    loadedEditProductIdRef.current = currentProductId;
-  }, [isOpen, isEditMode, editProduct, productId, methods]);
+  }, [mode, editProduct, methods]);
 
   if (!shouldRender) {
     return null;
@@ -221,6 +243,20 @@ const AddProductDrawer = ({
       values,
       action: "publish",
     });
+    console.table(
+  payload.attributesAndVariations?.variants?.map(
+    (variant, index) => ({
+      index,
+      name: variant.name,
+      variantId: variant.variantId,
+      sku: variant.sku,
+      optionSignature: variant.optionSignature,
+      attributeValues: JSON.stringify(
+        variant.attributeValues,
+      ),
+    }),
+  ),
+);
 
     try {
       if (isEditMode) {
@@ -260,25 +296,15 @@ const AddProductDrawer = ({
   };
 
   const handleNext = async () => {
-     if (
-    activeStep === 4 &&
-    methods.getValues(
-      "variantsNeedRegeneration"
-    )
-  ) {
-    toast.error(
-      "Regenerate variants before continuing"
-    );
+    if (activeStep === 4 && methods.getValues("variantsNeedRegeneration")) {
+      toast.error("Regenerate variants before continuing");
 
-    return;
-  }
+      return;
+    }
     const isStepValid = await validateAllProductSteps(methods);
-     console.log(isStepValid);
 
     if (!isStepValid) {
       const firstError = getFirstProductFormError(methods.formState.errors);
-
-      console.log(firstError)
 
       if (firstError.step) {
         setActiveStep(firstError.step);
@@ -367,35 +393,179 @@ const AddProductDrawer = ({
     }, DRAWER_ANIMATION_MS);
   };
 
-  const handleResetEditChanges = () => {
-    if (!isEditMode || !editProduct) return;
+  // const handleResetEditChanges = () => {
+  //   if (!isEditMode || !editProduct) return;
 
-    const mappedValues = mapAdminProductDetailToFormValues(editProduct);
+  //   const mappedValues = mapAdminProductDetailToFormValues(editProduct);
 
-    methods.reset(mappedValues);
+  //   methods.reset(mappedValues);
 
-    setActiveStep(1);
+  //   setActiveStep(1);
 
-    toast("Changes reset to original product data", {
-      icon: "↩️",
-    });
-  };
+  //   toast("Changes reset to original product data", {
+  //     icon: "↩️",
+  //   });
+  // };
 
-  const handleCancelEdit = async () => {
-    const values = methods.getValues();
+  const handleResetEditChanges = async () => {
+    if (isCleaningUp || !originalEditValuesRef.current) {
+      return;
+    }
 
     try {
-      await cleanupTemporaryProductImagesSafely({
-        values,
-        deleteTemporaryImages: deleteTemporaryProductImages.mutateAsync,
-      });
+      setIsCleaningUp(true);
+
+      /**
+       * -------------------------------------------
+       * 1. DELETE NEW TEMPORARY IMAGES
+       * -------------------------------------------
+       */
+      await cleanupCurrentTemporaryImages();
+
+      /**
+       * -------------------------------------------
+       * 2. RESET TO ORIGINAL SERVER STATE
+       * -------------------------------------------
+       */
+      const originalValues = structuredClone(originalEditValuesRef.current);
+
+      /**
+       * Explicitly ensure sync state.
+       *
+       * Even if mapper already includes these,
+       * this makes reset behavior predictable.
+       */
+      originalValues.attributesChanged = false;
+
+      originalValues.variantsNeedRegeneration = false;
+
+      originalValues.variantRegenerationReason = null;
+
+      methods.reset(originalValues);
+
+      /**
+       * Optional:
+       * clear remaining validation errors.
+       */
+      methods.clearErrors();
+
+      /**
+       * Return to first variant if you keep
+       * selected variant state outside RHF.
+       *
+       * We'll handle this through a callback below
+       * if needed.
+       */
+
+      toast.success("Product changes reset");
     } catch (error) {
-      console.error("Temporary edit images cleanup failed:", error);
+      console.error("Reset product changes failed:", error);
+
+      toast.error(
+        error?.response?.data?.message || "Unable to reset product changes",
+      );
     } finally {
-      handleClose();
+      setIsCleaningUp(false);
     }
   };
+  const cleanupCurrentTemporaryImages = async () => {
+    const currentValues = methods.getValues();
 
+    const temporaryPublicIds =
+      collectTemporaryProductImagePublicIds(currentValues);
+
+    if (temporaryPublicIds.length === 0) {
+      return {
+        success: true,
+        deletedPublicIds: [],
+      };
+    }
+
+    await deleteTemporaryProductImages.mutateAsync({
+      publicIds: temporaryPublicIds,
+    });
+
+    return {
+      success: true,
+      deletedPublicIds: temporaryPublicIds,
+    };
+  };
+
+  // const handleCancelEdit = async () => {
+  //   const values = methods.getValues();
+
+  //   try {
+  //     await cleanupTemporaryProductImagesSafely({
+  //       values,
+  //       deleteTemporaryImages: deleteTemporaryProductImages.mutateAsync,
+  //     });
+  //   } catch (error) {
+  //     console.error("Temporary edit images cleanup failed:", error);
+  //   } finally {
+  //     handleClose();
+  //   }
+  // };
+
+  const handleCancelEdit = async () => {
+    if (isCleaningUp || updateProductMutation.isPending) {
+      return;
+    }
+
+    try {
+      setIsCleaningUp(true);
+
+      /**
+       * Delete only newly uploaded TEMP images.
+       *
+       * Permanent existing images are ignored
+       * by the collector.
+       */
+      await cleanupCurrentTemporaryImages();
+
+      /**
+       * Restore form locally before close.
+       *
+       * Useful if drawer component remains mounted.
+       */
+      if (originalEditValuesRef.current) {
+        methods.reset(structuredClone(originalEditValuesRef.current));
+      }
+
+      /**
+       * Close only after cleanup succeeds.
+       */
+      onClose();
+    } catch (error) {
+      console.error("Edit product cleanup failed:", error);
+
+      toast.error(
+        error?.response?.data?.message ||
+          "Unable to clean temporary images. Please try again.",
+      );
+    } finally {
+      setIsCleaningUp(false);
+    }
+  };
+  const handleRequestClose = async () => {
+    if (
+      isCleaningUp ||
+      updateProductMutation.isPending ||
+      createProductMutation.isPending
+    ) {
+      return;
+    }
+
+    if (isEditMode) {
+      await handleCancelEdit();
+      return;
+    }
+
+    /**
+     * Create mode:
+     * keep current draft and close.
+     */
+    handleCloseAndKeepDraft();
+  };
   {
     isEditMode && isEditProductLoading && (
       <div className="space-y-5 p-5">
@@ -465,7 +635,7 @@ const AddProductDrawer = ({
                 ? "Update product information, images, pricing, inventory, and variants"
                 : "Create a new product with images, pricing, inventory, and variants"
             }
-            onClose={handleCloseAndKeepDraft}
+            onClose={handleRequestClose}
           />
           <ProductStepIndicator
             activeStep={activeStep}
@@ -483,6 +653,7 @@ const AddProductDrawer = ({
                     <ProductAttributesVariationsStep
                       mode={mode}
                       productId={productId}
+                      editResetVersion={editResetVersion}
                     />
                   )}
                   {activeStep === 5 && <ProductAdditionalDetailsStep />}
@@ -501,15 +672,16 @@ const AddProductDrawer = ({
             onNext={handleNext}
             onSaveDraft={handleSaveDraft}
             onDiscardDraft={handleDiscardDraft}
-            onCancel={handleCancelEdit}
+            onCancel={handleRequestClose}
             onResetChanges={handleResetEditChanges}
             isEditMode={isEditMode}
             showSaveDraft={isCreateMode}
             isSubmitting={
               isEditMode
-                ? updateProductMutation.isPending
+                ? isCleaningUp || updateProductMutation.isPending
                 : createProductMutation.isPending
             }
+            isCleaningUp={isCleaningUp}
             primaryButtonLabel={
               activeStep === totalSteps
                 ? isEditMode

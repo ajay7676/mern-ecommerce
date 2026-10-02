@@ -9,8 +9,13 @@ import CustomInformationCard from "../form/CustomInformationCard";
 import AdditionalProductPreviewCard from "../form/AdditionalProductPreviewCard";
 import CompletionStatusCard from "../form/CompletionStatusCard";
 import AdditionalDetailsTipsCard from "../form/AdditionalDetailsTipsCard";
+import { PRODUCT_FORM_MODE } from "../../../../../constants/admin/products/productFormMode.constants";
 
-const ProductAdditionalDetailsStep = () => {
+const ProductAdditionalDetailsStep = ({
+  mode = PRODUCT_FORM_MODE.CREATE,
+  productId = null,
+  editResetVersion = 0,
+}) => {
   const {
     register,
     control,

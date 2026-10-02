@@ -50,3 +50,14 @@ export const updateAdminProductApi = async ({ productId, payload }) => {
 
   return data.data;
 };
+
+export const deleteAdminProductApi = async ({
+  productId,
+}) => {
+  const { data } =
+    await api.delete(
+      `/admin/products/${productId}`,
+    );
+
+  return data.data;
+};

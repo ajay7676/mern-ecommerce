@@ -63,28 +63,102 @@ const getImageIsExisting = (image = {}) => {
   return image.isExisting === true && !getImageIsTemporary(image);
 };
 
-const mapVariantAttributes = (variant = {}) => {
-  const values = variant.attributeValues || {};
+const mapVariantAttributes = (
+  variant = {},
+) => {
+  const rawValues =
+    variant.attributeValues ??
+    variant.attributes ??
+    [];
 
-  const valuesArray = Array.isArray(values) ? values : Object.values(values);
+  let values = [];
 
-  return valuesArray.map((item) => ({
-    attributeId: item.attributeId || null,
+  /**
+   * Array format:
+   *
+   * [
+   *   {
+   *     attributeSlug: "storage",
+   *     value: "6gb-128gb"
+   *   }
+   * ]
+   */
+  if (Array.isArray(rawValues)) {
+    values = rawValues;
+  }
 
-    attributeName: item.attributeName || "",
+  /**
+   * Object format:
+   *
+   * {
+   *   storage: {
+   *     label: "6GB 128GB",
+   *     value: "6gb-128gb"
+   *   }
+   * }
+   */
+  else if (
+    rawValues &&
+    typeof rawValues === "object"
+  ) {
+    values = Object.entries(
+      rawValues,
+    ).map(
+      ([attributeKey, item]) => ({
+        ...item,
 
-    attributeSlug: item.attributeSlug || null,
+        attributeSlug:
+          item?.attributeSlug ||
+          item?.slug ||
+          attributeKey,
+      }),
+    );
+  }
 
-    optionId: item.optionId || item.value || null,
+  return values
+    .filter(
+      (item) =>
+        item &&
+        (
+          item.attributeId ||
+          item.attributeSlug ||
+          item.attributeName
+        ) &&
+        item.value,
+    )
+    .map((item) => ({
+      attributeId:
+        item.attributeId || null,
 
-    label: item.label || "",
+      attributeName:
+        item.attributeName ||
+        item.name ||
+        "",
 
-    value: item.value || "",
+      attributeSlug:
+        item.attributeSlug ||
+        item.slug ||
+        "",
 
-    colorCode: item.colorCode || null,
+      optionId:
+        item.optionId ||
+        item.value ||
+        null,
 
-    isCustom: Boolean(item.isCustom),
-  }));
+      label:
+        item.label || "",
+
+      value:
+        item.value || "",
+
+      colorCode:
+        item.colorCode || null,
+
+      isCustom:
+        Boolean(
+          item.isCustom,
+        ),
+    }));
 };
 
 const mapProductImages = (images = []) => {

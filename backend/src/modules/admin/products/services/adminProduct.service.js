@@ -35,6 +35,8 @@ import {
 import {
   findProductVariantsByProductId,
   persistProductVariantPlan,
+  deleteProductById,
+  deleteProductVariantsByProductId,
 } from "../repositories/adminProduct.repository.js";
 
 import {
@@ -66,6 +68,7 @@ import { verifyTemporaryCloudinaryAsset } from "../../../../utils/cloudinary/clo
 import { isCloudinaryResourceNotFound } from "../../../../utils/cloudinary/cloudinaryError.js";
 import { deleteCloudinaryAssets } from "../../../../utils/cloudinary/cloudinaryDelete.js";
 import { validateProductVariantUpdateIntegrity } from "./productVariantIntegrity.service.js";
+import { collectProductAssetPublicIds } from "../helpers/productImageAsset.helper.js";
 
 const assertUniqueVariantSkusInPayload = (variants = []) => {
   const skus = variants.map((variant) => variant.sku).filter(Boolean);
@@ -1012,3 +1015,149 @@ export const updateAdminProductService = async ({
     }
   }
 };
+
+export const deleteAdminProductService =
+  async ({
+    productId,
+    adminId,
+  }) => {
+    let session = null;
+
+    /**
+     * Cloudinary assets to delete only
+     * AFTER DB transaction succeeds.
+     */
+    let assetPublicIds = [];
+
+    try {
+      /**
+       * --------------------------------------
+       * 1. FIND PRODUCT
+       * --------------------------------------
+       */
+
+      const product =
+        await findProductById(
+          productId,
+        );
+
+      if (!product) {
+        throw new HandleError(
+          "Product not found",
+          404,
+          {
+            productId:
+              "Product does not exist",
+          },
+        );
+      }
+
+      /**
+       * --------------------------------------
+       * 2. FIND VARIANTS
+       * --------------------------------------
+       */
+
+      const variants =
+        await findProductVariantsByProductId({
+          productId,
+        });
+
+      /**
+       * --------------------------------------
+       * 3. COLLECT CLOUDINARY ASSETS
+       * --------------------------------------
+       *
+       * Don't delete them yet.
+       */
+
+      assetPublicIds =
+        collectProductAssetPublicIds({
+          product,
+          variants,
+        });
+
+      /**
+       * --------------------------------------
+       * 4. START TRANSACTION
+       * --------------------------------------
+       */
+
+      session =
+        await mongoose.startSession();
+
+      await session.withTransaction(
+        async () => {
+          /**
+           * Delete variants first.
+           */
+          await deleteProductVariantsByProductId({
+            productId,
+            session,
+          });
+
+          /**
+           * Delete main product.
+           */
+          const deletedProduct =
+            await deleteProductById({
+              productId,
+              session,
+            });
+
+          if (!deletedProduct) {
+            throw new HandleError(
+              "Product deletion failed",
+              500,
+            );
+          }
+        },
+      );
+
+      /**
+       * --------------------------------------
+       * 5. DB COMMITTED
+       * --------------------------------------
+       *
+       * Now it is safe to delete external assets.
+       */
+
+      if (
+        assetPublicIds.length >
+        0
+      ) {
+        try {
+          await deleteRemovedPermanentProductImages(
+            assetPublicIds,
+          );
+        } catch (cleanupError) {
+          /**
+           * Do not rollback DB deletion now.
+           *
+           * DB already committed.
+           *
+           * Log / retry orphan asset cleanup later.
+           */
+          console.error(
+            "Deleted product Cloudinary cleanup failed:",
+            cleanupError,
+          );
+        }
+      }
+
+      return {
+        id:
+          String(productId),
+
+        deletedVariantCount:
+          variants.length,
+
+        deletedAssetCount:
+          assetPublicIds.length,
+      };
+    } finally {
+      if (session) {
+        await session.endSession();
+      }
+    }
+  };

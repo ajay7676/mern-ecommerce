@@ -1,4 +1,5 @@
 import { Eye, MoreVertical, Pencil, ArrowUpDown } from "lucide-react";
+import { Link } from "react-router-dom";
 
 // import {
 //   ProductStatusBadge,
@@ -19,6 +20,7 @@ const ProductsTable = ({
   onViewProduct,
   onEditProduct,
   onClearFilters,
+  onDeleteProduct,
 }) => {
   if (isLoading) {
     return <ProductTableSkeleton />;
@@ -231,18 +233,33 @@ const ProductsTable = ({
                       <MoreVertical className="h-4 w-4" />
                     </button> */}
                     <div className="dropdown dropdown-end">
-                      <div tabIndex={0} role="button" className="rounded-lg p-1.5 hover:bg-slate-100 cursor-pointer">
+                      <div
+                        tabIndex={0}
+                        role="button"
+                        className="rounded-lg p-1.5 hover:bg-slate-100 cursor-pointer"
+                      >
                         <MoreVertical className="h-4 w-4" />
                       </div>
                       <ul
                         tabIndex={-1}
                         className="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
                       >
-                        <li>
-                          <a>Item 1</a>
+                        <li className="flex">
+                          <Link to="#">Copy Listing</Link>
                         </li>
                         <li>
-                          <a>Item 2</a>
+                          <Link to="#">Archive Listing</Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="#"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onDeleteProduct(product);
+                            }}
+                          >
+                            Delete Listing
+                          </Link>
                         </li>
                       </ul>
                     </div>

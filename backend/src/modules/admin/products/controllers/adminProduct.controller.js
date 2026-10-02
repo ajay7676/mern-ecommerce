@@ -2,7 +2,8 @@ import {
   createAdminProductService,
   getAdminProductsService,
   getAdminProductDetailService, 
-  updateAdminProductService
+  updateAdminProductService,
+  deleteAdminProductService
 } from "../services/adminProduct.service.js";
 
 export const createAdminProductController = async (req, res, next) => {
@@ -67,3 +68,33 @@ export const updateAdminProductController = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deleteAdminProductController =
+  async (
+    req,
+    res,
+    next,
+  ) => {
+    try {
+      const result =
+        await deleteAdminProductService({
+          productId:
+            req.params.productId,
+
+          adminId:
+            req.user._id,
+        });
+
+      return res.status(200).json({
+        success: true,
+
+        message:
+          "Product deleted successfully",
+
+        data:
+          result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };

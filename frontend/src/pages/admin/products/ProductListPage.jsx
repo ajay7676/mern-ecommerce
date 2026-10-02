@@ -19,6 +19,7 @@ import ProductDetailDrawer from "../../../components/admin/products/products-lis
 import useDebounce from "../../../utils/useDebounce";
 import toast from "react-hot-toast";
 import { PRODUCT_FORM_MODE } from "../../../constants/admin/products/productFormMode.constants";
+import DeleteProductConfirmModal from "../../../components/admin/products/products-list/delete/DeleteProductConfirmModal";
 const ProductListPage = () => {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [filters, setFilters] = useState({
@@ -47,6 +48,8 @@ const ProductListPage = () => {
     PRODUCT_FORM_MODE.CREATE,
   );
   const [editingProductId, setEditingProductId] = useState(null);
+
+  const [productToDelete, setProductToDelete] = useState(null);
 
   const debouncedSearch = useDebounce(searchInput, 500);
 
@@ -97,7 +100,6 @@ const ProductListPage = () => {
   const moreFiltersCount = getMoreFiltersCount(filters);
 
   const handleAddProductModal = () => {
-    console.log("Click Add New Product Modal");
     setProductEditorMode(PRODUCT_FORM_MODE.CREATE);
     setEditingProductId(null);
     setIsAddProductOpen(true);
@@ -122,27 +124,29 @@ const ProductListPage = () => {
   };
 
   const handleOpenEditProduct = (product) => {
-  const productId = product?.id ;
-   console.log("Click Edit modal");
-   console.log(productId)
+    const productId = product?.id;
+    console.log(productId);
 
+    if (!productId) {
+      toast.error("Product id not found");
+      return;
+    }
 
-  if (!productId) {
-    toast.error("Product id not found");
-    return;
-  }
+    setProductEditorMode(PRODUCT_FORM_MODE.EDIT);
+    setEditingProductId(productId);
 
-  setProductEditorMode(PRODUCT_FORM_MODE.EDIT);
-  setEditingProductId(productId);
+    // optional: close detail drawer if open
+    setIsProductDetailDrawerOpen(false);
+    setIsProductEditorOpen(true);
+    setIsAddProductOpen(true);
+  };
+  const handleCloseProductEditor = () => {
+    setIsProductEditorOpen(false);
+  };
 
-  // optional: close detail drawer if open
-  setIsProductDetailDrawerOpen(false);
-  setIsProductEditorOpen(true);
-  setIsAddProductOpen(true);
-};
-const handleCloseProductEditor = () => {
-  setIsProductEditorOpen(false);
-};
+  const handleRequestDeleteProduct = (product) => {
+    setProductToDelete(product);
+  };
   const handleSearchChange = (value) => {
     setSearchInput(value);
   };
@@ -223,9 +227,6 @@ const handleCloseProductEditor = () => {
       page: 1,
     }));
   };
-
-  console.log(selectedProductId);
-
   return (
     <>
       <main className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
@@ -272,6 +273,7 @@ const handleCloseProductEditor = () => {
                 onViewProduct={handleViewProduct}
                 onEditProduct={handleOpenEditProduct}
                 onClearFilters={handleClearFilters}
+                onDeleteProduct={handleRequestDeleteProduct}
               />
               <ProductPagination
                 pagination={pagination}
@@ -301,6 +303,11 @@ const handleCloseProductEditor = () => {
         productId={selectedProductId}
         onClose={handleCloseProductDetailDrawer}
         onEditProduct={handleOpenEditProduct}
+      />
+      <DeleteProductConfirmModal
+        open={Boolean(productToDelete)}
+        product={productToDelete}
+        onClose={() => setProductToDelete(null)}
       />
     </>
   );
